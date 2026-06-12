@@ -126,6 +126,16 @@ export const ResourceManagerDialog = ({
       toast({ title: "שגיאה", description: "יש לבחור קובץ להעלאה", variant: "destructive" });
       return;
     }
+    const MAX_SIZE = 50 * 1024 * 1024; // 50MB — Supabase free-tier per-file limit
+    if (file && file.size > MAX_SIZE) {
+      toast({
+        title: "הקובץ גדול מדי",
+        description:
+          "הגודל המרבי הוא 50MB. לסרטונים גדולים השתמש בקישור (YouTube/Vimeo) דרך ניהול הסרטונים.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     setIsSaving(true);
 
@@ -307,9 +317,12 @@ export const ResourceManagerDialog = ({
               <Input
                 id="r_file"
                 type="file"
-                accept=".pdf,.doc,.docx,.ppt,.pptx,.key,.odp,.odt,.txt,.xls,.xlsx"
                 onChange={(e) => setFile(e.target.files?.[0] ?? null)}
               />
+              <p className="text-xs text-muted-foreground">
+                כל סוגי הקבצים הנפוצים נתמכים — מסמכים, מצגות, גיליונות, PDF, תמונות,
+                אודיו, וידאו וארכיונים (ZIP). עד 50MB לקובץ.
+              </p>
               {editing?.file_name && !file && (
                 <p className="text-sm text-muted-foreground flex items-center gap-1">
                   <Upload size={14} /> קובץ נוכחי: {editing.file_name}
