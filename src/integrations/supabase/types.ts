@@ -9,7 +9,7 @@ export type Json =
 export type SubscriptionTier = "free" | "basic" | "premium" | "vip";
 export type CourseCategory = "business" | "ai" | "clinic_growth";
 export type AppRole = "admin" | "moderator" | "user";
-export type ResourceType = "document" | "presentation" | "pdf" | "other";
+export type ResourceType = "video" | "document" | "presentation" | "pdf" | "other";
 
 export interface Database {
   public: {

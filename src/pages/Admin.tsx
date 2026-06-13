@@ -11,18 +11,9 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CATEGORY_LABELS, TIER_LABELS } from "@/lib/constants";
 import { CourseFormDialog, type Course } from "@/components/admin/CourseFormDialog";
-import { VideoManagerDialog } from "@/components/admin/VideoManagerDialog";
 import { ResourceManagerDialog } from "@/components/admin/ResourceManagerDialog";
 import { UsersManager } from "@/components/admin/UsersManager";
-import {
-  Loader2,
-  Plus,
-  Pencil,
-  Trash2,
-  Video as VideoIcon,
-  FileText,
-  ShieldAlert,
-} from "lucide-react";
+import { Loader2, Plus, Pencil, Trash2, FileText, ShieldAlert } from "lucide-react";
 
 const Admin = () => {
   const { user, isAdmin, isLoading: authLoading } = useAuth();
@@ -32,8 +23,6 @@ const Admin = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [formOpen, setFormOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
-  const [videoCourse, setVideoCourse] = useState<Course | null>(null);
-  const [videoDialogOpen, setVideoDialogOpen] = useState(false);
   const [resourceCourse, setResourceCourse] = useState<Course | null>(null);
   const [resourceDialogOpen, setResourceDialogOpen] = useState(false);
 
@@ -59,11 +48,6 @@ const Admin = () => {
   const openEdit = (course: Course) => {
     setEditingCourse(course);
     setFormOpen(true);
-  };
-
-  const openVideos = (course: Course) => {
-    setVideoCourse(course);
-    setVideoDialogOpen(true);
   };
 
   const openResources = (course: Course) => {
@@ -184,19 +168,10 @@ const Admin = () => {
                         variant="outline"
                         size="sm"
                         className="gap-1"
-                        onClick={() => openVideos(course)}
-                      >
-                        <VideoIcon size={16} />
-                        סרטונים
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="gap-1"
                         onClick={() => openResources(course)}
                       >
                         <FileText size={16} />
-                        משאבים
+                        תוכן ומשאבים
                       </Button>
                       <Button variant="ghost" size="icon" onClick={() => openEdit(course)}>
                         <Pencil size={16} />
@@ -228,11 +203,6 @@ const Admin = () => {
         onOpenChange={setFormOpen}
         course={editingCourse}
         onSaved={fetchCourses}
-      />
-      <VideoManagerDialog
-        open={videoDialogOpen}
-        onOpenChange={setVideoDialogOpen}
-        course={videoCourse}
       />
       <ResourceManagerDialog
         open={resourceDialogOpen}

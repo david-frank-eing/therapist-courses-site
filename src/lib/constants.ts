@@ -27,6 +27,7 @@ export const TIER_LABELS: Record<SubscriptionTier, string> = {
 };
 
 export const RESOURCE_TYPE_OPTIONS: { value: ResourceType; label: string }[] = [
+  { value: "video", label: "וידאו" },
   { value: "document", label: "מסמך" },
   { value: "presentation", label: "מצגת" },
   { value: "pdf", label: "PDF" },
@@ -34,6 +35,7 @@ export const RESOURCE_TYPE_OPTIONS: { value: ResourceType; label: string }[] = [
 ];
 
 export const RESOURCE_TYPE_LABELS: Record<ResourceType, string> = {
+  video: "וידאו",
   document: "מסמך",
   presentation: "מצגת",
   pdf: "PDF",

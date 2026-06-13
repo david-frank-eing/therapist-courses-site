@@ -45,6 +45,7 @@ interface ResourceFormState {
   title: string;
   description: string;
   type: ResourceType;
+  url: string;
   min_tier: SubscriptionTier;
   order_index: string;
   is_published: boolean;
@@ -53,7 +54,8 @@ interface ResourceFormState {
 const emptyForm: ResourceFormState = {
   title: "",
   description: "",
-  type: "document",
+  type: "video",
+  url: "",
   min_tier: "free",
   order_index: "0",
   is_published: false,
@@ -106,6 +108,7 @@ export const ResourceManagerDialog = ({
       title: resource.title ?? "",
       description: resource.description ?? "",
       type: resource.type,
+      url: resource.url ?? "",
       min_tier: resource.min_tier,
       order_index: resource.order_index != null ? String(resource.order_index) : "0",
       is_published: !!resource.is_published,
@@ -122,8 +125,13 @@ export const ResourceManagerDialog = ({
       toast({ title: "שגיאה", description: "כותרת היא שדה חובה", variant: "destructive" });
       return;
     }
-    if (!editing && !file) {
-      toast({ title: "שגיאה", description: "יש לבחור קובץ להעלאה", variant: "destructive" });
+    const hasUrl = !!form.url.trim();
+    if (!editing && !file && !hasUrl) {
+      toast({
+        title: "שגיאה",
+        description: "יש לבחור קובץ להעלאה או להדביק קישור (לסרטוני יוטיוב/וימאו)",
+        variant: "destructive",
+      });
       return;
     }
     const MAX_SIZE = 50 * 1024 * 1024; // 50MB — Supabase free-tier per-file limit
@@ -166,6 +174,7 @@ export const ResourceManagerDialog = ({
       type: form.type,
       file_path,
       file_name,
+      url: form.url.trim() || null,
       min_tier: form.min_tier,
       order_index: form.order_index ? Number(form.order_index) : 0,
       is_published: form.is_published,
@@ -212,9 +221,10 @@ export const ResourceManagerDialog = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" dir="rtl">
         <DialogHeader>
-          <DialogTitle>משאבים — {course?.title}</DialogTitle>
+          <DialogTitle>תוכן ומשאבים — {course?.title}</DialogTitle>
           <DialogDescription>
-            מסמכים, מצגות וקבצים שניתן להוריד בדף הקורס (בכפוף לרמת המנוי).
+            סרטונים (קישור יוטיוב/וימאו), מסמכים, מצגות וקבצים. וידאו ינוגן בדף הקורס,
+            השאר ניתן להורדה — הכל בכפוף לרמת המנוי.
           </DialogDescription>
         </DialogHeader>
 
@@ -255,11 +265,15 @@ export const ResourceManagerDialog = ({
                             </Badge>
                           )}
                         </div>
-                        {resource.file_name && (
+                        {resource.file_name ? (
                           <p className="text-sm text-muted-foreground truncate">
                             {resource.file_name}
                           </p>
-                        )}
+                        ) : resource.url ? (
+                          <p className="text-sm text-muted-foreground truncate" dir="ltr">
+                            {resource.url}
+                          </p>
+                        ) : null}
                       </div>
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
@@ -311,23 +325,37 @@ export const ResourceManagerDialog = ({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="r_file">
-                קובץ {editing ? "(השאר ריק כדי לשמור את הקיים)" : "*"}
-              </Label>
+              <Label htmlFor="r_file">קובץ</Label>
               <Input
                 id="r_file"
                 type="file"
                 onChange={(e) => setFile(e.target.files?.[0] ?? null)}
               />
               <p className="text-xs text-muted-foreground">
-                כל סוגי הקבצים הנפוצים נתמכים — מסמכים, מצגות, גיליונות, PDF, תמונות,
-                אודיו, וידאו וארכיונים (ZIP). עד 50MB לקובץ.
+                העלה קובץ (מסמך, מצגת, PDF, תמונה, אודיו, וידאו, ZIP — עד 50MB)
+                <strong> או </strong>
+                הדבק קישור למטה (מומלץ לסרטונים).
               </p>
               {editing?.file_name && !file && (
                 <p className="text-sm text-muted-foreground flex items-center gap-1">
                   <Upload size={14} /> קובץ נוכחי: {editing.file_name}
                 </p>
               )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="r_url">קישור (URL)</Label>
+              <Input
+                id="r_url"
+                type="url"
+                dir="ltr"
+                placeholder="https://www.youtube.com/watch?v=..."
+                value={form.url}
+                onChange={(e) => setForm({ ...form, url: e.target.value })}
+              />
+              <p className="text-xs text-muted-foreground">
+                לסרטונים: הדבק קישור יוטיוב/וימאו — הם ינוגנו ישירות בדף הקורס.
+              </p>
             </div>
 
             <div className="grid grid-cols-3 gap-4">
