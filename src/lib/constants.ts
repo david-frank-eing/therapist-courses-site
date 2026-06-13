@@ -1,4 +1,9 @@
-import type { CourseCategory, SubscriptionTier, ResourceType } from "@/integrations/supabase/types";
+import type {
+  CourseCategory,
+  SubscriptionTier,
+  ResourceType,
+  ListingCategory,
+} from "@/integrations/supabase/types";
 
 export const CATEGORY_OPTIONS: { value: CourseCategory; label: string }[] = [
   { value: "business", label: "מידע עסקי" },
@@ -40,4 +45,18 @@ export const RESOURCE_TYPE_LABELS: Record<ResourceType, string> = {
   presentation: "מצגת",
   pdf: "PDF",
   other: "אחר",
+};
+
+export const LISTING_CATEGORY_OPTIONS: { value: ListingCategory; label: string }[] = [
+  { value: "clinic_room", label: "השכרת חדר קליניקה" },
+  { value: "jobs", label: "דרושים / שיתופי פעולה" },
+  { value: "workshops", label: "סדנאות ואירועים" },
+  { value: "equipment", label: "ציוד למכירה" },
+];
+
+export const LISTING_CATEGORY_LABELS: Record<ListingCategory, string> = {
+  clinic_room: "השכרת חדר קליניקה",
+  jobs: "דרושים / שיתופי פעולה",
+  workshops: "סדנאות ואירועים",
+  equipment: "ציוד למכירה",
 };

@@ -15,6 +15,7 @@ import { Badge } from "./ui/badge";
 const navLinks = [
   { label: "דף הבית", href: "/" },
   { label: "קורסים", href: "/courses" },
+  { label: "לוח מודעות", href: "/board" },
   { label: "אודות", href: "#about" },
   { label: "צור קשר", href: "#contact" },
 ];

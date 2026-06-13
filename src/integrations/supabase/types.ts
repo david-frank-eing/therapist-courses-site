@@ -10,6 +10,7 @@ export type SubscriptionTier = "free" | "basic" | "premium" | "vip";
 export type CourseCategory = "business" | "ai" | "clinic_growth";
 export type AppRole = "admin" | "moderator" | "user";
 export type ResourceType = "video" | "document" | "presentation" | "pdf" | "other";
+export type ListingCategory = "clinic_room" | "jobs" | "workshops" | "equipment";
 
 export interface Database {
   public: {
@@ -248,6 +249,64 @@ export interface Database {
           }
         ];
       };
+      listings: {
+        Row: {
+          id: string;
+          user_id: string;
+          title: string;
+          description: string;
+          category: ListingCategory;
+          price: string | null;
+          city: string | null;
+          image_path: string | null;
+          contact_name: string | null;
+          contact_phone: string | null;
+          contact_email: string | null;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          title: string;
+          description: string;
+          category: ListingCategory;
+          price?: string | null;
+          city?: string | null;
+          image_path?: string | null;
+          contact_name?: string | null;
+          contact_phone?: string | null;
+          contact_email?: string | null;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          title?: string;
+          description?: string;
+          category?: ListingCategory;
+          price?: string | null;
+          city?: string | null;
+          image_path?: string | null;
+          contact_name?: string | null;
+          contact_phone?: string | null;
+          contact_email?: string | null;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "listings_user_id_fkey";
+            columns: ["user_id"];
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -261,6 +320,7 @@ export interface Database {
       course_category: CourseCategory;
       app_role: AppRole;
       resource_type: ResourceType;
+      listing_category: ListingCategory;
     };
     CompositeTypes: Record<string, never>;
   };

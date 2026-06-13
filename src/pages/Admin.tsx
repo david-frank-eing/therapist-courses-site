@@ -13,6 +13,7 @@ import { CATEGORY_LABELS, TIER_LABELS } from "@/lib/constants";
 import { CourseFormDialog, type Course } from "@/components/admin/CourseFormDialog";
 import { ResourceManagerDialog } from "@/components/admin/ResourceManagerDialog";
 import { UsersManager } from "@/components/admin/UsersManager";
+import { ListingsManager } from "@/components/admin/ListingsManager";
 import { Loader2, Plus, Pencil, Trash2, FileText, ShieldAlert } from "lucide-react";
 
 const Admin = () => {
@@ -108,6 +109,7 @@ const Admin = () => {
         <Tabs defaultValue="courses" className="w-full">
           <TabsList className="mb-6">
             <TabsTrigger value="courses">קורסים</TabsTrigger>
+            <TabsTrigger value="listings">מודעות</TabsTrigger>
             <TabsTrigger value="users">משתמשים</TabsTrigger>
           </TabsList>
 
@@ -189,6 +191,10 @@ const Admin = () => {
                 ))}
               </div>
             )}
+          </TabsContent>
+
+          <TabsContent value="listings">
+            <ListingsManager />
           </TabsContent>
 
           <TabsContent value="users">
