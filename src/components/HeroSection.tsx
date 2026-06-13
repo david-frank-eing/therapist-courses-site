@@ -1,8 +1,10 @@
 import { Button } from "./ui/button";
 import { Link } from "react-router-dom";
 import { Play, BookOpen, Briefcase, Bot, TrendingUp } from "lucide-react";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 
 export const HeroSection = () => {
+  const s = useSiteSettings();
   return (
     <section className="relative py-20 md:py-32 overflow-hidden" id="home">
       {/* Background Elements */}
@@ -14,17 +16,15 @@ export const HeroSection = () => {
       <div className="container relative">
         <div className="max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 bg-secondary/50 rounded-full px-4 py-2 mb-6 animate-fade-in">
-            <span className="text-primary font-medium">🎓 פלטפורמת הקורסים למטפלים</span>
+            <span className="text-primary font-medium">{s.hero_badge}</span>
           </div>
 
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6 leading-tight animate-fade-in">
-            הרחיבו את
-            <span className="text-primary"> העסק </span>
-            והקליניקה שלכם
+            {s.hero_title}
           </h1>
 
-          <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto animate-fade-in">
-            למדו כיצד לנהל עסק מצליח, להשתמש בכלי AI מתקדמים, ולמלא את הקליניקה שלכם במטופלים חדשים
+          <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto animate-fade-in whitespace-pre-wrap">
+            {s.hero_subtitle}
           </p>
 
           <div className="flex flex-wrap justify-center gap-4 mb-12 animate-fade-in">

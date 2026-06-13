@@ -307,6 +307,57 @@ export interface Database {
           }
         ];
       };
+      site_settings: {
+        Row: {
+          id: number;
+          contact_email: string | null;
+          contact_phone: string | null;
+          contact_address: string | null;
+          social_facebook: string | null;
+          social_instagram: string | null;
+          social_linkedin: string | null;
+          social_youtube: string | null;
+          about_title: string | null;
+          about_text: string | null;
+          hero_badge: string | null;
+          hero_title: string | null;
+          hero_subtitle: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          id?: number;
+          contact_email?: string | null;
+          contact_phone?: string | null;
+          contact_address?: string | null;
+          social_facebook?: string | null;
+          social_instagram?: string | null;
+          social_linkedin?: string | null;
+          social_youtube?: string | null;
+          about_title?: string | null;
+          about_text?: string | null;
+          hero_badge?: string | null;
+          hero_title?: string | null;
+          hero_subtitle?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          id?: number;
+          contact_email?: string | null;
+          contact_phone?: string | null;
+          contact_address?: string | null;
+          social_facebook?: string | null;
+          social_instagram?: string | null;
+          social_linkedin?: string | null;
+          social_youtube?: string | null;
+          about_title?: string | null;
+          about_text?: string | null;
+          hero_badge?: string | null;
+          hero_title?: string | null;
+          hero_subtitle?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {

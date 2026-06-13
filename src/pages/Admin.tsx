@@ -14,6 +14,7 @@ import { CourseFormDialog, type Course } from "@/components/admin/CourseFormDial
 import { ResourceManagerDialog } from "@/components/admin/ResourceManagerDialog";
 import { UsersManager } from "@/components/admin/UsersManager";
 import { ListingsManager } from "@/components/admin/ListingsManager";
+import { SiteSettingsManager } from "@/components/admin/SiteSettingsManager";
 import { Loader2, Plus, Pencil, Trash2, FileText, ShieldAlert } from "lucide-react";
 
 const Admin = () => {
@@ -111,6 +112,7 @@ const Admin = () => {
             <TabsTrigger value="courses">קורסים</TabsTrigger>
             <TabsTrigger value="listings">מודעות</TabsTrigger>
             <TabsTrigger value="users">משתמשים</TabsTrigger>
+            <TabsTrigger value="settings">הגדרות אתר</TabsTrigger>
           </TabsList>
 
           <TabsContent value="courses">
@@ -199,6 +201,10 @@ const Admin = () => {
 
           <TabsContent value="users">
             <UsersManager />
+          </TabsContent>
+
+          <TabsContent value="settings">
+            <SiteSettingsManager />
           </TabsContent>
         </Tabs>
       </main>
