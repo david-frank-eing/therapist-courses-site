@@ -11,6 +11,7 @@ export type CourseCategory = "business" | "ai" | "clinic_growth";
 export type AppRole = "admin" | "moderator" | "user";
 export type ResourceType = "video" | "document" | "presentation" | "pdf" | "other";
 export type ListingCategory = "clinic_room" | "jobs" | "workshops" | "equipment";
+export type ClientStatus = "lead" | "active" | "inactive";
 
 export interface Database {
   public: {
@@ -307,6 +308,49 @@ export interface Database {
           }
         ];
       };
+      clients: {
+        Row: {
+          id: string;
+          user_id: string;
+          full_name: string;
+          phone: string | null;
+          email: string | null;
+          status: ClientStatus;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          full_name: string;
+          phone?: string | null;
+          email?: string | null;
+          status?: ClientStatus;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          full_name?: string;
+          phone?: string | null;
+          email?: string | null;
+          status?: ClientStatus;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "clients_user_id_fkey";
+            columns: ["user_id"];
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
       site_settings: {
         Row: {
           id: number;
@@ -372,6 +416,7 @@ export interface Database {
       app_role: AppRole;
       resource_type: ResourceType;
       listing_category: ListingCategory;
+      client_status: ClientStatus;
     };
     CompositeTypes: Record<string, never>;
   };

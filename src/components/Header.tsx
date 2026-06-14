@@ -68,6 +68,14 @@ export const Header = () => {
               </a>
             )
           ))}
+          {user && (
+            <Link
+              to="/crm"
+              className="px-4 py-2 text-muted-foreground hover:text-primary transition-smooth rounded-lg hover:bg-accent"
+            >
+              המטופלים שלי
+            </Link>
+          )}
           {isAdmin && (
             <Link
               to="/admin"
@@ -159,6 +167,15 @@ export const Header = () => {
                 </a>
               )
             ))}
+            {user && (
+              <Link
+                to="/crm"
+                onClick={() => setIsMenuOpen(false)}
+                className="px-4 py-3 text-foreground hover:text-primary hover:bg-accent rounded-lg transition-smooth"
+              >
+                המטופלים שלי
+              </Link>
+            )}
             {isAdmin && (
               <Link
                 to="/admin"

@@ -3,6 +3,7 @@ import type {
   SubscriptionTier,
   ResourceType,
   ListingCategory,
+  ClientStatus,
 } from "@/integrations/supabase/types";
 
 export const CATEGORY_OPTIONS: { value: CourseCategory; label: string }[] = [
@@ -59,4 +60,16 @@ export const LISTING_CATEGORY_LABELS: Record<ListingCategory, string> = {
   jobs: "דרושים / שיתופי פעולה",
   workshops: "סדנאות ואירועים",
   equipment: "ציוד למכירה",
+};
+
+export const CLIENT_STATUS_OPTIONS: { value: ClientStatus; label: string }[] = [
+  { value: "active", label: "פעיל" },
+  { value: "lead", label: "ליד" },
+  { value: "inactive", label: "לא פעיל" },
+];
+
+export const CLIENT_STATUS_LABELS: Record<ClientStatus, string> = {
+  active: "פעיל",
+  lead: "ליד",
+  inactive: "לא פעיל",
 };
