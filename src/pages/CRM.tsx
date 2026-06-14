@@ -21,6 +21,7 @@ import {
   Search,
   Lock,
   Users,
+  Calendar,
 } from "lucide-react";
 
 const statusBadgeClass: Record<string, string> = {
@@ -245,6 +246,12 @@ const CRM = () => {
                       </a>
                     )}
                   </div>
+                  {client.last_visit && (
+                    <p className="flex items-center gap-1 mt-1 text-sm text-muted-foreground">
+                      <Calendar size={14} />
+                      ביקור אחרון: {new Date(client.last_visit).toLocaleDateString("he-IL")}
+                    </p>
+                  )}
                   {client.notes && (
                     <p className="text-sm text-muted-foreground line-clamp-1 mt-1">
                       {client.notes}

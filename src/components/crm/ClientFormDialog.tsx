@@ -37,6 +37,7 @@ interface FormState {
   phone: string;
   email: string;
   status: ClientStatus;
+  last_visit: string;
   notes: string;
 }
 
@@ -45,6 +46,7 @@ const emptyForm: FormState = {
   phone: "",
   email: "",
   status: "active",
+  last_visit: "",
   notes: "",
 };
 
@@ -67,6 +69,7 @@ export const ClientFormDialog = ({
         phone: client.phone ?? "",
         email: client.email ?? "",
         status: client.status,
+        last_visit: client.last_visit ?? "",
         notes: client.notes ?? "",
       });
     } else {
@@ -89,6 +92,7 @@ export const ClientFormDialog = ({
       phone: form.phone.trim() || null,
       email: form.email.trim() || null,
       status: form.status,
+      last_visit: form.last_visit || null,
       notes: form.notes.trim() || null,
     };
 
@@ -161,6 +165,16 @@ export const ClientFormDialog = ({
               dir="ltr"
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="c_last_visit">ביקור אחרון</Label>
+            <Input
+              id="c_last_visit"
+              type="date"
+              value={form.last_visit}
+              onChange={(e) => setForm({ ...form, last_visit: e.target.value })}
             />
           </div>
 

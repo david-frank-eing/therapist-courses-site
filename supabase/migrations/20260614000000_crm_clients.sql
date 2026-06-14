@@ -29,6 +29,7 @@ CREATE TABLE public.clients (
   phone TEXT,
   email TEXT,
   status client_status NOT NULL DEFAULT 'active',
+  last_visit DATE,
   notes TEXT,
   created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
   updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
