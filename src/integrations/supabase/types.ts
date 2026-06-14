@@ -12,6 +12,7 @@ export type AppRole = "admin" | "moderator" | "user";
 export type ResourceType = "video" | "document" | "presentation" | "pdf" | "other";
 export type ListingCategory = "clinic_room" | "jobs" | "workshops" | "equipment";
 export type ClientStatus = "lead" | "active" | "inactive";
+export type SessionType = "initial" | "followup" | "group" | "phone" | "other";
 
 export interface Database {
   public: {
@@ -354,6 +355,49 @@ export interface Database {
           }
         ];
       };
+      sessions: {
+        Row: {
+          id: string;
+          user_id: string;
+          client_id: string;
+          date: string;
+          type: SessionType;
+          duration_minutes: number | null;
+          price: number | null;
+          notes: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          client_id: string;
+          date: string;
+          type?: SessionType;
+          duration_minutes?: number | null;
+          price?: number | null;
+          notes?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          client_id?: string;
+          date?: string;
+          type?: SessionType;
+          duration_minutes?: number | null;
+          price?: number | null;
+          notes?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "sessions_client_id_fkey";
+            columns: ["client_id"];
+            referencedRelation: "clients";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
       site_settings: {
         Row: {
           id: number;
@@ -420,6 +464,7 @@ export interface Database {
       resource_type: ResourceType;
       listing_category: ListingCategory;
       client_status: ClientStatus;
+      session_type: SessionType;
     };
     CompositeTypes: Record<string, never>;
   };

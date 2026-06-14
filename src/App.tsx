@@ -12,6 +12,7 @@ import CoursePage from "./pages/CoursePage";
 import Board from "./pages/Board";
 import ListingPage from "./pages/ListingPage";
 import CRM from "./pages/CRM";
+import ClientDetail from "./pages/ClientDetail";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
@@ -33,6 +34,7 @@ const App = () => (
             <Route path="/board" element={<Board />} />
             <Route path="/board/:id" element={<ListingPage />} />
             <Route path="/crm" element={<CRM />} />
+            <Route path="/crm/:id" element={<ClientDetail />} />
             <Route path="/admin" element={<Admin />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

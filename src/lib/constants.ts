@@ -4,6 +4,7 @@ import type {
   ResourceType,
   ListingCategory,
   ClientStatus,
+  SessionType,
 } from "@/integrations/supabase/types";
 
 export const CATEGORY_OPTIONS: { value: CourseCategory; label: string }[] = [
@@ -72,4 +73,20 @@ export const CLIENT_STATUS_LABELS: Record<ClientStatus, string> = {
   active: "פעיל",
   lead: "ליד",
   inactive: "לא פעיל",
+};
+
+export const SESSION_TYPE_OPTIONS: { value: SessionType; label: string }[] = [
+  { value: "initial", label: "פגישת היכרות" },
+  { value: "followup", label: "פגישת המשך" },
+  { value: "group", label: "קבוצה" },
+  { value: "phone", label: "שיחת טלפון" },
+  { value: "other", label: "אחר" },
+];
+
+export const SESSION_TYPE_LABELS: Record<SessionType, string> = {
+  initial: "פגישת היכרות",
+  followup: "פגישת המשך",
+  group: "קבוצה",
+  phone: "שיחת טלפון",
+  other: "אחר",
 };

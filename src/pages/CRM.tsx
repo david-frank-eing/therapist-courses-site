@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -22,6 +22,7 @@ import {
   Lock,
   Users,
   Calendar,
+  Download,
 } from "lucide-react";
 
 const statusBadgeClass: Record<string, string> = {
@@ -30,9 +31,32 @@ const statusBadgeClass: Record<string, string> = {
   inactive: "",
 };
 
+const exportCSV = (clients: Client[]) => {
+  const headers = ["שם", "טלפון", "אימייל", "סטטוס", "ביקור אחרון", "הערות"];
+  const rows = clients.map((c) => [
+    c.full_name,
+    c.phone ?? "",
+    c.email ?? "",
+    CLIENT_STATUS_LABELS[c.status],
+    c.last_visit ? new Date(c.last_visit).toLocaleDateString("he-IL") : "",
+    (c.notes ?? "").replace(/\n/g, " "),
+  ]);
+  const csv = [headers, ...rows]
+    .map((row) => row.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","))
+    .join("\n");
+  const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `מטופלים-${new Date().toISOString().split("T")[0]}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
 const CRM = () => {
   const { user, isLoading: authLoading, canAccessTier } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const [clients, setClients] = useState<Client[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -156,10 +180,18 @@ const CRM = () => {
               אזור פרטי ומאובטח — רק אתה רואה את הנתונים האלה.
             </p>
           </div>
-          <Button className="gap-1 shrink-0" onClick={openCreate}>
-            <Plus size={18} />
-            מטופל חדש
-          </Button>
+          <div className="flex items-center gap-2 shrink-0">
+            {clients.length > 0 && (
+              <Button variant="outline" className="gap-1" onClick={() => exportCSV(filtered)}>
+                <Download size={16} />
+                ייצוא CSV
+              </Button>
+            )}
+            <Button className="gap-1" onClick={openCreate}>
+              <Plus size={18} />
+              מטופל חדש
+            </Button>
+          </div>
         </div>
 
         {/* Stats */}
@@ -215,7 +247,8 @@ const CRM = () => {
             {filtered.map((client) => (
               <Card
                 key={client.id}
-                className="flex flex-col md:flex-row md:items-center justify-between gap-3 p-4"
+                className="flex flex-col md:flex-row md:items-center justify-between gap-3 p-4 cursor-pointer hover:bg-muted/40 transition-colors"
+                onClick={() => navigate(`/crm/${client.id}`)}
               >
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
@@ -230,6 +263,7 @@ const CRM = () => {
                         href={`tel:${client.phone}`}
                         className="flex items-center gap-1 hover:text-primary"
                         dir="ltr"
+                        onClick={(e) => e.stopPropagation()}
                       >
                         <Phone size={14} />
                         {client.phone}
@@ -240,6 +274,7 @@ const CRM = () => {
                         href={`mailto:${client.email}`}
                         className="flex items-center gap-1 hover:text-primary"
                         dir="ltr"
+                        onClick={(e) => e.stopPropagation()}
                       >
                         <Mail size={14} />
                         {client.email}
@@ -260,14 +295,18 @@ const CRM = () => {
                 </div>
 
                 <div className="flex items-center gap-1 shrink-0">
-                  <Button variant="ghost" size="icon" onClick={() => openEdit(client)}>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={(e) => { e.stopPropagation(); openEdit(client); }}
+                  >
                     <Pencil size={16} />
                   </Button>
                   <Button
                     variant="ghost"
                     size="icon"
                     className="text-destructive"
-                    onClick={() => handleDelete(client)}
+                    onClick={(e) => { e.stopPropagation(); handleDelete(client); }}
                   >
                     <Trash2 size={16} />
                   </Button>
