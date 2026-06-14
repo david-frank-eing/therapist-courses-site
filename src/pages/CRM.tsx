@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ClientFormDialog, type Client } from "@/components/crm/ClientFormDialog";
+import { ImportDialog } from "@/components/crm/ImportDialog";
 import { CLIENT_STATUS_LABELS } from "@/lib/constants";
 import {
   Loader2,
@@ -23,6 +24,7 @@ import {
   Users,
   Calendar,
   Download,
+  Upload,
 } from "lucide-react";
 
 const statusBadgeClass: Record<string, string> = {
@@ -63,6 +65,7 @@ const CRM = () => {
   const [search, setSearch] = useState("");
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Client | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
 
   const hasAccess = !!user && canAccessTier("premium");
 
@@ -181,6 +184,10 @@ const CRM = () => {
             </p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
+            <Button variant="outline" className="gap-1" onClick={() => setImportOpen(true)}>
+              <Upload size={16} />
+              ייבוא CSV
+            </Button>
             {clients.length > 0 && (
               <Button variant="outline" className="gap-1" onClick={() => exportCSV(filtered)}>
                 <Download size={16} />
@@ -323,6 +330,12 @@ const CRM = () => {
         onOpenChange={setFormOpen}
         client={editing}
         onSaved={fetchClients}
+      />
+
+      <ImportDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        onImported={fetchClients}
       />
     </div>
   );
