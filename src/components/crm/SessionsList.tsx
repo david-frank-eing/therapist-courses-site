@@ -7,7 +7,7 @@ import { SessionFormDialog } from "./SessionFormDialog";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Pencil, Trash2, Clock, Banknote, CalendarDays } from "lucide-react";
+import { Plus, Pencil, Trash2, Clock, Banknote, CalendarDays, CheckCircle2, AlertCircle } from "lucide-react";
 
 interface SessionsListProps {
   clientId: string;
@@ -19,16 +19,36 @@ export const SessionsList = ({ clientId, sessions, onRefresh }: SessionsListProp
   const { toast } = useToast();
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Session | null>(null);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
 
   const stats = useMemo(() => {
     const total = sessions.length;
-    const revenue = sessions.reduce((sum, s) => sum + (s.price ?? 0), 0);
+    const paidRevenue = sessions
+      .filter((s) => s.is_paid && s.price != null)
+      .reduce((sum, s) => sum + (s.price ?? 0), 0);
+    const unpaidRevenue = sessions
+      .filter((s) => !s.is_paid && s.price != null)
+      .reduce((sum, s) => sum + (s.price ?? 0), 0);
     const minutes = sessions.reduce((sum, s) => sum + (s.duration_minutes ?? 0), 0);
-    return { total, revenue, minutes };
+    return { total, paidRevenue, unpaidRevenue, minutes };
   }, [sessions]);
 
   const openCreate = () => { setEditing(null); setFormOpen(true); };
   const openEdit = (s: Session) => { setEditing(s); setFormOpen(true); };
+
+  const togglePaid = async (s: Session) => {
+    setTogglingId(s.id);
+    const { error } = await supabase
+      .from("sessions")
+      .update({ is_paid: !s.is_paid })
+      .eq("id", s.id);
+    setTogglingId(null);
+    if (error) {
+      toast({ title: "עדכון נכשל", description: error.message, variant: "destructive" });
+      return;
+    }
+    onRefresh();
+  };
 
   const handleDelete = async (s: Session) => {
     if (!confirm(`למחוק פגישה מ-${new Date(s.date).toLocaleDateString("he-IL")}?`)) return;
@@ -55,24 +75,39 @@ export const SessionsList = ({ clientId, sessions, onRefresh }: SessionsListProp
 
       {/* Stats */}
       {sessions.length > 0 && (
-        <div className="grid grid-cols-3 gap-3 mb-4">
-          <Card className="p-3 text-center">
-            <p className="text-xl font-bold text-foreground">{stats.total}</p>
-            <p className="text-xs text-muted-foreground">פגישות</p>
-          </Card>
-          <Card className="p-3 text-center">
-            <p className="text-xl font-bold text-primary">
-              {stats.revenue > 0 ? `₪${stats.revenue.toLocaleString()}` : "—"}
-            </p>
-            <p className="text-xs text-muted-foreground">סה"כ הכנסה</p>
-          </Card>
-          <Card className="p-3 text-center">
-            <p className="text-xl font-bold text-foreground">
-              {stats.minutes > 0 ? `${Math.round(stats.minutes / 60)}ש'` : "—"}
-            </p>
-            <p className="text-xs text-muted-foreground">שעות טיפול</p>
-          </Card>
-        </div>
+        <>
+          <div className="grid grid-cols-3 gap-3 mb-3">
+            <Card className="p-3 text-center">
+              <p className="text-xl font-bold text-foreground">{stats.total}</p>
+              <p className="text-xs text-muted-foreground">פגישות</p>
+            </Card>
+            <Card className="p-3 text-center">
+              <p className="text-xl font-bold text-green-600">
+                {stats.paidRevenue > 0 ? `₪${stats.paidRevenue.toLocaleString()}` : "—"}
+              </p>
+              <p className="text-xs text-muted-foreground">שולם</p>
+            </Card>
+            <Card className="p-3 text-center">
+              <p className="text-xl font-bold text-foreground">
+                {stats.minutes > 0 ? `${Math.round(stats.minutes / 60)}ש'` : "—"}
+              </p>
+              <p className="text-xs text-muted-foreground">שעות טיפול</p>
+            </Card>
+          </div>
+
+          {/* Outstanding debt banner */}
+          {stats.unpaidRevenue > 0 && (
+            <div className="flex items-center gap-2 rounded-lg bg-amber-50 border border-amber-200 px-4 py-2.5 mb-4 text-sm">
+              <AlertCircle size={15} className="text-amber-600 shrink-0" />
+              <span className="text-amber-800 font-medium">
+                חוב פתוח: ₪{stats.unpaidRevenue.toLocaleString()}
+              </span>
+              <span className="text-amber-600 mr-1">
+                ({sessions.filter((s) => !s.is_paid && s.price).length} פגישות לא שולמו)
+              </span>
+            </div>
+          )}
+        </>
       )}
 
       {sorted.length === 0 ? (
@@ -99,6 +134,18 @@ export const SessionsList = ({ clientId, sessions, onRefresh }: SessionsListProp
                     })}
                   </span>
                   <Badge variant="secondary">{SESSION_TYPE_LABELS[s.type]}</Badge>
+                  {s.price != null && (
+                    <Badge
+                      variant="secondary"
+                      className={
+                        s.is_paid
+                          ? "bg-green-50 text-green-700 hover:bg-green-50"
+                          : "bg-amber-50 text-amber-700 hover:bg-amber-50"
+                      }
+                    >
+                      {s.is_paid ? "שולם" : "טרם שולם"}
+                    </Badge>
+                  )}
                 </div>
                 <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
                   {s.duration_minutes && (
@@ -119,6 +166,18 @@ export const SessionsList = ({ clientId, sessions, onRefresh }: SessionsListProp
                 )}
               </div>
               <div className="flex items-center gap-1 shrink-0">
+                {s.price != null && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    disabled={togglingId === s.id}
+                    title={s.is_paid ? "סמן כלא שולם" : "סמן כשולם"}
+                    onClick={() => togglePaid(s)}
+                    className={s.is_paid ? "text-green-600 hover:text-green-700" : "text-amber-500 hover:text-amber-600"}
+                  >
+                    <CheckCircle2 size={17} />
+                  </Button>
+                )}
                 <Button variant="ghost" size="icon" onClick={() => openEdit(s)}>
                   <Pencil size={15} />
                 </Button>

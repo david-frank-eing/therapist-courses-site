@@ -365,6 +365,7 @@ export interface Database {
           duration_minutes: number | null;
           price: number | null;
           notes: string | null;
+          is_paid: boolean;
           created_at: string;
         };
         Insert: {
@@ -376,6 +377,7 @@ export interface Database {
           duration_minutes?: number | null;
           price?: number | null;
           notes?: string | null;
+          is_paid?: boolean;
           created_at?: string;
         };
         Update: {
@@ -387,6 +389,7 @@ export interface Database {
           duration_minutes?: number | null;
           price?: number | null;
           notes?: string | null;
+          is_paid?: boolean;
           created_at?: string;
         };
         Relationships: [

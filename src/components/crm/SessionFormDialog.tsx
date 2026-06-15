@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -39,6 +40,7 @@ interface FormState {
   duration_minutes: string;
   price: string;
   notes: string;
+  is_paid: boolean;
 }
 
 const today = new Date().toISOString().split("T")[0];
@@ -49,6 +51,7 @@ const emptyForm: FormState = {
   duration_minutes: "50",
   price: "",
   notes: "",
+  is_paid: false,
 };
 
 export const SessionFormDialog = ({
@@ -72,6 +75,7 @@ export const SessionFormDialog = ({
         duration_minutes: session.duration_minutes?.toString() ?? "",
         price: session.price?.toString() ?? "",
         notes: session.notes ?? "",
+        is_paid: session.is_paid,
       });
     } else {
       setForm(emptyForm);
@@ -91,6 +95,7 @@ export const SessionFormDialog = ({
       duration_minutes: form.duration_minutes ? parseInt(form.duration_minutes) : null,
       price: form.price ? parseFloat(form.price) : null,
       notes: form.notes.trim() || null,
+      is_paid: form.is_paid,
     };
 
     const { error } = session
@@ -180,6 +185,17 @@ export const SessionFormDialog = ({
               value={form.notes}
               onChange={(e) => setForm({ ...form, notes: e.target.value })}
             />
+          </div>
+
+          <div className="flex items-center gap-2 rounded-lg border p-3">
+            <Checkbox
+              id="s_paid"
+              checked={form.is_paid}
+              onCheckedChange={(v) => setForm({ ...form, is_paid: !!v })}
+            />
+            <Label htmlFor="s_paid" className="cursor-pointer font-medium">
+              הפגישה שולמה
+            </Label>
           </div>
 
           <div className="flex justify-end gap-2">
