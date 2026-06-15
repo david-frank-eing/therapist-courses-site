@@ -29,8 +29,6 @@ interface PreviewRow {
   error?: string;
 }
 
-const VALID_STATUSES: ClientStatus[] = ["active", "lead", "inactive"];
-
 const STATUS_MAP: Record<string, ClientStatus> = {
   פעיל: "active",
   active: "active",
