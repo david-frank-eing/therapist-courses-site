@@ -1,25 +1,45 @@
 import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useWhatsApp } from "@/hooks/useWhatsApp";
 import { SESSION_TYPE_LABELS } from "@/lib/constants";
 import type { Session } from "./SessionFormDialog";
 import { SessionFormDialog } from "./SessionFormDialog";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Pencil, Trash2, Clock, Banknote, CalendarDays, CheckCircle2, AlertCircle } from "lucide-react";
+import { Plus, Pencil, Trash2, Clock, Banknote, CalendarDays, CheckCircle2, AlertCircle, Send } from "lucide-react";
 
 interface SessionsListProps {
   clientId: string;
+  clientName: string;
+  clientPhone: string | null;
   sessions: Session[];
   onRefresh: () => void;
 }
 
-export const SessionsList = ({ clientId, sessions, onRefresh }: SessionsListProps) => {
+export const SessionsList = ({ clientId, clientName, clientPhone, sessions, onRefresh }: SessionsListProps) => {
   const { toast } = useToast();
+  const { sendReminder, isConfigured, sending } = useWhatsApp();
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Session | null>(null);
   const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [sendingId, setSendingId] = useState<string | null>(null);
+
+  const handleSendReminder = async (s: Session) => {
+    if (!clientPhone) {
+      toast({ title: "אין טלפון", description: "למטופל אין מספר טלפון", variant: "destructive" });
+      return;
+    }
+    setSendingId(s.id);
+    const { ok, error } = await sendReminder(clientPhone, clientName, s.date, s.session_time);
+    setSendingId(null);
+    if (!ok) {
+      toast({ title: "שליחה נכשלה", description: error, variant: "destructive" });
+      return;
+    }
+    toast({ title: "תזכורת נשלחה בוואטסאפ ✓" });
+  };
 
   const stats = useMemo(() => {
     const total = sessions.length;
@@ -148,6 +168,11 @@ export const SessionsList = ({ clientId, sessions, onRefresh }: SessionsListProp
                   )}
                 </div>
                 <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+                  {s.session_time && (
+                    <span className="flex items-center gap-1 font-medium text-foreground">
+                      {s.session_time.slice(0, 5)}
+                    </span>
+                  )}
                   {s.duration_minutes && (
                     <span className="flex items-center gap-1">
                       <Clock size={13} />
@@ -166,6 +191,22 @@ export const SessionsList = ({ clientId, sessions, onRefresh }: SessionsListProp
                 )}
               </div>
               <div className="flex items-center gap-1 shrink-0">
+                {isConfigured && clientPhone && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    disabled={sendingId === s.id || sending}
+                    title="שלח תזכורת בוואטסאפ"
+                    onClick={() => handleSendReminder(s)}
+                    className="text-green-600 hover:text-green-700"
+                  >
+                    {sendingId === s.id ? (
+                      <Clock size={15} className="animate-spin" />
+                    ) : (
+                      <Send size={15} />
+                    )}
+                  </Button>
+                )}
                 {s.price != null && (
                   <Button
                     variant="ghost"

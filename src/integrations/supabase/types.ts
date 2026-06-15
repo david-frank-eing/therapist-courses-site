@@ -25,6 +25,9 @@ export interface Database {
           avatar_url: string | null;
           subscription_tier: SubscriptionTier;
           subscription_expires_at: string | null;
+          wa_instance_id: string | null;
+          wa_api_token: string | null;
+          wa_reminder_template: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -35,6 +38,9 @@ export interface Database {
           avatar_url?: string | null;
           subscription_tier?: SubscriptionTier;
           subscription_expires_at?: string | null;
+          wa_instance_id?: string | null;
+          wa_api_token?: string | null;
+          wa_reminder_template?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -45,6 +51,9 @@ export interface Database {
           avatar_url?: string | null;
           subscription_tier?: SubscriptionTier;
           subscription_expires_at?: string | null;
+          wa_instance_id?: string | null;
+          wa_api_token?: string | null;
+          wa_reminder_template?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -366,6 +375,7 @@ export interface Database {
           price: number | null;
           notes: string | null;
           is_paid: boolean;
+          session_time: string | null;
           created_at: string;
         };
         Insert: {
@@ -378,6 +388,7 @@ export interface Database {
           price?: number | null;
           notes?: string | null;
           is_paid?: boolean;
+          session_time?: string | null;
           created_at?: string;
         };
         Update: {
@@ -390,6 +401,7 @@ export interface Database {
           price?: number | null;
           notes?: string | null;
           is_paid?: boolean;
+          session_time?: string | null;
           created_at?: string;
         };
         Relationships: [

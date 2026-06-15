@@ -36,6 +36,7 @@ interface SessionFormDialogProps {
 
 interface FormState {
   date: string;
+  session_time: string;
   type: SessionType;
   duration_minutes: string;
   price: string;
@@ -47,6 +48,7 @@ const today = new Date().toISOString().split("T")[0];
 
 const emptyForm: FormState = {
   date: today,
+  session_time: "",
   type: "followup",
   duration_minutes: "50",
   price: "",
@@ -71,6 +73,7 @@ export const SessionFormDialog = ({
     if (session) {
       setForm({
         date: session.date,
+        session_time: session.session_time?.slice(0, 5) ?? "",
         type: session.type,
         duration_minutes: session.duration_minutes?.toString() ?? "",
         price: session.price?.toString() ?? "",
@@ -91,6 +94,7 @@ export const SessionFormDialog = ({
       user_id: user.id,
       client_id: clientId,
       date: form.date,
+      session_time: form.session_time || null,
       type: form.type,
       duration_minutes: form.duration_minutes ? parseInt(form.duration_minutes) : null,
       price: form.price ? parseFloat(form.price) : null,
@@ -132,6 +136,17 @@ export const SessionFormDialog = ({
               />
             </div>
             <div className="space-y-2">
+              <Label htmlFor="s_time">שעה</Label>
+              <Input
+                id="s_time"
+                type="time"
+                value={form.session_time}
+                onChange={(e) => setForm({ ...form, session_time: e.target.value })}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
               <Label>סוג פגישה</Label>
               <Select
                 value={form.type}
@@ -148,7 +163,6 @@ export const SessionFormDialog = ({
                   ))}
                 </SelectContent>
               </Select>
-            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">

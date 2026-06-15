@@ -10,6 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { ClientFormDialog, type Client } from "@/components/crm/ClientFormDialog";
 import { SessionsList } from "@/components/crm/SessionsList";
+import { WhatsAppSettingsDialog } from "@/components/crm/WhatsAppSettingsDialog";
+import { useWhatsApp } from "@/hooks/useWhatsApp";
 import type { Session } from "@/components/crm/SessionFormDialog";
 import { CLIENT_STATUS_LABELS } from "@/lib/constants";
 import {
@@ -20,6 +22,7 @@ import {
   Calendar,
   Pencil,
   Trash2,
+  Settings,
 } from "lucide-react";
 
 const statusBadgeClass: Record<string, string> = {
@@ -34,10 +37,12 @@ const ClientDetail = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  const { isConfigured } = useWhatsApp();
   const [client, setClient] = useState<Client | null>(null);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [editOpen, setEditOpen] = useState(false);
+  const [waSettingsOpen, setWaSettingsOpen] = useState(false);
 
   const hasAccess = !!user && canAccessTier("premium");
 
@@ -172,6 +177,16 @@ const ClientDetail = () => {
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
+              <Button
+                variant="outline"
+                size="sm"
+                className={`gap-1 ${!isConfigured ? "border-amber-300 text-amber-600" : ""}`}
+                title={isConfigured ? "הגדרות WhatsApp" : "הגדר WhatsApp לתזכורות"}
+                onClick={() => setWaSettingsOpen(true)}
+              >
+                <Settings size={15} />
+                {!isConfigured && "הגדר"} WhatsApp
+              </Button>
               <Button variant="outline" size="sm" className="gap-1" onClick={() => setEditOpen(true)}>
                 <Pencil size={15} />
                 עריכה
@@ -192,6 +207,8 @@ const ClientDetail = () => {
         {/* Sessions */}
         <SessionsList
           clientId={client.id}
+          clientName={client.full_name}
+          clientPhone={client.phone}
           sessions={sessions}
           onRefresh={fetchAll}
         />
@@ -203,6 +220,11 @@ const ClientDetail = () => {
         onOpenChange={setEditOpen}
         client={client}
         onSaved={fetchAll}
+      />
+
+      <WhatsAppSettingsDialog
+        open={waSettingsOpen}
+        onOpenChange={setWaSettingsOpen}
       />
     </div>
   );
