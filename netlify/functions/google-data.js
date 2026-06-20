@@ -241,6 +241,22 @@ ${emailLine}`;
         value: { events: tomorrowEvents, updated_at: now },
         updated_at: now
       })
+    }),
+    fetch(`${supabaseUrl}/rest/v1/sync_data`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json', 'apikey': supabaseKey,
+        'Authorization': 'Bearer ' + supabaseKey, 'Prefer': 'resolution=merge-duplicates'
+      },
+      body: JSON.stringify({
+        user_id: userId, key: 'last-refresh',
+        value: {
+          date: todayStr,
+          time: new Date().toLocaleTimeString('he-IL', { timeZone: 'Asia/Jerusalem', hour: '2-digit', minute: '2-digit' }),
+          status: 'success'
+        },
+        updated_at: now
+      })
     })
   ]);
 
