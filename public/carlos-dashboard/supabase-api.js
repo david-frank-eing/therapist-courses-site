@@ -250,6 +250,24 @@ window._sbApi = async function(url, body) {
     return { ok: true };
   }
 
+  if (url === '/api/habit/add') {
+    const { emoji, label } = body || {};
+    const { data: existing } = await sb.from('habit_definitions')
+      .select('sort_order').eq('user_id', uid).order('sort_order', { ascending: false }).limit(1).maybeSingle();
+    const nextOrder = existing ? (existing.sort_order + 1) : 0;
+    const { error } = await sb.from('habit_definitions').insert({
+      user_id: uid, emoji: emoji || '✅', label, active: true, sort_order: nextOrder
+    });
+    if (error) throw error;
+    return { ok: true };
+  }
+
+  if (url === '/api/habit/delete') {
+    const { error } = await sb.from('habit_definitions').delete().eq('id', body.id).eq('user_id', uid);
+    if (error) throw error;
+    return { ok: true };
+  }
+
   // ── Timer ─────────────────────────────────────────────────────────────────
   if (url === '/api/timer') {
     const { domain, label, seconds, note } = body || {};

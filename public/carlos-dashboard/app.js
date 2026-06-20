@@ -630,20 +630,54 @@ function renderHabits(habits, date) {
     }
     return streak;
   };
-  $('#habit-list').innerHTML = habits.habits.map(h => `<label class="habit">
-    <input type="checkbox" data-id="${h.id}" ${done.includes(h.id) ? 'checked' : ''}>
-    <span class="habit-name">${h.emoji} ${h.label}</span>
-    <span class="habit-stats">
-      <span>${weeklyCount(h.id)}/7 שבוע</span>
-      <span>${monthCount(h.id)}/28 חודש</span>
-      <span class="habit-streak">🔥 ${streakOf(h.id)}</span>
-    </span>
-  </label>`).join('');
-  document.querySelectorAll('#habit-list input').forEach(cb =>
+  const habitHtml = habits.habits.length
+    ? habits.habits.map(h => `<label class="habit">
+        <input type="checkbox" data-id="${h.id}" ${done.includes(h.id) ? 'checked' : ''}>
+        <span class="habit-name">${h.emoji} ${h.label}</span>
+        <span class="habit-stats">
+          <span>${weeklyCount(h.id)}/7 שבוע</span>
+          <span>${monthCount(h.id)}/28 חודש</span>
+          <span class="habit-streak">🔥 ${streakOf(h.id)}</span>
+        </span>
+        <button class="habit-del-btn" data-id="${h.id}" title="מחק הרגל">✕</button>
+      </label>`).join('')
+    : '<div class="muted-text" style="font-size:.85rem;padding:6px 0">אין הרגלים עדיין — הוסף אחד ⬇️</div>';
+
+  $('#habit-list').innerHTML = habitHtml + `
+    <div class="habit-add-row" style="display:flex;gap:6px;margin-top:8px;align-items:center">
+      <input type="text" id="habit-new-emoji" placeholder="😴" maxlength="2"
+        style="width:42px;text-align:center;padding:4px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:inherit">
+      <input type="text" id="habit-new-label" placeholder="שם ההרגל..."
+        style="flex:1;padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:inherit">
+      <button id="habit-add-btn" style="padding:4px 10px;background:var(--primary);color:#fff;border:none;border-radius:6px;cursor:pointer">+ הוסף</button>
+    </div>`;
+
+  document.querySelectorAll('#habit-list input[type=checkbox]').forEach(cb =>
     cb.addEventListener('change', async () => {
       await api('/api/habit', { id: cb.dataset.id });
       loadState();
     }));
+
+  document.querySelectorAll('#habit-list .habit-del-btn').forEach(btn =>
+    btn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      if (!confirm('למחוק את ההרגל הזה?')) return;
+      await api('/api/habit/delete', { id: btn.dataset.id });
+      loadState();
+    }));
+
+  document.getElementById('habit-add-btn')?.addEventListener('click', async () => {
+    const emoji = document.getElementById('habit-new-emoji').value.trim() || '✅';
+    const label = document.getElementById('habit-new-label').value.trim();
+    if (!label) { toast('כתוב שם להרגל', false); return; }
+    await api('/api/habit/add', { emoji, label });
+    toast('✓ הרגל נוסף');
+    loadState();
+  });
+
+  document.getElementById('habit-new-label')?.addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('habit-add-btn')?.click();
+  });
 }
 
 function renderTimeToday(timeLog, date) {
