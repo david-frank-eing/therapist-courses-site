@@ -2821,7 +2821,7 @@ function initWelcome() {
     e.preventDefault();
     hideWelcome();
   });
-})();
+}
 
 // ---------- Init ----------
 function _initApp() {
