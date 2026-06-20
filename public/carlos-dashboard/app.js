@@ -608,12 +608,13 @@ function renderHabits(habits, date) {
   const completions = habits.completions || {};
   const done = completions[date] || [];
   const todayUtc = new Date(date + 'T12:00:00Z');
+  const daysInMonth = new Date(todayUtc.getUTCFullYear(), todayUtc.getUTCMonth() + 1, 0).getDate();
   const weekDays = [], monthDays = [];
   for (let i = 0; i < 7; i++) {
     const d = new Date(todayUtc); d.setUTCDate(d.getUTCDate() - i);
     weekDays.push(d.toISOString().slice(0, 10));
   }
-  for (let i = 0; i < 28; i++) {
+  for (let i = 0; i < daysInMonth; i++) {
     const d = new Date(todayUtc); d.setUTCDate(d.getUTCDate() - i);
     monthDays.push(d.toISOString().slice(0, 10));
   }
@@ -636,7 +637,7 @@ function renderHabits(habits, date) {
         <span class="habit-name">${h.emoji} ${h.label}</span>
         <span class="habit-stats">
           <span>${weeklyCount(h.id)}/7 שבוע</span>
-          <span>${monthCount(h.id)}/28 חודש</span>
+          <span>${monthCount(h.id)}/${daysInMonth} חודש</span>
           <span class="habit-streak">🔥 ${streakOf(h.id)}</span>
         </span>
       </label>`).join('')
