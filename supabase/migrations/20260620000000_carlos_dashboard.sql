@@ -207,22 +207,12 @@ CREATE TABLE public.dashboard_config (
 ALTER TABLE public.dashboard_config ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Owner dashboard_config" ON public.dashboard_config USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 
--- ── Clients ────────────────────────────────────────────────
-CREATE TABLE public.clients (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
-  full_name TEXT NOT NULL DEFAULT '',
-  phone TEXT DEFAULT '',
-  email TEXT DEFAULT '',
-  city TEXT DEFAULT '',
-  notes TEXT DEFAULT '',
-  photo_url TEXT DEFAULT '',
-  archived BOOLEAN DEFAULT false,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
-);
-ALTER TABLE public.clients ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Owner clients" ON public.clients USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+-- ── Clients (extend existing CRM table) ────────────────────
+-- The clients table was created in 20260614000000_crm_clients.sql.
+-- We add dashboard-specific columns if not already present.
+ALTER TABLE public.clients ADD COLUMN IF NOT EXISTS city TEXT DEFAULT '';
+ALTER TABLE public.clients ADD COLUMN IF NOT EXISTS photo_url TEXT DEFAULT '';
+ALTER TABLE public.clients ADD COLUMN IF NOT EXISTS archived BOOLEAN DEFAULT false;
 
 -- ── Events ────────────────────────────────────────────────
 CREATE TABLE public.events (

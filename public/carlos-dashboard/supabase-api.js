@@ -369,6 +369,7 @@ window._sbApi = async function(url, body) {
       city: city || '',
       notes: notes || '',
       photo_url: photo_url || '',
+      status: 'active',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     });
