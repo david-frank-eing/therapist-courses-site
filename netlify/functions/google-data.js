@@ -170,7 +170,6 @@ exports.handler = async (event) => {
 
   // Build morning briefing
   const now = new Date().toISOString();
-  const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' });
   const todayHe = new Date().toLocaleDateString('he-IL', { timeZone: 'Asia/Jerusalem', weekday: 'long', day: 'numeric', month: 'numeric' });
 
   const calSection = calendarEvents.length > 0
