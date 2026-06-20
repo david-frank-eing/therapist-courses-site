@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title id="page-title">קרלוס · דאשבורד</title>
+  <link rel="stylesheet" href="style.css?v=64">
+</head>
+<body>
+  <div id="toast-area"></div>
+
+  <div class="page-wrap">
+    <header>
+      <div class="header-btns">
+        <button id="collapse-all-btn" class="hdr-action-btn" title="כווץ את כל החלונות">⊟</button>
+        <button id="theme-btn" class="hdr-action-btn" title="מצב בהיר/כהה">🌙</button>
+        <button id="export-pdf-btn" class="hdr-action-btn" title="ייצוא PDF / הדפסה">📄</button>
+        <button id="help-btn" class="hdr-action-btn" title="מדריך שימוש">❓</button>
+        <button id="settings-btn" class="hdr-action-btn" title="הגדרות">⚙️</button>
+      </div>
+      <h1 id="greeting">בוקר טוב</h1>
+      <p id="date" class="date"></p>
+    </header>
+
+    <div id="booking-alert-bar"></div>
+    <div id="auto-refresh-bar" class="auto-refresh-bar hidden">
+      <span id="auto-refresh-msg">⏳ מעדכן נתונים...</span>
+    </div>
+    <div class="layout">
+
+      <!-- ════ MAIN COLUMN ════ -->
+      <main class="main-col">
+
+        <section id="briefing" class="card collapsible">
+          <h2><span>🌅 בריפינג בוקר</span>
+            <button class="section-toggle" type="button">▾</button>
+          </h2>
+          <div class="section-body">
+            <div id="briefing-body"></div>
+          </div>
+        </section>
+
+        <section id="email" class="card collapsible">
+          <h2>
+            <span>📧 סיכום מיילים</span>
+            <button class="section-toggle" type="button">▾</button>
+          </h2>
+          <div class="section-body">
+            <div id="email-body"></div>
+          </div>
+        </section>
+
+        <section id="tasks" class="card collapsible">
+          <h2><span>📌 משימות</span><button class="section-toggle" type="button">▾</button></h2>
+          <div class="section-body">
+            <div class="add-row">
+              <input type="text" id="new-task" placeholder="משימה חדשה...">
+              <button id="add-task">הוסף</button>
+            </div>
+            <div class="add-when">
+              <label>תאריך: <input type="date" id="new-task-date"></label>
+              <label>שעה: <input type="time" id="new-task-time"></label>
+              <span class="muted-text">(ריק = היום)</span>
+            </div>
+            <div class="add-when">
+              <label>קטגוריה:
+                <select id="new-task-category">
+                  <option value="general">📌 כללי</option>
+                  <option value="health">💊 בריאות / טיפולים</option>
+                  <option value="marketing">📢 שיווק</option>
+                  <option value="music">🎵 מוזיקה / DJ</option>
+                  <option value="learning">📚 לימוד</option>
+                </select>
+              </label>
+              <label>עדיפות:
+                <select id="new-task-priority">
+                  <option value="normal">🔵 רגיל</option>
+                  <option value="urgent">⚠️ דחוף</option>
+                  <option value="low">⚪ נמוך</option>
+                </select>
+              </label>
+            </div>
+            <ul id="task-list"></ul>
+            <div class="task-stats-row">
+              <div id="task-stats" class="task-stats muted-text"></div>
+              <button id="open-history" class="history-btn" title="היסטוריית משימות שהושלמו">📜 היסטוריה</button>
+            </div>
+          </div>
+        </section>
+
+        <section id="tomorrow" class="card collapsible">
+          <h2>
+            <span>📅 מחר — <span id="tomorrow-date"></span></span>
+            <button class="section-toggle" type="button">▾</button>
+          </h2>
+          <div class="section-body">
+            <div id="tomorrow-gcal-events"></div>
+            <ul id="tomorrow-list"></ul>
+            <div class="add-row">
+              <input type="text" id="tomorrow-task" placeholder="משימה למחר...">
+              <button id="add-tomorrow">הוסף</button>
+            </div>
+            <div class="add-when">
+              <label>שעה: <input type="time" id="tomorrow-time"></label>
+              <span class="muted-text">(תזכורת אופציונלית)</span>
+            </div>
+          </div>
+        </section>
+
+        <section id="content" class="card collapsible">
+          <h2><span>📲 תוכן השבוע</span><button class="section-toggle" type="button">▾</button></h2>
+          <div class="section-body">
+            <div class="content-add">
+              <select id="new-content-type">
+                <option value="reel">🎬 רילס</option>
+                <option value="post">📝 פוסט</option>
+              </select>
+              <select id="new-content-domain">
+                <option value="treatments">💆 טיפולים</option>
+                <option value="music">🎵 אירועים</option>
+                <option value="product">🚀 כלי</option>
+                <option value="unassigned" selected>⚪ כללי</option>
+              </select>
+              <input type="text" id="new-content-title" placeholder="שם / רעיון...">
+              <button id="add-content">הוסף</button>
+            </div>
+            <div id="content-buckets"></div>
+            <div id="content-summary" class="muted-text"></div>
+          </div>
+        </section>
+
+        <section id="contacts" class="card collapsible">
+          <h2><span>👥 מטופלים ואירועים <a id="cal-link" href="#" class="cal-inline">📅 פתח יומן</a></span><button class="section-toggle" type="button">▾</button></h2>
+          <div class="section-body">
+            <div class="ct-tabs">
+              <button class="ct-tab active" data-tab="clients">💆 מטופלים</button>
+              <button class="ct-tab" data-tab="events">🎵 אירועים</button>
+            </div>
+            <div class="search-row"><input type="text" id="contact-search" class="search-input" placeholder="🔍 חפש שם / טלפון..."></div>
+            <div id="contacts-list"></div>
+            <div class="capture-row">
+              <button id="add-contact">+ הוסף ידנית</button>
+              <button id="capture-btn" class="capture-open-btn">🗣️ לכידת שיחה</button>
+            </div>
+            <!-- לכידת שיחה חופשית -->
+            <div id="capture-box" class="capture-box hidden">
+              <div class="capture-hint">כתוב בחופשיות על השיחה — קרלוס ישאב את הפרטים</div>
+              <textarea id="capture-text" placeholder="לדוגמה: דיברתי עם דנה, היא רוצה טיפול גב בתל אביב, חיפשה דרך אינסטגרם, מתעניינת ביום חמישי הקרוב. הטלפון שלה 052-1234567..."></textarea>
+              <div class="capture-type-row">
+                <label><input type="radio" name="capture-type" value="client" checked> 💆 לקוח</label>
+                <label><input type="radio" name="capture-type" value="event"> 🎵 אירוע</label>
+              </div>
+              <div class="capture-actions">
+                <button id="capture-save">💾 שמור שיחה</button>
+                <button id="capture-cancel" class="capture-cancel-btn">ביטול</button>
+              </div>
+              <div id="capture-result" class="capture-result hidden"></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="habits" class="card collapsible">
+          <h2><span>🌱 הרגלים</span><button class="section-toggle" type="button">▾</button></h2>
+          <div class="section-body">
+            <div id="habit-list"></div>
+          </div>
+        </section>
+
+        <section id="timetoday" class="card collapsible">
+          <h2><span>⏱️ זמן שנרשם היום</span><button class="section-toggle" type="button">▾</button></h2>
+          <div class="section-body">
+            <div id="time-list"></div>
+          </div>
+        </section>
+
+        <section id="journal" class="card collapsible">
+          <h2><span>📝 מה יש לי לשתף היום?</span><button class="section-toggle" type="button">▾</button></h2>
+          <div class="section-body">
+            <textarea id="journal-text" placeholder="כתוב כאן..."></textarea>
+            <div><button id="journal-save">שמור ליומן</button></div>
+          </div>
+        </section>
+
+        <section id="daily" class="card collapsible">
+          <h2><span>📊 היום</span><button class="section-toggle" type="button">▾</button></h2>
+          <div class="section-body">
+            <div id="daily-bars"></div>
+          </div>
+        </section>
+
+        <section id="weekly" class="card collapsible">
+          <h2><span>📈 השבוע (רקע)</span><button class="section-toggle" type="button">▾</button></h2>
+          <div class="section-body">
+            <div id="quota-bars"></div>
+          </div>
+        </section>
+
+        <section id="open-loops" class="card collapsible">
+          <h2><span>🔍 פתוחים מהעבר</span><button class="section-toggle" type="button">▾</button></h2>
+          <div class="section-body">
+            <div id="open-loops-content"></div>
+          </div>
+        </section>
+
+        <section id="consistency" class="card collapsible">
+          <h2><span>📊 עקביות הפרסום</span><button class="section-toggle" type="button">▾</button></h2>
+          <div class="section-body">
+            <div id="consistency-content"></div>
+          </div>
+        </section>
+
+        <!-- מעקב הרגלים — שבוע שעבר -->
+        <section id="habits-history" class="card collapsible">
+          <h2><span>📆 הרגלים — שבוע שעבר</span><button class="section-toggle" type="button">▾</button></h2>
+          <div class="section-body">
+            <div id="habits-history-grid"></div>
+          </div>
+        </section>
+
+        <section id="booking-mgmt" class="card collapsible">
+          <h2>
+            <span>📅 זימונים <a id="booking-cal-link" href="#" class="cal-inline">📅 פתח יומן</a></span>
+            <button id="copy-booking-link" class="hdr-action-btn" title="העתק קישור לדף הזימון">🔗</button>
+            <button class="section-toggle" type="button">▾</button>
+          </h2>
+          <div class="section-body">
+            <div id="booking-upcoming"></div>
+            <hr class="section-divider">
+            <div id="booking-slots-mgr"></div>
+            <div class="add-row" style="margin-top:10px">
+              <button id="booking-edit-profile-btn" class="bk-profile-btn">✏️ ערוך דף ציבורי</button>
+            </div>
+          </div>
+        </section>
+
+        <footer class="ver"><span id="footer-asst">קרלוס דאשבורד</span> · גרסה 3.5</footer>
+      </main>
+
+      <!-- ════ SIDEBAR ════ -->
+      <aside class="sidebar">
+
+        <div class="sb-card sb-focus-card">
+          <div class="sb-focus-header">
+            <span class="sb-focus-title">🎯 פוקוס היום</span>
+            <span id="sb-focus-date" class="sb-focus-date"></span>
+          </div>
+          <div id="sb-focus-body"></div>
+        </div>
+
+        <div class="sb-card sb-cal-card">
+          <div class="sb-title">📅 יומן היום</div>
+          <div id="sb-calendar"></div>
+        </div>
+
+        <div class="sb-card sb-pb-card">
+          <div class="sb-title">📖 פלייבוקים</div>
+          <div class="sb-pb-btns">
+            <button class="pb-btn" data-domain="treatments">💆 טיפולים</button>
+            <button class="pb-btn" data-domain="dj-events">🎵 DJ אירועים</button>
+            <button class="pb-btn" data-domain="product">🚀 כלי למטפלים</button>
+            <button class="pb-btn" data-domain="learning">📚 לימוד מוזיקה</button>
+          </div>
+        </div>
+
+        <div class="sb-card sb-ask-card">
+          <div class="sb-title">💬 שאל קרלוס</div>
+          <textarea id="ask-input" rows="3"
+            placeholder="בדוק מיילים / בריפינג / מה המשימות שלי..."></textarea>
+          <button id="ask-btn">▶ שלח</button>
+          <div id="ask-response" class="hidden"></div>
+        </div>
+
+      </aside>
+
+      <!-- Playbook Modal -->
+      <div id="playbook-modal" class="pb-modal hidden">
+        <div class="pb-modal-inner">
+          <div class="pb-modal-head">
+            <span id="pb-modal-title">📖 פלייבוק</span>
+            <button id="pb-modal-close">✕</button>
+          </div>
+          <div id="pb-modal-body"></div>
+        </div>
+      </div>
+
+    </div><!-- /.layout -->
+  </div><!-- /.page-wrap -->
+
+  <!-- Timer widget (fixed) -->
+  <div id="timer-widget">
+    <div class="tw-head">
+      <span>⏱️</span>
+      <select id="tw-mode">
+        <option value="stopwatch">סטופר</option>
+        <option value="timer">טיימר</option>
+      </select>
+    </div>
+    <div id="tw-minutes-row" class="hidden">
+      <input type="number" id="tw-amount" value="25" min="1">
+      <select id="tw-unit">
+        <option value="minutes">דקות</option>
+        <option value="seconds">שניות</option>
+      </select>
+    </div>
+    <div id="tw-display">00:00:00</div>
+    <div class="tw-controls">
+      <button id="tw-start">▶ התחל</button>
+      <button id="tw-stop" class="hidden">■ עצור</button>
+    </div>
+    <div class="tw-links">
+      <a id="tw-manual" href="#">➕ ידני</a>
+      <a id="tw-sound" href="#">🔔 צלצול</a>
+    </div>
+    <div id="tw-manual-box" class="hidden"></div>
+  </div>
+
+  <div id="attrib-overlay" class="overlay hidden">
+    <div class="dialog">
+      <button id="attrib-close" class="close-x" title="סגור בלי לשמור">✕</button>
+      <button id="attrib-silence" class="silence-btn hidden" type="button">🔕 שתק את הצלצול</button>
+      <h3>במה עבדת?</h3>
+      <p id="attrib-dur" class="muted-text"></p>
+      <input type="text" id="attrib-note" placeholder="הערה (אופציונלי)">
+      <div id="attrib-domains" class="domain-btns"></div>
+      <p class="dialog-hint">בחר נושא ולחץ "💾 שמור זמן" · ✕ סוגר בלי לשמור</p>
+    </div>
+  </div>
+
+  <audio id="snd-beep" src="beep.wav" preload="auto"></audio>
+  <audio id="snd-chime" src="chime.wav" preload="auto"></audio>
+
+  <!-- Help Modal -->
+  <div id="help-modal" class="settings-modal hidden">
+    <div class="settings-inner help-inner">
+      <div class="settings-head">
+        <span>📖 מדריך שימוש</span>
+        <button id="help-close">✕</button>
+      </div>
+      <div id="help-body" class="help-body"></div>
+    </div>
+  </div>
+
+  <!-- Task History Modal -->
+  <div id="history-modal" class="settings-modal hidden">
+    <div class="settings-inner">
+      <div class="settings-head">
+        <span>📜 היסטוריית משימות</span>
+        <button id="history-close">✕</button>
+      </div>
+      <div class="history-search-row">
+        <input type="text" id="history-search" class="search-input" placeholder="🔍 חפש משימה ברשימה...">
+      </div>
+      <div class="history-filter">
+        <label>מ-<input type="date" id="history-from"></label>
+        <label>עד-<input type="date" id="history-to"></label>
+        <button id="history-load">חפש בטווח</button>
+        <button id="history-week" class="history-quick">7 ימים</button>
+        <button id="history-month" class="history-quick">30 ימים</button>
+        <button id="history-all" class="history-quick">הכל</button>
+      </div>
+      <div id="history-body" class="history-body"></div>
+    </div>
+  </div>
+
+  <!-- Welcome Screen (first run) -->
+  <div id="welcome-overlay" class="welcome-overlay hidden">
+    <div class="welcome-box">
+      <div class="welcome-logo">🎯</div>
+      <h2 class="welcome-title">ברוך הבא לדאשבורד!</h2>
+      <p class="welcome-sub">שלוש שניות ואתה בפנים</p>
+      <div class="welcome-steps">
+        <div class="welcome-step">
+          <span class="ws-num">1</span>
+          <div class="ws-text">
+            <strong>מה שמך?</strong>
+            <input type="text" id="welcome-name" class="welcome-input" placeholder="הכנס את שמך..." maxlength="40" autocomplete="off">
+          </div>
+        </div>
+        <div class="welcome-step">
+          <span class="ws-num">2</span>
+          <div class="ws-text">
+            <strong>מה אתה עושה?</strong>
+            <input type="text" id="welcome-role" class="welcome-input" placeholder='למשל: "מטפל בשיאצו", "DJ", "מאמן כושר"...' maxlength="60" autocomplete="off">
+          </div>
+        </div>
+        <div class="welcome-step ws-info">
+          <span class="ws-num">3</span>
+          <div class="ws-text">
+            <strong>כל הכלים כבר מוכנים</strong>
+            <span class="ws-hint">משימות · מטופלים · אירועים · הזמנות · הרגלים</span>
+          </div>
+        </div>
+      </div>
+      <button id="welcome-start" class="welcome-start-btn">✅ בוא נתחיל</button>
+      <p class="welcome-skip"><a href="#" id="welcome-skip-link">דלג — אמלא אחר כך</a></p>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div id="settings-modal" class="settings-modal hidden">
+    <div class="settings-inner">
+      <div class="settings-head">
+        <span>⚙️ הגדרות</span>
+        <button id="settings-close">✕</button>
+      </div>
+      <div id="settings-body"></div>
+    </div>
+  </div>
+
+  <!-- Supabase JS -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script>
+    // ── Supabase init ──
+    const SUPABASE_URL = 'https://oxxjibriplesmrnklmaf.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_nKg-RrKI9Zfd_BarB1ehzQ_HEkUE9YD';
+    window._supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // ── Auth guard: runs before app.js ──
+    (async () => {
+      const { data: { session } } = await window._supabase.auth.getSession();
+      if (!session) {
+        window.location.href = '/auth?redirect=/carlos-dashboard/';
+        return;
+      }
+      const { data: profile } = await window._supabase
+        .from('profiles').select('subscription_tier, full_name').eq('id', session.user.id).single();
+      if (!profile || !['premium','vip'].includes(profile.subscription_tier)) {
+        document.body.innerHTML = `
+          <div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;direction:rtl">
+            <div style="text-align:center;padding:40px;background:#fff;border-radius:16px;box-shadow:0 4px 32px #0002">
+              <div style="font-size:3rem;margin-bottom:16px">🔒</div>
+              <h2 style="margin:0 0 8px">גישה לפרימיום בלבד</h2>
+              <p style="color:#666;margin:0 0 24px">הדאשבורד זמין למנויי פרימיום.</p>
+              <a href="/" style="background:#4a6aee;color:#fff;padding:12px 28px;border-radius:10px;text-decoration:none;font-weight:700">שדרג עכשיו</a>
+            </div>
+          </div>`;
+        return;
+      }
+      // Store session globally for app.js / supabase-api.js
+      window._session = session;
+      window._userId = session.user.id;
+      window._userName = profile.full_name || session.user.email;
+      window._isPremium = true;
+      // Trigger app startup now that auth is confirmed
+      if (window._startApp) window._startApp();
+    })();
+  </script>
+  <script src="supabase-api.js?v=1"></script>
+  <script src="app.js?v=66"></script>
+</body>
+</html>
