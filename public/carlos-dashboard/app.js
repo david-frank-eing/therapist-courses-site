@@ -639,45 +639,16 @@ function renderHabits(habits, date) {
           <span>${monthCount(h.id)}/28 חודש</span>
           <span class="habit-streak">🔥 ${streakOf(h.id)}</span>
         </span>
-        <button class="habit-del-btn" data-id="${h.id}" title="מחק הרגל">✕</button>
       </label>`).join('')
-    : '<div class="muted-text" style="font-size:.85rem;padding:6px 0">אין הרגלים עדיין — הוסף אחד ⬇️</div>';
+    : '<div class="muted-text" style="font-size:.85rem;padding:6px 0">אין הרגלים — הוסף דרך ⚙️ הגדרות</div>';
 
-  $('#habit-list').innerHTML = habitHtml + `
-    <div class="habit-add-row" style="display:flex;gap:6px;margin-top:8px;align-items:center">
-      <input type="text" id="habit-new-emoji" placeholder="😴" maxlength="2"
-        style="width:42px;text-align:center;padding:4px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:inherit">
-      <input type="text" id="habit-new-label" placeholder="שם ההרגל..."
-        style="flex:1;padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:inherit">
-      <button id="habit-add-btn" style="padding:4px 10px;background:var(--primary);color:#fff;border:none;border-radius:6px;cursor:pointer">+ הוסף</button>
-    </div>`;
+  $('#habit-list').innerHTML = habitHtml;
 
   document.querySelectorAll('#habit-list input[type=checkbox]').forEach(cb =>
     cb.addEventListener('change', async () => {
       await api('/api/habit', { id: cb.dataset.id });
       loadState();
     }));
-
-  document.querySelectorAll('#habit-list .habit-del-btn').forEach(btn =>
-    btn.addEventListener('click', async (e) => {
-      e.preventDefault();
-      if (!confirm('למחוק את ההרגל הזה?')) return;
-      await api('/api/habit/delete', { id: btn.dataset.id });
-      loadState();
-    }));
-
-  document.getElementById('habit-add-btn')?.addEventListener('click', async () => {
-    const emoji = document.getElementById('habit-new-emoji').value.trim() || '✅';
-    const label = document.getElementById('habit-new-label').value.trim();
-    if (!label) { toast('כתוב שם להרגל', false); return; }
-    await api('/api/habit/add', { emoji, label });
-    toast('✓ הרגל נוסף');
-    loadState();
-  });
-
-  document.getElementById('habit-new-label')?.addEventListener('keydown', e => {
-    if (e.key === 'Enter') document.getElementById('habit-add-btn')?.click();
-  });
 }
 
 function renderTimeToday(timeLog, date) {
@@ -2141,6 +2112,104 @@ document.getElementById('settings-modal')?.addEventListener('click', (e) => {
     document.getElementById('settings-modal').classList.add('hidden');
 });
 
+function _renderHabitsSettings() {
+  const listEl = document.getElementById('habits-settings-list');
+  if (!listEl) return;
+  const habits = (lastState && lastState.habits && lastState.habits.habits) || [];
+
+  if (!habits.length) {
+    listEl.innerHTML = '<div class="muted-text" style="font-size:.85rem">אין הרגלים עדיין — הוסף למטה</div>';
+  } else {
+    listEl.innerHTML = habits.map(h => `
+      <div class="habit-settings-row" data-id="${h.id}" style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">
+        <button class="hs-emoji-btn" data-id="${h.id}" title="שנה אמוג'י"
+          style="font-size:1.4rem;border:none;background:transparent;cursor:pointer;min-width:32px">${h.emoji}</button>
+        <input type="text" class="hs-label-inp" data-id="${h.id}" value="${h.label.replace(/"/g,'&quot;')}"
+          style="flex:1;padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:inherit">
+        <button class="hs-save-btn" data-id="${h.id}" style="padding:4px 10px;background:var(--primary);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:.8rem">שמור</button>
+        <button class="hs-del-btn" data-id="${h.id}" style="padding:4px 8px;background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:.8rem">✕</button>
+      </div>`).join('');
+  }
+
+  // Emoji grid picks
+  document.querySelectorAll('#habit-emoji-grid .habit-emoji-pick').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.getElementById('habit-new-emoji-settings').value = btn.dataset.e;
+      document.querySelectorAll('.habit-emoji-pick').forEach(b => b.style.borderColor = 'transparent');
+      btn.style.borderColor = 'var(--primary)';
+    });
+  });
+
+  // Save edited habit
+  listEl.querySelectorAll('.hs-save-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const row = listEl.querySelector(`.habit-settings-row[data-id="${btn.dataset.id}"]`);
+      const emoji = row.querySelector('.hs-emoji-btn').textContent;
+      const label = row.querySelector('.hs-label-inp').value.trim();
+      if (!label) return;
+      await api('/api/habit/update', { id: btn.dataset.id, emoji, label });
+      toast('✓ הרגל עודכן');
+      loadState();
+      setTimeout(_renderHabitsSettings, 500);
+    });
+  });
+
+  // Edit emoji inline — click emoji opens a small picker row
+  listEl.querySelectorAll('.hs-emoji-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const row = btn.closest('.habit-settings-row');
+      // Remove any existing picker
+      row.querySelector('.hs-emoji-picker')?.remove();
+      const picker = document.createElement('div');
+      picker.className = 'hs-emoji-picker';
+      picker.style.cssText = 'position:absolute;display:flex;flex-wrap:wrap;gap:4px;padding:8px;background:var(--card);border:1px solid var(--border);border-radius:10px;z-index:200;max-width:240px;box-shadow:0 4px 20px #0004';
+      ['💧','🏃','📚','😴','🧘','🍎','💊','🧹','📝','🎵','💪','🌅','🤸','🚶','🧴','🥗','🍵','✍️','🎯','🛁','😊','⭐','🔥','🌿','🎭'].forEach(e => {
+        const b = document.createElement('button');
+        b.textContent = e;
+        b.style.cssText = 'font-size:1.3rem;padding:4px 6px;border:none;border-radius:6px;cursor:pointer;background:transparent';
+        b.addEventListener('click', () => { btn.textContent = e; picker.remove(); });
+        picker.appendChild(b);
+      });
+      row.style.position = 'relative';
+      row.appendChild(picker);
+      document.addEventListener('click', function closePicker(ev) {
+        if (!picker.contains(ev.target) && ev.target !== btn) {
+          picker.remove();
+          document.removeEventListener('click', closePicker);
+        }
+      }, true);
+    });
+  });
+
+  // Delete habit
+  listEl.querySelectorAll('.hs-del-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!confirm('למחוק הרגל זה?')) return;
+      await api('/api/habit/delete', { id: btn.dataset.id });
+      toast('✓ נמחק');
+      loadState();
+      setTimeout(_renderHabitsSettings, 500);
+    });
+  });
+
+  // Add new habit
+  document.getElementById('habit-add-settings-btn')?.addEventListener('click', async () => {
+    const emoji = document.getElementById('habit-new-emoji-settings')?.value.trim() || '✅';
+    const label = document.getElementById('habit-new-label-settings')?.value.trim();
+    if (!label) { toast('כתוב שם להרגל', false); return; }
+    await api('/api/habit/add', { emoji, label });
+    document.getElementById('habit-new-label-settings').value = '';
+    document.getElementById('habit-new-emoji-settings').value = '✅';
+    toast('✓ הרגל נוסף');
+    loadState();
+    setTimeout(_renderHabitsSettings, 500);
+  });
+
+  document.getElementById('habit-new-label-settings')?.addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('habit-add-settings-btn')?.click();
+  });
+}
+
 async function openSettings() {
   const modal  = document.getElementById('settings-modal');
   const bodyEl = document.getElementById('settings-body');
@@ -2306,6 +2375,26 @@ function renderSettings(s, bodyEl) {
       </div>
     </div>
 
+    <div class="settings-section" id="habits-settings-section">
+      <div class="settings-section-title">🏃 הרגלים</div>
+      <div id="habits-settings-list"></div>
+      <div style="margin-top:10px">
+        <div class="settings-section-title" style="font-size:.8rem;margin-bottom:6px">הוסף הרגל חדש</div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px" id="habit-emoji-grid">
+          ${['💧','🏃','📚','😴','🧘','🍎','💊','🧹','📝','🎵','💪','🌅','🤸','🚶','🧴','🥗','🍵','✍️','🎯','🛁'].map(e =>
+            `<button class="habit-emoji-pick" data-e="${e}" style="font-size:1.3rem;padding:4px 6px;border:2px solid transparent;border-radius:8px;cursor:pointer;background:var(--card)">${e}</button>`
+          ).join('')}
+        </div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <input type="text" id="habit-new-emoji-settings" value="✅" maxlength="2"
+            style="width:42px;text-align:center;font-size:1.3rem;padding:4px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:inherit">
+          <input type="text" id="habit-new-label-settings" placeholder="שם ההרגל..."
+            style="flex:1;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:inherit">
+          <button id="habit-add-settings-btn" style="padding:6px 14px;background:var(--primary);color:#fff;border:none;border-radius:6px;cursor:pointer;white-space:nowrap">+ הוסף</button>
+        </div>
+      </div>
+    </div>
+
     <div class="settings-section connections-section">
       <div class="settings-section-title">🔌 חיבורים</div>
       <div id="connections-body" class="connections-body">
@@ -2326,6 +2415,9 @@ function renderSettings(s, bodyEl) {
       <button id="settings-save">💾 שמור</button>
       <button id="settings-cancel-btn" class="settings-cancel-btn">ביטול</button>
     </div>`;
+
+  // ── Habits section ────────────────────────────────────────
+  _renderHabitsSettings();
 
   // Load diagnose immediately after rendering
   loadConnectionsDiagnose();

@@ -262,6 +262,16 @@ window._sbApi = async function(url, body) {
     return { ok: true };
   }
 
+  if (url === '/api/habit/update') {
+    const { id, emoji, label } = body || {};
+    const update = {};
+    if (emoji !== undefined) update.emoji = emoji;
+    if (label !== undefined) update.label = label;
+    const { error } = await sb.from('habit_definitions').update(update).eq('id', id).eq('user_id', uid);
+    if (error) throw error;
+    return { ok: true };
+  }
+
   if (url === '/api/habit/delete') {
     const { error } = await sb.from('habit_definitions').delete().eq('id', body.id).eq('user_id', uid);
     if (error) throw error;
