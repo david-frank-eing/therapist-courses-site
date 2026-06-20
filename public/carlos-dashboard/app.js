@@ -2114,9 +2114,8 @@ async function openSettings() {
   modal.classList.remove('hidden');
   bodyEl.innerHTML = '<div class="muted-text">טוען...</div>';
   try {
-    const r = await fetch('/api/settings');
-    if (!r.ok) throw new Error('HTTP ' + r.status);
-    renderSettings(await r.json(), bodyEl);
+    const s = await api('/api/settings');
+    renderSettings(s, bodyEl);
   } catch (e) {
     bodyEl.innerHTML = '<div class="muted-text">שגיאה: ' + e.message + '</div>';
   }
@@ -2126,6 +2125,11 @@ async function openSettings() {
 async function loadConnectionsDiagnose() {
   const body = document.getElementById('connections-body');
   if (!body) return;
+  // In cloud mode, local diagnostics are not available
+  if (window._supabase) {
+    body.innerHTML = '<div class="muted-text">🌐 גרסת ענן — חיבורים מנוהלים דרך Supabase</div>';
+    return;
+  }
   body.innerHTML = '<div class="conn-loading">טוען סטטוס חיבורים...</div>';
   try {
     const r = await fetch('/api/setup/diagnose');

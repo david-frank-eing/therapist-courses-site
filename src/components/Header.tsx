@@ -47,6 +47,16 @@ export const Header = () => {
           <span className="font-bold text-xl text-foreground">מרחב למטפלים</span>
         </Link>
 
+        {/* Desktop Nav — Dashboard shortcut for premium users */}
+        {profile && ['premium','vip'].includes(profile.subscription_tier) && (
+          <a
+            href="/carlos-dashboard/"
+            className="hidden md:flex items-center gap-1 px-3 py-1.5 text-sm font-medium bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-opacity ml-2"
+          >
+            🎛️ דאשבורד
+          </a>
+        )}
+
         {/* Desktop Nav */}
         <nav className="hidden md:flex items-center gap-1">
           {navLinks.map((link) => (
