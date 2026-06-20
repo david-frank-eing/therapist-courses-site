@@ -806,7 +806,7 @@ function renderConsistency(stats) {
   const streakLine = stats.streak > 0
     ? `<div class="cs-streak">🔥 רצף נוכחי: <strong>${stats.streak} ימים</strong> עם פרסום</div>`
     : `<div class="cs-streak muted-text">📉 אין רצף פעיל — תפרסם היום כדי להתחיל</div>`;
-  const weeklyRows = stats.weekly.map(w => `
+  const weeklyRows = (stats.weekly || []).map(w => `
     <div class="cs-week-row">
       <span class="cs-week-label">${w.weekLabel}</span>
       <span class="cs-week-vals">🎬 ${w.reels} · 📝 ${w.posts}</span>

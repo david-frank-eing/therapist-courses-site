@@ -140,9 +140,43 @@ exports.handler = async (event) => {
     console.error('Gmail fetch error:', e);
   }
 
-  // Save to Supabase sync_data so dashboard can read it
+  // Fetch urgent tasks for briefing
+  let urgentTasks = [];
+  try {
+    const tasksRes = await fetch(
+      `${supabaseUrl}/rest/v1/tasks?user_id=eq.${userId}&status=eq.pending&priority=eq.urgent&select=title`,
+      { headers: { 'apikey': supabaseKey, 'Authorization': 'Bearer ' + supabaseKey } }
+    );
+    urgentTasks = await tasksRes.json();
+  } catch(e) { console.error('Tasks fetch error:', e); }
+
+  // Build morning briefing
   const now = new Date().toISOString();
   const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' });
+  const todayHe = new Date().toLocaleDateString('he-IL', { timeZone: 'Asia/Jerusalem', weekday: 'long', day: 'numeric', month: 'numeric' });
+
+  const calSection = calendarEvents.length > 0
+    ? calendarEvents.map(e => `• ${e.time}${e.end_time ? '–' + e.end_time : ''} — ${e.title}${e.location ? ' 📍' + e.location : ''}`).join('\n')
+    : '• אין אירועים מתוזמנים';
+
+  const urgentSection = urgentTasks.length > 0
+    ? urgentTasks.map(t => `• ⚠️ ${t.title}`).join('\n')
+    : '• אין משימות דחופות';
+
+  const emailLine = emailSummary
+    ? emailSummary.split('\n').slice(0, 3).join('\n')
+    : '• אין מיילים חדשים';
+
+  const briefingText = `🌅 בריפינג בוקר — ${todayHe}
+━━━━━━━━━━━━━━
+📅 היומן היום
+${calSection}
+
+⚠️ דחוף לטיפול
+${urgentSection}
+
+📧 מיילים
+${emailLine}`;
 
   await Promise.all([
     fetch(`${supabaseUrl}/rest/v1/sync_data`, {
@@ -166,6 +200,17 @@ exports.handler = async (event) => {
       body: JSON.stringify({
         user_id: userId, key: 'email-summary',
         text_value: emailSummary, updated_at: now
+      })
+    }),
+    fetch(`${supabaseUrl}/rest/v1/sync_data`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json', 'apikey': supabaseKey,
+        'Authorization': 'Bearer ' + supabaseKey, 'Prefer': 'resolution=merge-duplicates'
+      },
+      body: JSON.stringify({
+        user_id: userId, key: 'morning-briefing',
+        text_value: briefingText, updated_at: now
       })
     })
   ]);
