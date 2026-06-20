@@ -119,8 +119,9 @@ function renderRefreshStatus(lastRefresh, todayDate) {
   if (lastRefresh.date === today && lastRefresh.status === 'success') {
     // עודכן היום בהצלחה מלאה
     bar.className = 'auto-refresh-bar auto-refresh-ok';
-    msg.textContent = `🟢 עודכן ב-${lastRefresh.time} היום`;
+    msg.innerHTML = `🟢 עודכן ב-${lastRefresh.time} היום &nbsp;<button class="refresh-now-btn" id="refresh-now-btn">🔄</button>`;
     bar.classList.remove('hidden');
+    _bindManualRefresh();
   } else if (lastRefresh.date === today) {
     // עודכן היום אבל לא הכל הצליח (status: partial / failed)
     bar.className = 'auto-refresh-bar auto-refresh-warn';
