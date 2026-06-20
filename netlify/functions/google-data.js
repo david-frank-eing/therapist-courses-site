@@ -75,31 +75,49 @@ exports.handler = async (event) => {
 
   const authH = { Authorization: 'Bearer ' + access_token };
 
-  // Fetch today's calendar events (Israel timezone)
+  // Fetch today + tomorrow calendar events (Israel timezone)
+  const tz = 'Asia/Jerusalem';
+  const nowDate = new Date();
+  const todayStr = nowDate.toLocaleDateString('en-CA', { timeZone: tz });
+  const tomorrowDate = new Date(nowDate.getTime() + 864e5);
+  const tomorrowStr = tomorrowDate.toLocaleDateString('en-CA', { timeZone: tz });
+
+  const _mapEvent = (ev, dateStr) => ({
+    title: ev.summary || '(ללא שם)',
+    time: ev.start?.dateTime
+      ? new Date(ev.start.dateTime).toLocaleTimeString('he-IL', { timeZone: tz, hour: '2-digit', minute: '2-digit' })
+      : 'כל היום',
+    end_time: ev.end?.dateTime
+      ? new Date(ev.end.dateTime).toLocaleTimeString('he-IL', { timeZone: tz, hour: '2-digit', minute: '2-digit' })
+      : null,
+    location: ev.location || '',
+    date: dateStr
+  });
+
   let calendarEvents = [];
+  let tomorrowEvents = [];
   try {
-    const now = new Date();
-    const tz = 'Asia/Jerusalem';
-    const todayStr = now.toLocaleDateString('en-CA', { timeZone: tz });
-    const timeMin = new Date(todayStr + 'T00:00:00').toISOString();
-    const timeMax = new Date(todayStr + 'T23:59:59').toISOString();
+    const timeMin = new Date(todayStr + 'T00:00:00+03:00').toISOString();
+    const timeMax = new Date(tomorrowStr + 'T23:59:59+03:00').toISOString();
 
     const calRes = await fetch(
-      `https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${timeMin}&timeMax=${timeMax}&singleEvents=true&orderBy=startTime&timeZone=${encodeURIComponent(tz)}`,
+      `https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${encodeURIComponent(timeMin)}&timeMax=${encodeURIComponent(timeMax)}&singleEvents=true&orderBy=startTime&timeZone=${encodeURIComponent(tz)}`,
       { headers: authH }
     );
     const calData = await calRes.json();
-    calendarEvents = (calData.items || []).map(ev => ({
-      title: ev.summary || '(ללא שם)',
-      time: ev.start?.dateTime
-        ? new Date(ev.start.dateTime).toLocaleTimeString('he-IL', { timeZone: tz, hour: '2-digit', minute: '2-digit' })
-        : 'כל היום',
-      end_time: ev.end?.dateTime
-        ? new Date(ev.end.dateTime).toLocaleTimeString('he-IL', { timeZone: tz, hour: '2-digit', minute: '2-digit' })
-        : null,
-      location: ev.location || '',
-      date: todayStr
-    }));
+    const allItems = calData.items || [];
+    calendarEvents = allItems
+      .filter(ev => {
+        const d = (ev.start?.dateTime || ev.start?.date || '').slice(0, 10);
+        return d === todayStr;
+      })
+      .map(ev => _mapEvent(ev, todayStr));
+    tomorrowEvents = allItems
+      .filter(ev => {
+        const d = (ev.start?.dateTime || ev.start?.date || '').slice(0, 10);
+        return d === tomorrowStr;
+      })
+      .map(ev => _mapEvent(ev, tomorrowStr));
   } catch (e) {
     console.error('Calendar fetch error:', e);
   }
@@ -211,6 +229,18 @@ ${emailLine}`;
       body: JSON.stringify({
         user_id: userId, key: 'morning-briefing',
         text_value: briefingText, updated_at: now
+      })
+    }),
+    fetch(`${supabaseUrl}/rest/v1/sync_data`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json', 'apikey': supabaseKey,
+        'Authorization': 'Bearer ' + supabaseKey, 'Prefer': 'resolution=merge-duplicates'
+      },
+      body: JSON.stringify({
+        user_id: userId, key: 'calendar-upcoming',
+        value: { events: tomorrowEvents, updated_at: now },
+        updated_at: now
       })
     })
   ]);
