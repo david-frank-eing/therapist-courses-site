@@ -2229,11 +2229,45 @@ async function openSettings() {
 async function loadConnectionsDiagnose() {
   const body = document.getElementById('connections-body');
   if (!body) return;
-  // In cloud mode, local diagnostics are not available
+
   if (window._supabase) {
-    body.innerHTML = '<div class="muted-text">🌐 גרסת ענן — חיבורים מנוהלים דרך Supabase</div>';
+    // Cloud mode — show Google connection status
+    body.innerHTML = '<div class="muted-text">טוען...</div>';
+    try {
+      const { data } = await window._supabase.from('google_tokens')
+        .select('google_email, updated_at').eq('user_id', window._userId).maybeSingle();
+      if (data) {
+        const updated = data.updated_at ? new Date(data.updated_at).toLocaleString('he-IL', { timeZone: 'Asia/Jerusalem' }) : '';
+        body.innerHTML = `
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 0">
+            <span style="font-size:1.4rem">✅</span>
+            <div>
+              <div style="font-weight:600">Google מחובר</div>
+              <div class="muted-text" style="font-size:.82rem">${data.google_email} · עודכן: ${updated}</div>
+            </div>
+            <button id="conn-google-refresh" style="margin-right:auto;padding:5px 12px;background:var(--primary);color:#fff;border:none;border-radius:8px;cursor:pointer">🔄 רענן</button>
+            <button id="conn-google-disconnect" style="padding:5px 12px;background:transparent;border:1px solid var(--border);border-radius:8px;cursor:pointer;color:var(--muted)">נתק</button>
+          </div>`;
+        document.getElementById('conn-google-refresh')?.addEventListener('click', _googleRefreshData);
+        document.getElementById('conn-google-disconnect')?.addEventListener('click', _googleDisconnect);
+      } else {
+        body.innerHTML = `
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 0">
+            <span style="font-size:1.4rem">⭕</span>
+            <div>
+              <div style="font-weight:600">Google לא מחובר</div>
+              <div class="muted-text" style="font-size:.82rem">חבר כדי לראות יומן ומיילים בדאשבורד</div>
+            </div>
+            <button id="conn-google-connect" style="margin-right:auto;padding:6px 14px;background:#4285f4;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600">🔗 חבר Google</button>
+          </div>`;
+        document.getElementById('conn-google-connect')?.addEventListener('click', _googleConnect);
+      }
+    } catch(e) {
+      body.innerHTML = '<div class="muted-text">שגיאה: ' + e.message + '</div>';
+    }
     return;
   }
+
   body.innerHTML = '<div class="conn-loading">טוען סטטוס חיבורים...</div>';
   try {
     const r = await fetch('/api/setup/diagnose');
@@ -2243,6 +2277,41 @@ async function loadConnectionsDiagnose() {
     renderConnectionLogs(data.recentLog || []);
   } catch (e) {
     body.innerHTML = '<div class="conn-error">שגיאה בטעינת סטטוס: ' + e.message + '</div>';
+  }
+}
+
+function _googleConnect() {
+  const uid = window._userId;
+  if (!uid) return;
+  window.location.href = '/.netlify/functions/google-auth?user_id=' + uid;
+}
+
+async function _googleDisconnect() {
+  if (!confirm('לנתק את Google? יומן ומיילים לא יוצגו עוד.')) return;
+  await window._supabase.from('google_tokens').delete().eq('user_id', window._userId);
+  toast('✓ Google נותק');
+  loadConnectionsDiagnose();
+}
+
+async function _googleRefreshData() {
+  const btn = document.getElementById('conn-google-refresh');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ מרענן...'; }
+  try {
+    const { data: { session } } = await window._supabase.auth.getSession();
+    const r = await fetch('/.netlify/functions/google-data', {
+      headers: { Authorization: 'Bearer ' + session.access_token }
+    });
+    const d = await r.json();
+    if (d.connected) {
+      toast('✓ יומן ומיילים עודכנו');
+      loadState();
+    } else {
+      toast('שגיאה ברענון', false);
+    }
+  } catch(e) {
+    toast('שגיאה: ' + e.message, false);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '🔄 רענן'; }
   }
 }
 
@@ -2398,18 +2467,7 @@ function renderSettings(s, bodyEl) {
 
     <div class="settings-section connections-section">
       <div class="settings-section-title">🔌 חיבורים</div>
-      <div id="connections-body" class="connections-body">
-        <div class="conn-loading">טוען סטטוס חיבורים...</div>
-      </div>
-      <div class="connections-actions">
-        <button id="conn-refresh-status" class="conn-secondary-btn">🔄 בדוק שוב</button>
-        <button id="conn-run-refresh" class="conn-primary-btn">🚀 הרץ רענון עכשיו</button>
-      </div>
-      <div id="conn-run-log" class="conn-run-log hidden"></div>
-      <details class="conn-recent-log">
-        <summary>📜 לוג רענונים אחרונים</summary>
-        <div id="conn-log-content" class="conn-log-content">טוען...</div>
-      </details>
+      <div id="connections-body" class="connections-body"></div>
     </div>
 
     <div class="settings-actions">
@@ -2963,6 +3021,16 @@ function _initApp() {
   const nd = $('#new-task-date');
   if (nd) nd.value = todayStr();
   initWelcome();
+  // Handle Google OAuth return
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('google_connected') === '1') {
+    history.replaceState({}, '', window.location.pathname);
+    toast('✅ Google חובר בהצלחה! מרענן נתונים...');
+    setTimeout(_googleRefreshData, 800);
+  } else if (urlParams.get('google_error')) {
+    history.replaceState({}, '', window.location.pathname);
+    toast('שגיאה בחיבור Google: ' + decodeURIComponent(urlParams.get('google_error')), false);
+  }
   loadState();
   // Auto-poll for new bookings every 30s
   setInterval(async () => {
