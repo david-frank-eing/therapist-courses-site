@@ -202,7 +202,7 @@ function renderBriefing(text) {
     if (dateMatch) {
       const [, dd, mm, yyyy] = dateMatch;
       const briefingDate = `${yyyy}-${mm.padStart(2,'0')}-${dd.padStart(2,'0')}`;
-      const todayDate = new Date().toISOString().slice(0, 10);
+      const todayDate = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' });
       if (briefingDate !== todayDate) {
         staleHtml = `<div class="br-stale-warning" style="cursor:pointer" onclick="typeof _googleRefreshData==='function'?_googleRefreshData():loadState()">⚠️ בריפינג מ-${dd}.${mm} — לחץ כאן לעדכון 🔄</div>`;
       }
