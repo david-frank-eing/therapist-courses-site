@@ -204,7 +204,7 @@ function renderBriefing(text) {
       const briefingDate = `${yyyy}-${mm.padStart(2,'0')}-${dd.padStart(2,'0')}`;
       const todayDate = new Date().toISOString().slice(0, 10);
       if (briefingDate !== todayDate) {
-        staleHtml = `<div class="br-stale-warning">⚠️ בריפינג מ-${dd}.${mm} — לחץ 🔄 לעדכון</div>`;
+        staleHtml = `<div class="br-stale-warning" style="cursor:pointer" onclick="typeof _googleRefreshData==='function'?_googleRefreshData():loadState()">⚠️ בריפינג מ-${dd}.${mm} — לחץ כאן לעדכון 🔄</div>`;
       }
     }
     // Skip the 🎯 focus section — it's already shown in the sidebar
