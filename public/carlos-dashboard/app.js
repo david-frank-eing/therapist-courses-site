@@ -1,4 +1,4 @@
-// Carlos Dashboard — client logic
+﻿// Carlos Dashboard ג€” client logic
 const $ = (s) => document.querySelector(s);
 
 // Israel-local date (YYYY-MM-DD). Using UTC toISOString caused false "stale" warnings
@@ -27,16 +27,16 @@ async function api(url, body) {
     if (!r.ok) throw new Error('HTTP ' + r.status);
     return await r.json();
   } catch (e) {
-    toast('שגיאה בחיבור לשרת: ' + e.message, false);
+    toast('׳©׳’׳™׳׳” ׳‘׳—׳™׳‘׳•׳¨ ׳׳©׳¨׳×: ' + e.message, false);
     throw e;
   }
 }
 
 // DOMAINS is populated dynamically from config.json via /api/state (userConfig.domains)
 // Default fallback used before first state load
-let DOMAINS = [{ id: 'unassigned', label: '⚪ לא משויך' }];
+let DOMAINS = [{ id: 'unassigned', label: 'ג× ׳׳ ׳׳©׳•׳™׳' }];
 
-// תיקון timezone: שימוש בתאריך מקומי (לא UTC) למניעת קפיצת יום אחרי חצות
+// ׳×׳™׳§׳•׳ timezone: ׳©׳™׳׳•׳© ׳‘׳×׳׳¨׳™׳ ׳׳§׳•׳׳™ (׳׳ UTC) ׳׳׳ ׳™׳¢׳× ׳§׳₪׳™׳¦׳× ׳™׳•׳ ׳׳—׳¨׳™ ׳—׳¦׳•׳×
 const todayStr = () => ilDate();
 
 const fmt = (s) => {
@@ -53,7 +53,7 @@ async function loadState() {
   if (s.userConfig && s.userConfig.domains && s.userConfig.domains.length) {
     DOMAINS = [
       ...s.userConfig.domains.map(d => ({ id: d.id, label: d.emoji + ' ' + d.label })),
-      { id: 'unassigned', label: '⚪ לא משויך' }
+      { id: 'unassigned', label: 'ג× ׳׳ ׳׳©׳•׳™׳' }
     ];
   }
   // Lite-mode toggle: hide AI surfaces when edition=lite
@@ -62,11 +62,11 @@ async function loadState() {
   document.body.classList.toggle('lite-mode', isLite);
   document.body.classList.toggle('has-ai-briefing', isLite && hasByok);
   // Update page title & footer assistant name
-  const aName = (s.userConfig && s.userConfig.assistantName) || 'דאשבורד';
+  const aName = (s.userConfig && s.userConfig.assistantName) || '׳“׳׳©׳‘׳•׳¨׳“';
   const titleEl = document.getElementById('page-title');
-  if (titleEl) document.title = aName + ' · דאשבורד';
+  if (titleEl) document.title = aName + ' ֲ· ׳“׳׳©׳‘׳•׳¨׳“';
   const footerEl = document.getElementById('footer-asst');
-  if (footerEl) footerEl.textContent = aName + ' דאשבורד';
+  if (footerEl) footerEl.textContent = aName + ' ׳“׳׳©׳‘׳•׳¨׳“';
   renderGreeting();
   renderBriefing(s.briefing);
   renderEmail(s.emailSummary);
@@ -95,19 +95,19 @@ function renderRefreshStatus(lastRefresh, todayDate) {
   const msg = document.getElementById('auto-refresh-msg');
   if (!bar || !msg) return;
 
-  // Lite mode: no refresh needed — hide banner completely
+  // Lite mode: no refresh needed ג€” hide banner completely
   if (document.body.classList.contains('lite-mode')) {
     bar.classList.add('hidden');
     return;
   }
 
   if (!lastRefresh) {
-    // No refresh has ever run — show subtle hint
+    // No refresh has ever run ג€” show subtle hint
     bar.className = 'auto-refresh-bar auto-refresh-none';
-    msg.innerHTML = '⚪ רענון יומי לא הוגדר — <a href="#" id="refresh-setup-link">הוראות הגדרה</a>';
+    msg.innerHTML = 'ג× ׳¨׳¢׳ ׳•׳ ׳™׳•׳׳™ ׳׳ ׳”׳•׳’׳“׳¨ ג€” <a href="#" id="refresh-setup-link">׳”׳•׳¨׳׳•׳× ׳”׳’׳“׳¨׳”</a>';
     document.getElementById('refresh-setup-link')?.addEventListener('click', e => {
       e.preventDefault();
-      toast('📋 פתח ⚙️ הגדרות → 🔌 חיבורים → "⏰ תזמן רענון"', true, 6000);
+      toast('נ“‹ ׳₪׳×׳— ג™ן¸ ׳”׳’׳“׳¨׳•׳× ג†’ נ” ׳—׳™׳‘׳•׳¨׳™׳ ג†’ "ג° ׳×׳–׳׳ ׳¨׳¢׳ ׳•׳"', true, 6000);
     });
     bar.classList.remove('hidden');
     return;
@@ -117,26 +117,26 @@ function renderRefreshStatus(lastRefresh, todayDate) {
   const daysDiff = Math.floor((new Date(today) - new Date(lastRefresh.date)) / 864e5);
 
   if (lastRefresh.date === today && lastRefresh.status === 'success') {
-    // עודכן היום בהצלחה מלאה
+    // ׳¢׳•׳“׳›׳ ׳”׳™׳•׳ ׳‘׳”׳¦׳׳—׳” ׳׳׳׳”
     bar.className = 'auto-refresh-bar auto-refresh-ok';
-    msg.textContent = `🟢 עודכן ב-${lastRefresh.time} היום`;
+    msg.textContent = `נ¢ ׳¢׳•׳“׳›׳ ׳‘-${lastRefresh.time} ׳”׳™׳•׳`;
     bar.classList.remove('hidden');
   } else if (lastRefresh.date === today) {
-    // עודכן היום אבל לא הכל הצליח (status: partial / failed)
+    // ׳¢׳•׳“׳›׳ ׳”׳™׳•׳ ׳׳‘׳ ׳׳ ׳”׳›׳ ׳”׳¦׳׳™׳— (status: partial / failed)
     bar.className = 'auto-refresh-bar auto-refresh-warn';
-    msg.innerHTML = `🟡 עודכן חלקית היום ב-${lastRefresh.time} (${lastRefresh.tasks_failed||0} משימות נכשלו) — <button class="refresh-now-btn" id="refresh-now-btn">🔄 נסה שוב</button>`;
+    msg.innerHTML = `נ¡ ׳¢׳•׳“׳›׳ ׳—׳׳§׳™׳× ׳”׳™׳•׳ ׳‘-${lastRefresh.time} (${lastRefresh.tasks_failed||0} ׳׳©׳™׳׳•׳× ׳ ׳›׳©׳׳•) ג€” <button class="refresh-now-btn" id="refresh-now-btn">נ”„ ׳ ׳¡׳” ׳©׳•׳‘</button>`;
     bar.classList.remove('hidden');
     _bindManualRefresh();
   } else if (daysDiff <= 1) {
-    // אתמול — הצג אזהרה קלה
+    // ׳׳×׳׳•׳ ג€” ׳”׳¦׳’ ׳׳–׳”׳¨׳” ׳§׳׳”
     bar.className = 'auto-refresh-bar auto-refresh-warn';
-    msg.innerHTML = `🟡 עדכון אחרון: אתמול ב-${lastRefresh.time} — <button class="refresh-now-btn" id="refresh-now-btn">🔄 עדכן עכשיו</button>`;
+    msg.innerHTML = `נ¡ ׳¢׳“׳›׳•׳ ׳׳—׳¨׳•׳: ׳׳×׳׳•׳ ׳‘-${lastRefresh.time} ג€” <button class="refresh-now-btn" id="refresh-now-btn">נ”„ ׳¢׳“׳›׳ ׳¢׳›׳©׳™׳•</button>`;
     bar.classList.remove('hidden');
     _bindManualRefresh();
   } else {
-    // יותר מיום — אזהרה בולטת
+    // ׳™׳•׳×׳¨ ׳׳™׳•׳ ג€” ׳׳–׳”׳¨׳” ׳‘׳•׳׳˜׳×
     bar.className = 'auto-refresh-bar auto-refresh-error';
-    msg.innerHTML = `🔴 לא עודכן ${daysDiff} ימים! (אחרון: ${lastRefresh.date}) — <button class="refresh-now-btn" id="refresh-now-btn">🔄 עדכן עכשיו</button>`;
+    msg.innerHTML = `נ”´ ׳׳ ׳¢׳•׳“׳›׳ ${daysDiff} ׳™׳׳™׳! (׳׳—׳¨׳•׳: ${lastRefresh.date}) ג€” <button class="refresh-now-btn" id="refresh-now-btn">נ”„ ׳¢׳“׳›׳ ׳¢׳›׳©׳™׳•</button>`;
     bar.classList.remove('hidden');
     _bindManualRefresh();
   }
@@ -145,9 +145,9 @@ function renderRefreshStatus(lastRefresh, todayDate) {
 function _bindManualRefresh() {
   document.getElementById('refresh-now-btn')?.addEventListener('click', async function () {
     const btn = this;
-    btn.disabled = true; btn.textContent = '⏳ מעדכן...';
+    btn.disabled = true; btn.textContent = 'ג³ ׳׳¢׳“׳›׳...';
     const msg = document.getElementById('auto-refresh-msg');
-    // Use the reliable script-based refresh (same as ⚙️ → 🔌 חיבורים → "הרץ רענון עכשיו").
+    // Use the reliable script-based refresh (same as ג™ן¸ ג†’ נ” ׳—׳™׳‘׳•׳¨׳™׳ ג†’ "׳”׳¨׳¥ ׳¨׳¢׳ ׳•׳ ׳¢׳›׳©׳™׳•").
     // The old chat-based /api/ask path was slow and didn't reliably write the files.
     try {
       const r = await api('/api/setup/run-refresh', {});
@@ -160,18 +160,18 @@ function _bindManualRefresh() {
           const st = await sr.json();
           const sec = Math.floor((Date.now() - start) / 1000);
           if (st.done) {
-            if (st.exitCode === 0) { toast('✅ נתונים עודכנו!'); loadState(); }
-            else { toast('⚠ הרענון נכשל חלקית — נסה שוב', false); btn.disabled = false; btn.textContent = '🔄 נסה שוב'; }
+            if (st.exitCode === 0) { toast('ג… ׳ ׳×׳•׳ ׳™׳ ׳¢׳•׳“׳›׳ ׳•!'); loadState(); }
+            else { toast('ג  ׳”׳¨׳¢׳ ׳•׳ ׳ ׳›׳©׳ ׳—׳׳§׳™׳× ג€” ׳ ׳¡׳” ׳©׳•׳‘', false); btn.disabled = false; btn.textContent = 'נ”„ ׳ ׳¡׳” ׳©׳•׳‘'; }
           } else {
-            if (msg) msg.textContent = `⏳ מעדכן... (${sec} שניות)`;
+            if (msg) msg.textContent = `ג³ ׳׳¢׳“׳›׳... (${sec} ׳©׳ ׳™׳•׳×)`;
             setTimeout(poll, 3000);
           }
-        } catch (e) { if (msg) msg.textContent = 'שגיאה — נסה שוב'; btn.disabled = false; btn.textContent = '🔄 נסה שוב'; }
+        } catch (e) { if (msg) msg.textContent = '׳©׳’׳™׳׳” ג€” ׳ ׳¡׳” ׳©׳•׳‘'; btn.disabled = false; btn.textContent = 'נ”„ ׳ ׳¡׳” ׳©׳•׳‘'; }
       };
       setTimeout(poll, 3000);
     } catch (e) {
-      toast('שגיאה בהפעלת רענון — נסה שוב', false);
-      btn.disabled = false; btn.textContent = '🔄 נסה שוב';
+      toast('׳©׳’׳™׳׳” ׳‘׳”׳₪׳¢׳׳× ׳¨׳¢׳ ׳•׳ ג€” ׳ ׳¡׳” ׳©׳•׳‘', false);
+      btn.disabled = false; btn.textContent = 'נ”„ ׳ ׳¡׳” ׳©׳•׳‘';
     }
   });
 }
@@ -186,7 +186,7 @@ document.getElementById('contact-search')?.addEventListener('input', e => {
 
 function renderGreeting() {
   const h = new Date().getHours();
-  const g = h < 12 ? 'בוקר טוב' : h < 18 ? 'צהריים טובים' : 'ערב טוב';
+  const g = h < 12 ? '׳‘׳•׳§׳¨ ׳˜׳•׳‘' : h < 18 ? '׳¦׳”׳¨׳™׳™׳ ׳˜׳•׳‘׳™׳' : '׳¢׳¨׳‘ ׳˜׳•׳‘';
   const uname = (lastState && lastState.userConfig && lastState.userConfig.userName) || '';
   $('#greeting').textContent = uname ? (g + ' ' + uname) : g;
   $('#date').textContent = new Date().toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'long' });
@@ -204,13 +204,13 @@ function renderBriefing(text) {
       const briefingDate = `${yyyy}-${mm.padStart(2,'0')}-${dd.padStart(2,'0')}`;
       const todayDate = new Date().toISOString().slice(0, 10);
       if (briefingDate !== todayDate) {
-        staleHtml = `<div class="br-stale-warning">⚠️ בריפינג מ-${dd}.${mm} — לחץ 🔄 לעדכון</div>`;
+        staleHtml = `<div class="br-stale-warning">ג ן¸ ׳‘׳¨׳™׳₪׳™׳ ׳’ ׳-${dd}.${mm} ג€” ׳׳—׳¥ נ”„ ׳׳¢׳“׳›׳•׳</div>`;
       }
     }
-    // Skip the 🎯 focus section — it's already shown in the sidebar
+    // Skip the נ¯ focus section ג€” it's already shown in the sidebar
     let skipFocus = false;
-    const FOCUS_RE  = /🎯/;
-    const SECTION_RE = /^[📅⚠️📊🎵📋💡🌅━]/u;
+    const FOCUS_RE  = /נ¯/;
+    const SECTION_RE = /^[נ“…ג ן¸נ“נµנ“‹נ’¡נ…ג”]/u;
     const bodyHtml = text.trim().split('\n').map(raw => {
       if (FOCUS_RE.test(raw)) { skipFocus = true; return ''; }
       if (skipFocus) {
@@ -219,64 +219,64 @@ function renderBriefing(text) {
       }
       const line = raw.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
       if (/^#{1,3}\s/.test(raw)) return `<div class="br-heading">${line.replace(/^#+\s+/, '')}</div>`;
-      if (/^[-*•]\s/.test(raw)) return `<div class="br-item">${line.replace(/^[-*•]\s+/, '')}</div>`;
+      if (/^[-*ג€¢]\s/.test(raw)) return `<div class="br-item">${line.replace(/^[-*ג€¢]\s+/, '')}</div>`;
       if (raw.trim() === '') return '<div class="br-gap"></div>';
       return `<div class="br-line">${line}</div>`;
     }).join('');
     el.innerHTML = staleHtml + bodyHtml;
   } else {
-    // BYOK: if API key set → show generate button; if lite with no key → upgrade hint
+    // BYOK: if API key set ג†’ show generate button; if lite with no key ג†’ upgrade hint
     if (document.body.classList.contains('has-ai-briefing')) {
       el.innerHTML = `<div class="br-byok-prompt">
-        <div class="muted-text" style="margin-bottom:8px">אין עדיין בריפינג להיום</div>
-        <button id="byok-gen-btn" class="byok-gen-btn">✨ צור בריפינג עכשיו</button>
+        <div class="muted-text" style="margin-bottom:8px">׳׳™׳ ׳¢׳“׳™׳™׳ ׳‘׳¨׳™׳₪׳™׳ ׳’ ׳׳”׳™׳•׳</div>
+        <button id="byok-gen-btn" class="byok-gen-btn">ג¨ ׳¦׳•׳¨ ׳‘׳¨׳™׳₪׳™׳ ׳’ ׳¢׳›׳©׳™׳•</button>
       </div>`;
       document.getElementById('byok-gen-btn')?.addEventListener('click', _generateByokBriefing);
     } else if (document.body.classList.contains('lite-mode')) {
-      el.innerHTML = `<div class="muted-text">💡 הוסף מפתח Anthropic ב-⚙️ הגדרות כדי לקבל בריפינג בוקר חכם</div>`;
+      el.innerHTML = `<div class="muted-text">נ’¡ ׳”׳•׳¡׳£ ׳׳₪׳×׳— Anthropic ׳‘-ג™ן¸ ׳”׳’׳“׳¨׳•׳× ׳›׳“׳™ ׳׳§׳‘׳ ׳‘׳¨׳™׳₪׳™׳ ׳’ ׳‘׳•׳§׳¨ ׳—׳›׳</div>`;
     } else {
-      el.innerHTML = `<div class="muted-text">בריפינג בוקר יופיע כאן אחרי הרענון הבוקר (07:00)<br>
-        <span class="br-hint">💡 לרענון מיידי — לחץ 🔄 בפינה</span></div>`;
+      el.innerHTML = `<div class="muted-text">׳‘׳¨׳™׳₪׳™׳ ׳’ ׳‘׳•׳§׳¨ ׳™׳•׳₪׳™׳¢ ׳›׳׳ ׳׳—׳¨׳™ ׳”׳¨׳¢׳ ׳•׳ ׳”׳‘׳•׳§׳¨ (07:00)<br>
+        <span class="br-hint">נ’¡ ׳׳¨׳¢׳ ׳•׳ ׳׳™׳™׳“׳™ ג€” ׳׳—׳¥ נ”„ ׳‘׳₪׳™׳ ׳”</span></div>`;
     }
   }
 }
 
 async function _generateByokBriefing() {
   const btn = document.getElementById('byok-gen-btn');
-  if (btn) { btn.disabled = true; btn.textContent = '⏳ יוצר בריפינג...'; }
+  if (btn) { btn.disabled = true; btn.textContent = 'ג³ ׳™׳•׳¦׳¨ ׳‘׳¨׳™׳₪׳™׳ ׳’...'; }
   try {
     const r = await fetch('/api/briefing/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
     const j = await r.json();
-    if (!r.ok) throw new Error(j.message || j.error || 'שגיאה');
-    toast('✓ בריפינג נוצר');
+    if (!r.ok) throw new Error(j.message || j.error || '׳©׳’׳™׳׳”');
+    toast('ג“ ׳‘׳¨׳™׳₪׳™׳ ׳’ ׳ ׳•׳¦׳¨');
     loadState();
   } catch (e) {
-    toast('שגיאה ביצירת בריפינג: ' + e.message, false);
-    if (btn) { btn.disabled = false; btn.textContent = '✨ צור בריפינג עכשיו'; }
+    toast('׳©׳’׳™׳׳” ׳‘׳™׳¦׳™׳¨׳× ׳‘׳¨׳™׳₪׳™׳ ׳’: ' + e.message, false);
+    if (btn) { btn.disabled = false; btn.textContent = 'ג¨ ׳¦׳•׳¨ ׳‘׳¨׳™׳₪׳™׳ ׳’ ׳¢׳›׳©׳™׳•'; }
   }
 }
 
 function renderEmail(summary) {
   $('#email-body').innerHTML = (summary && summary.trim())
     ? summary.split('\n').filter(l => l.trim()).map(l => `<div>${l}</div>`).join('')
-    : '<span class="muted-text">סיכום מיילים יופיע כאן אחרי הרענון הבוקר (07:00)<br><span class="br-hint">💡 לרענון מיידי — לחץ 🔄 בפינה</span></span>';
+    : '<span class="muted-text">׳¡׳™׳›׳•׳ ׳׳™׳™׳׳™׳ ׳™׳•׳₪׳™׳¢ ׳›׳׳ ׳׳—׳¨׳™ ׳”׳¨׳¢׳ ׳•׳ ׳”׳‘׳•׳§׳¨ (07:00)<br><span class="br-hint">נ’¡ ׳׳¨׳¢׳ ׳•׳ ׳׳™׳™׳“׳™ ג€” ׳׳—׳¥ נ”„ ׳‘׳₪׳™׳ ׳”</span></span>';
 }
 
-// (renderFocus moved to sidebar — see renderSbFocus below)
+// (renderFocus moved to sidebar ג€” see renderSbFocus below)
 
 function dueLabel(task) {
   if (!task.due_date) return '';
   const tmrw = ilDate(1);
   const d = task.due_date;
-  const day = d === todayStr() ? 'היום' : d === tmrw ? 'מחר' : d.slice(8, 10) + '/' + d.slice(5, 7);
+  const day = d === todayStr() ? '׳”׳™׳•׳' : d === tmrw ? '׳׳—׳¨' : d.slice(8, 10) + '/' + d.slice(5, 7);
   let time = '';
   if (task.reminder_at && task.reminder_at.length >= 16) time = ' ' + task.reminder_at.slice(11, 16);
-  return '📅 ' + day + time;
+  return 'נ“… ' + day + time;
 }
 
 function renderTasks(tasks, date, completedToday) {
   const tmrw = tomorrowStr();
-  // משימות של מחר מוצגות בסקשן "מחר" — לא כאן
+  // ׳׳©׳™׳׳•׳× ׳©׳ ׳׳—׳¨ ׳׳•׳¦׳’׳•׳× ׳‘׳¡׳§׳©׳ "׳׳—׳¨" ג€” ׳׳ ׳›׳׳
   const todayTasks = tasks.filter(t => t.due_date !== tmrw);
   const sorted = [...todayTasks].sort((a, b) => {
     const u = (a.priority === 'urgent' ? 0 : 1) - (b.priority === 'urgent' ? 0 : 1);
@@ -291,35 +291,35 @@ function renderTasks(tasks, date, completedToday) {
         const dl = dueLabel(t);
         const cc = contactChip(t);
         const overdueCls = isOverdue(t) ? 'overdue' : '';
-        const overdueMark = isOverdue(t) ? '⚠️ ' : '';
-        const notesChip = (t.notes && t.notes.trim()) ? `<span class="notes-chip" title="${(t.notes||'').replace(/"/g,'&quot;').slice(0,200)}">📝 בתהליך</span>` : '';
+        const overdueMark = isOverdue(t) ? 'ג ן¸ ' : '';
+        const notesChip = (t.notes && t.notes.trim()) ? `<span class="notes-chip" title="${(t.notes||'').replace(/"/g,'&quot;').slice(0,200)}">נ“ ׳‘׳×׳”׳׳™׳</span>` : '';
         return `<li class="${overdueCls}" data-id="${t.id}"><input type="checkbox" data-id="${t.id}">
-          <span class="${t.priority === 'urgent' ? 'urgent' : ''}">${overdueMark}${t.priority === 'urgent' ? '⚠️ ' : ''}${t.title}</span>
+          <span class="${t.priority === 'urgent' ? 'urgent' : ''}">${overdueMark}${t.priority === 'urgent' ? 'ג ן¸ ' : ''}${t.title}</span>
           ${notesChip}
           ${cc}
           ${dl ? `<span class="due-chip">${dl}</span>` : ''}
-          <button class="row-edit-btn" data-id="${t.id}" data-kind="task" title="ערוך">✏️</button></li>`;
+          <button class="row-edit-btn" data-id="${t.id}" data-kind="task" title="׳¢׳¨׳•׳">גן¸</button></li>`;
       }).join('')
-    : '<li class="muted-text">אין משימות ממתינות 🎉</li>';
+    : '<li class="muted-text">׳׳™׳ ׳׳©׳™׳׳•׳× ׳׳׳×׳™׳ ׳•׳× נ‰</li>';
 
-  // Completed today — shown with strikethrough
+  // Completed today ג€” shown with strikethrough
   const doneHtml = (completedToday || []).length
     ? (completedToday || []).map(t =>
         `<li class="task-done-today" data-id="${t.id}">
           <input type="checkbox" checked data-id="${t.id}" class="task-undo-cb">
           <span>${t.title}</span>
-          <span class="done-chip">✓ בוצע</span>
+          <span class="done-chip">ג“ ׳‘׳•׳¦׳¢</span>
         </li>`
       ).join('')
     : '';
 
   $('#task-list').innerHTML = pendingHtml +
-    (doneHtml ? `<li class="done-divider">הושלמו היום</li>${doneHtml}` : '');
+    (doneHtml ? `<li class="done-divider">׳”׳•׳©׳׳׳• ׳”׳™׳•׳</li>${doneHtml}` : '');
 
   document.querySelectorAll('#task-list input[type=checkbox]:not(.task-undo-cb)').forEach(cb =>
     cb.addEventListener('change', async () => {
       await api('/api/task', { action: 'toggle', id: cb.dataset.id });
-      toast('✓ משימה הושלמה');
+      toast('ג“ ׳׳©׳™׳׳” ׳”׳•׳©׳׳׳”');
       loadState();
     }));
 
@@ -328,7 +328,7 @@ function renderTasks(tasks, date, completedToday) {
     cb.addEventListener('change', async () => {
       if (!cb.checked) {
         await api('/api/task/undo', { id: cb.dataset.id });
-        toast('↩ משימה חזרה לממתינות');
+        toast('ג†© ׳׳©׳™׳׳” ׳—׳–׳¨׳” ׳׳׳׳×׳™׳ ׳•׳×');
         loadState();
       }
     }));
@@ -355,28 +355,28 @@ function openEditForm(rowEl, kind, id) {
     : ((lastState.content || {}).items || []).find(x => x.id === id);
   if (!item) { rowEl.classList.remove('editing'); return; }
   const taskCategoryOpts = [
-    ['general',   '📌 כללי'],
-    ['health',    '💊 בריאות / טיפולים'],
-    ['marketing', '📢 שיווק'],
-    ['music',     '🎵 מוזיקה / DJ'],
-    ['learning',  '📚 לימוד']
+    ['general',   'נ“ ׳›׳׳׳™'],
+    ['health',    'נ’ ׳‘׳¨׳™׳׳•׳× / ׳˜׳™׳₪׳•׳׳™׳'],
+    ['marketing', 'נ“¢ ׳©׳™׳•׳•׳§'],
+    ['music',     'נµ ׳׳•׳–׳™׳§׳” / DJ'],
+    ['learning',  'נ“ ׳׳™׳׳•׳“']
   ];
   const taskPriorityOpts = [
-    ['normal', '🔵 רגיל'],
-    ['urgent', '⚠️ דחוף'],
-    ['low',    '⚪ נמוך']
+    ['normal', 'נ”µ ׳¨׳’׳™׳'],
+    ['urgent', 'ג ן¸ ׳“׳—׳•׳£'],
+    ['low',    'ג× ׳ ׳׳•׳']
   ];
   const fieldsCfg = kind === 'task'
     ? [
-        ['title','כותרת','text'],
-        ['category','קטגוריה','select', taskCategoryOpts],
-        ['priority','עדיפות','select', taskPriorityOpts],
-        ['due_date','תאריך','date'],
-        ['reminder_at','שעה','time'],
-        ['notes','הערות','textarea']
+        ['title','׳›׳•׳×׳¨׳×','text'],
+        ['category','׳§׳˜׳’׳•׳¨׳™׳”','select', taskCategoryOpts],
+        ['priority','׳¢׳“׳™׳₪׳•׳×','select', taskPriorityOpts],
+        ['due_date','׳×׳׳¨׳™׳','date'],
+        ['reminder_at','׳©׳¢׳”','time'],
+        ['notes','׳”׳¢׳¨׳•׳×','textarea']
       ]
-    : [['title','כותרת','text'],['body','תוכן הפוסט','textarea'],
-       ['scheduled_for','מתוזמן ליום','date'],['docs_url','Google Docs URL','text']];
+    : [['title','׳›׳•׳×׳¨׳×','text'],['body','׳×׳•׳›׳ ׳”׳₪׳•׳¡׳˜','textarea'],
+       ['scheduled_for','׳׳×׳•׳–׳׳ ׳׳™׳•׳','date'],['docs_url','Google Docs URL','text']];
   const valueOf = (k) => {
     if (kind === 'task' && k === 'reminder_at' && item.reminder_at && item.reminder_at.length >= 16) return item.reminder_at.slice(11, 16);
     if (kind === 'task' && k === 'category') return item.category || 'general';
@@ -386,9 +386,9 @@ function openEditForm(rowEl, kind, id) {
   const formHtml = `<div class="inline-edit-form">
     ${fieldsCfg.map(([k, l, t, opts]) => fld(k, l, valueOf(k), t, opts)).join('')}
     <div class="ef-actions">
-      <button class="ef-save" type="button">שמור</button>
-      ${kind === 'task' ? '<button class="ef-del" type="button">✕ מחק</button>' : ''}
-      <button class="ef-cancel" type="button">סגור</button>
+      <button class="ef-save" type="button">׳©׳׳•׳¨</button>
+      ${kind === 'task' ? '<button class="ef-del" type="button">ג• ׳׳—׳§</button>' : ''}
+      <button class="ef-cancel" type="button">׳¡׳’׳•׳¨</button>
     </div>
   </div>`;
   rowEl.insertAdjacentHTML('afterend', formHtml);
@@ -415,13 +415,13 @@ function openEditForm(rowEl, kind, id) {
       if (widget) data.creative_urls = JSON.parse(widget.dataset.urls || '[]');
     }
     await api(kind === 'task' ? '/api/task/update' : '/api/content/update', { ...data, id });
-    toast('✓ עודכן');
+    toast('ג“ ׳¢׳•׳“׳›׳');
     loadState();
   });
   const del = form.querySelector('.ef-del');
   if (del) del.addEventListener('click', async () => {
     await api('/api/task', { action: 'toggle', id });
-    toast('🗑️ המשימה הוסרה');
+    toast('נ—‘ן¸ ׳”׳׳©׳™׳׳” ׳”׳•׳¡׳¨׳”');
     loadState();
   });
   form.querySelector('.ef-cancel').addEventListener('click', () => loadState());
@@ -440,10 +440,10 @@ function renderMultiImgGallery(container, urls) {
     return `<div class="mig-item" data-url="${url}">
       ${isImg
         ? `<img src="${url}" class="mig-thumb" alt="${displayName}">`
-        : `<div class="mig-file-icon">📎</div>`}
+        : `<div class="mig-file-icon">נ“</div>`}
       <span class="mig-name" title="${displayName}">${displayName}</span>
-      <span class="mig-path" title="${fullPath}">uploads\\${fname.slice(0,20)}${fname.length>20?'…':''}</span>
-      <button class="mig-remove" type="button" title="הסר">✕</button>
+      <span class="mig-path" title="${fullPath}">uploads\\${fname.slice(0,20)}${fname.length>20?'ג€¦':''}</span>
+      <button class="mig-remove" type="button" title="׳”׳¡׳¨">ג•</button>
     </div>`;
   }).join('');
 
@@ -461,7 +461,7 @@ function renderMultiImgGallery(container, urls) {
 
 function updateMigHint(container, count) {
   const hint = container.querySelector('.mig-count-hint');
-  if (hint) hint.textContent = count + ' תמונות · עד 20MB לכל קובץ';
+  if (hint) hint.textContent = count + ' ׳×׳׳•׳ ׳•׳× ֲ· ׳¢׳“ 20MB ׳׳›׳ ׳§׳•׳‘׳¥';
 }
 
 function buildMultiImgWidget(existingUrls) {
@@ -470,11 +470,11 @@ function buildMultiImgWidget(existingUrls) {
   div.className = 'multi-img-widget';
   div.dataset.urls = JSON.stringify(urls);
   div.innerHTML = `
-    <span class="mig-label">📸 תמונות / קריאטיבים</span>
+    <span class="mig-label">נ“¸ ׳×׳׳•׳ ׳•׳× / ׳§׳¨׳™׳׳˜׳™׳‘׳™׳</span>
     <div class="mig-list"></div>
     <div class="mig-add">
-      <input type="file" class="mig-file-input" accept="image/*,video/*" multiple placeholder="בחר קבצים...">
-      <div class="mig-count-hint">${urls.length} תמונות · עד 20MB לכל קובץ</div>
+      <input type="file" class="mig-file-input" accept="image/*,video/*" multiple placeholder="׳‘׳—׳¨ ׳§׳‘׳¦׳™׳...">
+      <div class="mig-count-hint">${urls.length} ׳×׳׳•׳ ׳•׳× ֲ· ׳¢׳“ 20MB ׳׳›׳ ׳§׳•׳‘׳¥</div>
     </div>
   `;
   renderMultiImgGallery(div, urls);
@@ -482,7 +482,7 @@ function buildMultiImgWidget(existingUrls) {
   div.querySelector('.mig-file-input').addEventListener('change', async (e) => {
     const files = Array.from(e.target.files);
     for (const file of files) {
-      if (file.size > 20 * 1024 * 1024) { toast('הקובץ גדול מ-20MB: ' + file.name, false); continue; }
+      if (file.size > 20 * 1024 * 1024) { toast('׳”׳§׳•׳‘׳¥ ׳’׳“׳•׳ ׳-20MB: ' + file.name, false); continue; }
       const reader = new FileReader();
       await new Promise(resolve => {
         reader.onload = async () => {
@@ -495,9 +495,9 @@ function buildMultiImgWidget(existingUrls) {
               div.dataset.urls = JSON.stringify(current);
               updateMigHint(div, current.length);
               renderMultiImgGallery(div, current);
-              toast('✓ ' + file.name.slice(0, 30) + ' הועלה');
+              toast('ג“ ' + file.name.slice(0, 30) + ' ׳”׳•׳¢׳׳”');
             }
-          } catch (err) { toast('שגיאה בהעלאה: ' + file.name, false); }
+          } catch (err) { toast('׳©׳’׳™׳׳” ׳‘׳”׳¢׳׳׳”: ' + file.name, false); }
           resolve();
         };
         reader.readAsDataURL(file);
@@ -511,11 +511,11 @@ function buildMultiImgWidget(existingUrls) {
 function contactChip(t) {
   if (t.client_id) {
     const c = (lastState && lastState.clients || []).find(x => x.id === t.client_id);
-    if (c) return `<span class="contact-chip">💆 ${c.name || '(לקוח)'}</span>`;
+    if (c) return `<span class="contact-chip">נ’† ${c.name || '(׳׳˜׳•׳₪׳)'}</span>`;
   }
   if (t.event_id) {
     const e = (lastState && lastState.events || []).find(x => x.id === t.event_id);
-    if (e) return `<span class="contact-chip">🎵 ${[e.date, e.contact].filter(Boolean).join(' · ') || '(אירוע)'}</span>`;
+    if (e) return `<span class="contact-chip">נµ ${[e.date, e.contact].filter(Boolean).join(' ֲ· ') || '(׳׳™׳¨׳•׳¢)'}</span>`;
   }
   return '';
 }
@@ -539,16 +539,16 @@ function renderTomorrow(tasks, upcomingEvents) {
       const evts = (data && data.events)
         ? data.events.filter(e => e.date === tmrw) : [];
       if (evts.length) {
-        gcalEl.innerHTML = '<div class="tmrw-gcal-title">📆 פגישות ביומן</div>' +
+        gcalEl.innerHTML = '<div class="tmrw-gcal-title">נ“† ׳₪׳’׳™׳©׳•׳× ׳‘׳™׳•׳׳</div>' +
           evts.map(e => {
-            const timeStr = (!e.time || e.time === 'allday') ? 'כל היום' : e.time;
+            const timeStr = (!e.time || e.time === 'allday') ? '׳›׳ ׳”׳™׳•׳' : e.time;
             return `<div class="tmrw-gcal-item">` +
               `<span class="tmrw-gcal-time">${timeStr}</span>` +
               `<span class="tmrw-gcal-title-text">${_esc(e.title)}</span>` +
               `</div>`;
           }).join('');
       } else {
-        gcalEl.innerHTML = '<div class="tmrw-gcal-empty">📆 אין פגישות ביומן למחר</div>';
+        gcalEl.innerHTML = '<div class="tmrw-gcal-empty">נ“† ׳׳™׳ ׳₪׳’׳™׳©׳•׳× ׳‘׳™׳•׳׳ ׳׳׳—׳¨</div>';
       }
     };
     // Use state data if available, otherwise fetch directly
@@ -556,7 +556,7 @@ function renderTomorrow(tasks, upcomingEvents) {
       renderGcal(upcomingEvents);
     } else {
       api('/api/calendar-upcoming').then(renderGcal).catch(() => {
-        gcalEl.innerHTML = '<div class="tmrw-gcal-empty">📆 יומן לא זמין</div>';
+        gcalEl.innerHTML = '<div class="tmrw-gcal-empty">נ“† ׳™׳•׳׳ ׳׳ ׳–׳׳™׳</div>';
       });
     }
   }
@@ -567,12 +567,12 @@ function renderTomorrow(tasks, upcomingEvents) {
 
   list.innerHTML = tmrwTasks.length
     ? tmrwTasks.map(t => {
-        const time = t.reminder_at && t.reminder_at.length >= 16 ? ' · ' + t.reminder_at.slice(11, 16) : '';
+        const time = t.reminder_at && t.reminder_at.length >= 16 ? ' ֲ· ' + t.reminder_at.slice(11, 16) : '';
         return `<li data-id="${t.id}">
           <input type="checkbox" data-id="${t.id}">
           <span>${t.title}</span>
-          ${time ? `<span class="due-chip">⏰${time}</span>` : ''}
-          <button class="row-edit-btn" data-id="${t.id}" data-kind="task" title="ערוך">✏️</button>
+          ${time ? `<span class="due-chip">ג°${time}</span>` : ''}
+          <button class="row-edit-btn" data-id="${t.id}" data-kind="task" title="׳¢׳¨׳•׳">גן¸</button>
         </li>`;
       }).join('')
     : '';
@@ -580,7 +580,7 @@ function renderTomorrow(tasks, upcomingEvents) {
   list.querySelectorAll('input[type=checkbox]').forEach(cb =>
     cb.addEventListener('change', async () => {
       await api('/api/task', { action: 'toggle', id: cb.dataset.id });
-      toast('✓ הושלם');
+      toast('ג“ ׳”׳•׳©׳׳');
       loadState();
     }));
 
@@ -589,7 +589,7 @@ function renderTomorrow(tasks, upcomingEvents) {
 
 $('#add-tomorrow').addEventListener('click', async () => {
   const v = document.getElementById('tomorrow-task').value.trim();
-  if (!v) { toast('כתוב משימה קודם', false); return; }
+  if (!v) { toast('׳›׳×׳•׳‘ ׳׳©׳™׳׳” ׳§׳•׳“׳', false); return; }
   const tmrw = tomorrowStr();
   const time = document.getElementById('tomorrow-time').value;
   const payload = { action: 'add', title: v, due_date: tmrw };
@@ -597,7 +597,7 @@ $('#add-tomorrow').addEventListener('click', async () => {
   await api('/api/task', payload);
   document.getElementById('tomorrow-task').value = '';
   document.getElementById('tomorrow-time').value = '';
-  toast('✓ נוסף למחר — ' + (time ? time : 'ללא שעה'));
+  toast('ג“ ׳ ׳•׳¡׳£ ׳׳׳—׳¨ ג€” ' + (time ? time : '׳׳׳ ׳©׳¢׳”'));
   loadState();
 });
 document.getElementById('tomorrow-task')?.addEventListener('keydown', e => {
@@ -636,12 +636,12 @@ function renderHabits(habits, date) {
         <input type="checkbox" data-id="${h.id}" ${done.includes(h.id) ? 'checked' : ''}>
         <span class="habit-name">${h.emoji} ${h.label}</span>
         <span class="habit-stats">
-          <span>${weeklyCount(h.id)}/7 שבוע</span>
-          <span>${monthCount(h.id)}/${daysInMonth} חודש</span>
-          <span class="habit-streak">🔥 ${streakOf(h.id)}</span>
+          <span>${weeklyCount(h.id)}/7 ׳©׳‘׳•׳¢</span>
+          <span>${monthCount(h.id)}/${daysInMonth} ׳—׳•׳“׳©</span>
+          <span class="habit-streak">נ”¥ ${streakOf(h.id)}</span>
         </span>
       </label>`).join('')
-    : '<div class="muted-text" style="font-size:.85rem;padding:6px 0">אין הרגלים — הוסף דרך ⚙️ הגדרות</div>';
+    : '<div class="muted-text" style="font-size:.85rem;padding:6px 0">׳׳™׳ ׳”׳¨׳’׳׳™׳ ג€” ׳”׳•׳¡׳£ ׳“׳¨׳ ג™ן¸ ׳”׳’׳“׳¨׳•׳×</div>';
 
   $('#habit-list').innerHTML = habitHtml;
 
@@ -655,21 +655,21 @@ function renderHabits(habits, date) {
 function renderTimeToday(timeLog, date) {
   const sessions = (timeLog.sessions || []).filter(s => (s.ended_at || '').slice(0, 10) === date);
   const el = $('#time-list');
-  if (!sessions.length) { el.innerHTML = '<span class="muted-text">עדיין לא נרשם זמן היום</span>'; return; }
+  if (!sessions.length) { el.innerHTML = '<span class="muted-text">׳¢׳“׳™׳™׳ ׳׳ ׳ ׳¨׳©׳ ׳–׳׳ ׳”׳™׳•׳</span>'; return; }
   const total = sessions.reduce((sum, x) => sum + (x.seconds || 0), 0);
   el.innerHTML = sessions.map(s =>
     `<div class="time-row">
        <span>${s.label || s.domain}</span>
        <span class="time-meta">
-         <span class="muted-text">${fmt(s.seconds)}${s.note ? ' · ' + s.note : ''}</span>
-         <button class="time-del" data-id="${s.id}" title="מחק רישום">✕</button>
+         <span class="muted-text">${fmt(s.seconds)}${s.note ? ' ֲ· ' + s.note : ''}</span>
+         <button class="time-del" data-id="${s.id}" title="׳׳—׳§ ׳¨׳™׳©׳•׳">ג•</button>
        </span>
      </div>`
-  ).join('') + `<div class="time-total">סה"כ היום: ${fmt(total)}</div>`;
+  ).join('') + `<div class="time-total">׳¡׳”"׳› ׳”׳™׳•׳: ${fmt(total)}</div>`;
   document.querySelectorAll('.time-del').forEach(b =>
     b.addEventListener('click', async () => {
       await api('/api/timer/delete', { id: b.dataset.id });
-      toast('🗑️ הזמן נמחק');
+      toast('נ—‘ן¸ ׳”׳–׳׳ ׳ ׳׳—׳§');
       loadState();
     }));
 }
@@ -678,12 +678,12 @@ function renderTimeToday(timeLog, date) {
 const NEXT_STATUS = { idea: 'draft', draft: 'ready', ready: 'published' };
 let _contentCollapsed = localStorage.getItem('contentPublishedCollapsed') !== 'false';
 const STATUS_LABEL = {
-  idea: '💡 רעיונות',
-  draft: '✏️ טיוטות',
-  ready: '✅ מוכנים לפרסום',
-  published: '📤 פורסם השבוע'
+  idea: 'נ’¡ ׳¨׳¢׳™׳•׳ ׳•׳×',
+  draft: 'גן¸ ׳˜׳™׳•׳˜׳•׳×',
+  ready: 'ג… ׳׳•׳›׳ ׳™׳ ׳׳₪׳¨׳¡׳•׳',
+  published: 'נ“₪ ׳₪׳•׳¨׳¡׳ ׳”׳©׳‘׳•׳¢'
 };
-const NEXT_LABEL = { idea: '→ טיוטה', draft: '→ מוכן', ready: '→ פורסם' };
+const NEXT_LABEL = { idea: 'ג†’ ׳˜׳™׳•׳˜׳”', draft: 'ג†’ ׳׳•׳›׳', ready: 'ג†’ ׳₪׳•׳¨׳¡׳' };
 
 // CONTENT_DOMAINS reads from DOMAINS (loaded from config.json in loadState)
 const domainLabel = id => (DOMAINS.find(d => d.id === id) || DOMAINS[DOMAINS.length - 1]).label;
@@ -698,12 +698,12 @@ function renderContent(content, weekly) {
     const isPublished = s === 'published';
     const collapsedCls = isPublished && _contentCollapsed ? ' c-collapsed' : '';
     const toggleBtn = isPublished
-      ? `<button class="c-bucket-toggle" data-bucket="published" title="${_contentCollapsed ? 'הרחב' : 'מזער'}">${_contentCollapsed ? '▸' : '▾'}</button>`
+      ? `<button class="c-bucket-toggle" data-bucket="published" title="${_contentCollapsed ? '׳”׳¨׳—׳‘' : '׳׳–׳¢׳¨'}">${_contentCollapsed ? 'ג–¸' : 'ג–¾'}</button>`
       : '';
     return `<div class="c-bucket c-bucket-${s}${collapsedCls}">
       <div class="c-bucket-title">${toggleBtn}${STATUS_LABEL[s]} (${buckets[s].length})</div>
       ${buckets[s].map(item => {
-        const icon = item.type === 'reel' ? '🎬' : '📝';
+        const icon = item.type === 'reel' ? 'נ¬' : 'נ“';
         const next = NEXT_STATUS[item.status];
             const thumbUrls = item.creative_urls && item.creative_urls.length
           ? item.creative_urls
@@ -712,29 +712,29 @@ function renderContent(content, weekly) {
         const isImg = firstThumb && /\.(jpe?g|png|gif|webp|svg)(\?|$)/i.test(firstThumb);
         const thumbHtml = thumbUrls.length
           ? (isImg
-              ? `<img src="${firstThumb}" class="c-item-thumb" title="${thumbUrls.length} תמונות">`
-              : `<span class="c-img-badge">📎 ${thumbUrls.length}</span>`)
+              ? `<img src="${firstThumb}" class="c-item-thumb" title="${thumbUrls.length} ׳×׳׳•׳ ׳•׳×">`
+              : `<span class="c-img-badge">נ“ ${thumbUrls.length}</span>`)
           : '';
         return `<div class="c-item" data-id="${item.id}">
           ${thumbHtml}
-          <span class="c-item-title">${icon} ${item.title || '(ללא כותרת)'}</span>
+          <span class="c-item-title">${icon} ${item.title || '(׳׳׳ ׳›׳•׳×׳¨׳×)'}</span>
           <span class="c-domain">${domainLabel(item.domain)}</span>
-          ${thumbUrls.length > 1 ? `<span class="c-img-badge">📸 ${thumbUrls.length}</span>` : ''}
+          ${thumbUrls.length > 1 ? `<span class="c-img-badge">נ“¸ ${thumbUrls.length}</span>` : ''}
           ${next ? `<button class="c-next-btn" data-id="${item.id}" data-next="${next}">${NEXT_LABEL[item.status]}</button>` : ''}
-          <button class="row-edit-btn" data-id="${item.id}" data-kind="content" title="ערוך">✏️</button>
-          <button class="c-del-btn" data-id="${item.id}" title="מחק">✕</button>
+          <button class="row-edit-btn" data-id="${item.id}" data-kind="content" title="׳¢׳¨׳•׳">גן¸</button>
+          <button class="c-del-btn" data-id="${item.id}" title="׳׳—׳§">ג•</button>
         </div>`;
       }).join('')}
     </div>`;
   }).join('');
 
-  $('#content-buckets').innerHTML = html || '<span class="muted-text">אין תוכן עדיין — הוסף רעיון לבנק</span>';
+  $('#content-buckets').innerHTML = html || '<span class="muted-text">׳׳™׳ ׳×׳•׳›׳ ׳¢׳“׳™׳™׳ ג€” ׳”׳•׳¡׳£ ׳¨׳¢׳™׳•׳ ׳׳‘׳ ׳§</span>';
   const q = weekly && weekly.quotas;
   if (q) {
     $('#content-summary').textContent =
-      `💆 ${(q.treatments_reels||{done:0,target:0}).done}/${(q.treatments_reels||{}).target||0}R · ${(q.treatments_posts||{done:0,target:0}).done}/${(q.treatments_posts||{}).target||0}P  ·  ` +
-      `🎵 ${(q.music_reels||{done:0,target:0}).done}/${(q.music_reels||{}).target||0}R · ${(q.music_posts||{done:0,target:0}).done}/${(q.music_posts||{}).target||0}P  ·  ` +
-      `🚀 ${(q.product_reels||{done:0,target:0}).done}/${(q.product_reels||{}).target||0}R · ${(q.product_posts||{done:0,target:0}).done}/${(q.product_posts||{}).target||0}P`;
+      `נ’† ${(q.treatments_reels||{done:0,target:0}).done}/${(q.treatments_reels||{}).target||0}R ֲ· ${(q.treatments_posts||{done:0,target:0}).done}/${(q.treatments_posts||{}).target||0}P  ֲ·  ` +
+      `נµ ${(q.music_reels||{done:0,target:0}).done}/${(q.music_reels||{}).target||0}R ֲ· ${(q.music_posts||{done:0,target:0}).done}/${(q.music_posts||{}).target||0}P  ֲ·  ` +
+      `נ€ ${(q.product_reels||{done:0,target:0}).done}/${(q.product_reels||{}).target||0}R ֲ· ${(q.product_posts||{done:0,target:0}).done}/${(q.product_posts||{}).target||0}P`;
   } else {
     $('#content-summary').textContent = '';
   }
@@ -742,13 +742,13 @@ function renderContent(content, weekly) {
   document.querySelectorAll('#content-buckets .c-next-btn').forEach(b =>
     b.addEventListener('click', async () => {
       await api('/api/content/update', { id: b.dataset.id, status: b.dataset.next });
-      toast(b.dataset.next === 'published' ? '✓ פורסם! המכסה התעדכנה' : '✓ מצב התעדכן');
+      toast(b.dataset.next === 'published' ? 'ג“ ׳₪׳•׳¨׳¡׳! ׳”׳׳›׳¡׳” ׳”׳×׳¢׳“׳›׳ ׳”' : 'ג“ ׳׳¦׳‘ ׳”׳×׳¢׳“׳›׳');
       loadState();
     }));
   document.querySelectorAll('#content-buckets .c-del-btn').forEach(b =>
     b.addEventListener('click', async () => {
       await api('/api/content/delete', { id: b.dataset.id });
-      toast('🗑️ נמחק');
+      toast('נ—‘ן¸ ׳ ׳׳—׳§');
       loadState();
     }));
   bindRowEditBtns('#content-buckets');
@@ -764,12 +764,12 @@ function renderContent(content, weekly) {
 
 $('#add-content').addEventListener('click', async () => {
   const title = $('#new-content-title').value.trim();
-  if (!title) { toast('כתוב שם/רעיון', false); return; }
+  if (!title) { toast('׳›׳×׳•׳‘ ׳©׳/׳¨׳¢׳™׳•׳', false); return; }
   const type = $('#new-content-type').value;
   const domain = $('#new-content-domain').value;
   await api('/api/content/add', { type, domain, title });
   $('#new-content-title').value = '';
-  toast('✓ נוסף לבנק כרעיון · ' + domainLabel(domain));
+  toast('ג“ ׳ ׳•׳¡׳£ ׳׳‘׳ ׳§ ׳›׳¨׳¢׳™׳•׳ ֲ· ' + domainLabel(domain));
   loadState();
 });
 $('#new-content-title').addEventListener('keydown', e => { if (e.key === 'Enter') $('#add-content').click(); });
@@ -781,7 +781,7 @@ function renderQuotaBars(containerSel, quotas, scope) {
       <div class="quota-label">
         <span>${q.emoji} ${q.label}</span>
         <span class="quota-nums">${q.done} / <span class="quota-target">${q.target}</span>
-          <button class="quota-edit" title="ערוך יעד">✏️</button></span>
+          <button class="quota-edit" title="׳¢׳¨׳•׳ ׳™׳¢׳“">גן¸</button></span>
       </div>
       <div class="quota-track"><div class="quota-fill" style="width:${pct}%"></div></div>
     </div>`;
@@ -794,24 +794,24 @@ function renderDaily(quotas) { renderQuotaBars('#daily-bars', quotas, 'daily'); 
 
 function renderTaskStats(s) {
   if (!s) return;
-  $('#task-stats').textContent = `✅ הושלמו: ${s.today} היום · ${s.week} השבוע · ${s.total} בסה"כ`;
+  $('#task-stats').textContent = `ג… ׳”׳•׳©׳׳׳•: ${s.today} ׳”׳™׳•׳ ֲ· ${s.week} ׳”׳©׳‘׳•׳¢ ֲ· ${s.total} ׳‘׳¡׳”"׳›`;
 }
 
 function renderConsistency(stats) {
   if (!stats || stats.totalEvents === 0) {
     $('#consistency-content').innerHTML =
-      '<div class="muted-text">עדיין אין נתוני פרסום — תפרסם פוסט/רילס ונתחיל לעקוב 🎯</div>';
+      '<div class="muted-text">׳¢׳“׳™׳™׳ ׳׳™׳ ׳ ׳×׳•׳ ׳™ ׳₪׳¨׳¡׳•׳ ג€” ׳×׳₪׳¨׳¡׳ ׳₪׳•׳¡׳˜/׳¨׳™׳׳¡ ׳•׳ ׳×׳—׳™׳ ׳׳¢׳§׳•׳‘ נ¯</div>';
     return;
   }
   const streakLine = stats.streak > 0
-    ? `<div class="cs-streak">🔥 רצף נוכחי: <strong>${stats.streak} ימים</strong> עם פרסום</div>`
-    : `<div class="cs-streak muted-text">📉 אין רצף פעיל — תפרסם היום כדי להתחיל</div>`;
+    ? `<div class="cs-streak">נ”¥ ׳¨׳¦׳£ ׳ ׳•׳›׳—׳™: <strong>${stats.streak} ׳™׳׳™׳</strong> ׳¢׳ ׳₪׳¨׳¡׳•׳</div>`
+    : `<div class="cs-streak muted-text">נ“‰ ׳׳™׳ ׳¨׳¦׳£ ׳₪׳¢׳™׳ ג€” ׳×׳₪׳¨׳¡׳ ׳”׳™׳•׳ ׳›׳“׳™ ׳׳”׳×׳—׳™׳</div>`;
   const weeklyRows = (stats.weekly || []).map(w => `
     <div class="cs-week-row">
       <span class="cs-week-label">${w.weekLabel}</span>
-      <span class="cs-week-vals">🎬 ${w.reels} · 📝 ${w.posts}</span>
+      <span class="cs-week-vals">נ¬ ${w.reels} ֲ· נ“ ${w.posts}</span>
     </div>`).join('');
-  const avgLine = `<div class="cs-avg muted-text">ממוצע 4 שבועות: 🎬 ${stats.avgReels} · 📝 ${stats.avgPosts} בשבוע</div>`;
+  const avgLine = `<div class="cs-avg muted-text">׳׳׳•׳¦׳¢ 4 ׳©׳‘׳•׳¢׳•׳×: נ¬ ${stats.avgReels} ֲ· נ“ ${stats.avgPosts} ׳‘׳©׳‘׳•׳¢</div>`;
   $('#consistency-content').innerHTML = streakLine + '<div class="cs-weeks">' + weeklyRows + '</div>' + avgLine;
 }
 
@@ -827,7 +827,7 @@ function renderOpenLoops(state) {
   const ideas = ((state.content || {}).items || []).filter(c => c.status === 'idea' && stale(c.created_at));
 
   if (!(tasks.length + leads.length + ideas.length)) {
-    $('#open-loops-content').innerHTML = '<div class="muted-text">הכל מתעדכן 🎯 אין דברים תקועים מעל 14 ימים</div>';
+    $('#open-loops-content').innerHTML = '<div class="muted-text">׳”׳›׳ ׳׳×׳¢׳“׳›׳ נ¯ ׳׳™׳ ׳“׳‘׳¨׳™׳ ׳×׳§׳•׳¢׳™׳ ׳׳¢׳ 14 ׳™׳׳™׳</div>';
     return;
   }
   const group = (title, items, render) => items.length ? `<div class="ol-group">
@@ -836,9 +836,9 @@ function renderOpenLoops(state) {
   </div>` : '';
 
   $('#open-loops-content').innerHTML =
-    group('⏰ משימות ישנות', tasks, t => `<div class="ol-item"><span>${t.title}</span><span class="ol-age">${ageOf(t.created_at)} ימים</span></div>`) +
-    group('🟡 לידים תקועים', leads, e => `<div class="ol-item"><span>${[e.date, e.contact].filter(Boolean).join(' · ') || '(אירוע)'}</span><span class="ol-age">${ageOf(e.updated_at || e.created_at)} ימים</span></div>`) +
-    group('💡 רעיונות לא קודמו', ideas, c => `<div class="ol-item"><span>${c.title || '(ללא כותרת)'}</span><span class="ol-age">${ageOf(c.created_at)} ימים</span></div>`);
+    group('ג° ׳׳©׳™׳׳•׳× ׳™׳©׳ ׳•׳×', tasks, t => `<div class="ol-item"><span>${t.title}</span><span class="ol-age">${ageOf(t.created_at)} ׳™׳׳™׳</span></div>`) +
+    group('נ¡ ׳׳™׳“׳™׳ ׳×׳§׳•׳¢׳™׳', leads, e => `<div class="ol-item"><span>${[e.date, e.contact].filter(Boolean).join(' ֲ· ') || '(׳׳™׳¨׳•׳¢)'}</span><span class="ol-age">${ageOf(e.updated_at || e.created_at)} ׳™׳׳™׳</span></div>`) +
+    group('נ’¡ ׳¨׳¢׳™׳•׳ ׳•׳× ׳׳ ׳§׳•׳“׳׳•', ideas, c => `<div class="ol-item"><span>${c.title || '(׳׳׳ ׳›׳•׳×׳¨׳×)'}</span><span class="ol-age">${ageOf(c.created_at)} ׳™׳׳™׳</span></div>`);
 }
 
 function editQuota(btn) {
@@ -850,8 +850,8 @@ function editQuota(btn) {
   const current = parseInt(numsSpan.querySelector('.quota-target').textContent) || 0;
   numsSpan.innerHTML =
     `<input type="number" class="quota-input" min="0" value="${current}">
-     <button class="quota-save">✓</button>
-     <button class="quota-cancel">✕</button>`;
+     <button class="quota-save">ג“</button>
+     <button class="quota-cancel">ג•</button>`;
   const input = numsSpan.querySelector('.quota-input');
   input.focus(); input.select();
   const cancel = () => {
@@ -862,9 +862,9 @@ function editQuota(btn) {
   numsSpan.querySelector('.quota-cancel').addEventListener('click', cancel);
   const save = async () => {
     const t = parseInt(input.value);
-    if (isNaN(t) || t < 0) { toast('מספר לא תקין', false); return; }
+    if (isNaN(t) || t < 0) { toast('׳׳¡׳₪׳¨ ׳׳ ׳×׳§׳™׳', false); return; }
     await api('/api/quota/update', { key, target: t, scope });
-    toast('✓ היעד עודכן');
+    toast('ג“ ׳”׳™׳¢׳“ ׳¢׳•׳“׳›׳');
     loadState();
   };
   numsSpan.querySelector('.quota-save').addEventListener('click', save);
@@ -877,7 +877,7 @@ function editQuota(btn) {
 // ---------- Tasks ----------
 $('#add-task').addEventListener('click', async () => {
   const v = $('#new-task').value.trim();
-  if (!v) { toast('כתוב משימה קודם', false); return; }
+  if (!v) { toast('׳›׳×׳•׳‘ ׳׳©׳™׳׳” ׳§׳•׳“׳', false); return; }
   const date = $('#new-task-date').value;
   const time = $('#new-task-time').value;
   const category = $('#new-task-category').value || 'general';
@@ -890,7 +890,7 @@ $('#add-task').addEventListener('click', async () => {
   await api('/api/task', payload);
   $('#new-task').value = ''; $('#new-task-date').value = todayStr(); $('#new-task-time').value = '';
   $('#new-task-category').value = 'general'; $('#new-task-priority').value = 'normal';
-  toast('✓ ' + (date ? 'משימה נקבעה ל-' + (date === todayStr() ? 'היום' : date) + (time ? ' ' + time : '') : 'המשימה נוספה'));
+  toast('ג“ ' + (date ? '׳׳©׳™׳׳” ׳ ׳§׳‘׳¢׳” ׳-' + (date === todayStr() ? '׳”׳™׳•׳' : date) + (time ? ' ' + time : '') : '׳”׳׳©׳™׳׳” ׳ ׳•׳¡׳₪׳”'));
   loadState();
 });
 $('#new-task').addEventListener('keydown', e => { if (e.key === 'Enter') $('#add-task').click(); });
@@ -898,10 +898,10 @@ $('#new-task').addEventListener('keydown', e => { if (e.key === 'Enter') $('#add
 // ---------- Journal ----------
 $('#journal-save').addEventListener('click', async () => {
   const v = $('#journal-text').value.trim();
-  if (!v) { toast('כתוב משהו קודם', false); return; }
+  if (!v) { toast('׳›׳×׳•׳‘ ׳׳©׳”׳• ׳§׳•׳“׳', false); return; }
   await api('/api/journal', { text: v });
   $('#journal-text').value = '';
-  toast('✓ נשמר ליומן האישי של היום');
+  toast('ג“ ׳ ׳©׳׳¨ ׳׳™׳•׳׳ ׳”׳׳™׳©׳™ ׳©׳ ׳”׳™׳•׳');
   loadState();
 });
 
@@ -926,10 +926,10 @@ function playSound(loop = false) {
   const el = document.getElementById('snd-' + type);
   if (!el) return;
   el.muted = false;
-  el.loop = (loop && type === 'chime');           // לולאה רק כשהטיימר מסיים, לא בתצוגה מקדימה
+  el.loop = (loop && type === 'chime');           // ׳׳•׳׳׳” ׳¨׳§ ׳›׳©׳”׳˜׳™׳™׳׳¨ ׳׳¡׳™׳™׳, ׳׳ ׳‘׳×׳¦׳•׳’׳” ׳׳§׳“׳™׳׳”
   try { el.currentTime = 0; } catch (e) {}
   Promise.resolve(el.play()).catch(() =>
-    toast('הדפדפן חסם את הצליל — לחץ פעם אחת על הדף ונסה שוב', false));
+    toast('׳”׳“׳₪׳“׳₪׳ ׳—׳¡׳ ׳׳× ׳”׳¦׳׳™׳ ג€” ׳׳—׳¥ ׳₪׳¢׳ ׳׳—׳× ׳¢׳ ׳”׳“׳£ ׳•׳ ׳¡׳” ׳©׳•׳‘', false));
 }
 
 function silenceChime() {
@@ -939,18 +939,18 @@ function silenceChime() {
 }
 function refreshSoundLabel() {
   const type = localStorage.getItem('carlos-sound') || 'chime';
-  $('#tw-sound').textContent = '🔔 ' + (type === 'beep' ? 'ציפצוף' : 'צלצול');
+  $('#tw-sound').textContent = 'נ”” ' + (type === 'beep' ? '׳¦׳™׳₪׳¦׳•׳£' : '׳¦׳׳¦׳•׳');
 }
 $('#tw-sound').addEventListener('click', (e) => {
   e.preventDefault();
-  silenceChime();                                 // עוצר צלצול קודם אם נשאר חי
+  silenceChime();                                 // ׳¢׳•׳¦׳¨ ׳¦׳׳¦׳•׳ ׳§׳•׳“׳ ׳׳ ׳ ׳©׳׳¨ ׳—׳™
   const type = localStorage.getItem('carlos-sound') || 'chime';
   localStorage.setItem('carlos-sound', type === 'beep' ? 'chime' : 'beep');
   refreshSoundLabel();
-  playSound();                                    // תצוגה מקדימה — פעם אחת בלבד
+  playSound();                                    // ׳×׳¦׳•׳’׳” ׳׳§׳“׳™׳׳” ג€” ׳₪׳¢׳ ׳׳—׳× ׳‘׳׳‘׳“
 });
 
-// ---------- Timer (timestamp-based — ממשיך נכון גם ברקע) ----------
+// ---------- Timer (timestamp-based ג€” ׳׳׳©׳™׳ ׳ ׳›׳•׳ ׳’׳ ׳‘׳¨׳§׳¢) ----------
 let timerMode = 'stopwatch', interval = null, endTimeout = null;
 let startTs = 0, endTs = 0, plannedTotal = 0;
 let startedAt = null, pendingSeconds = 0;
@@ -984,28 +984,28 @@ function tick() {
   } else {
     const remainingSec = Math.max(0, Math.ceil((endTs - Date.now()) / 1000));
     $('#tw-display').textContent = fmt(remainingSec);
-    if (remainingSec <= 0) triggerFinish();          // גיבוי אם setTimeout פיגר
+    if (remainingSec <= 0) triggerFinish();          // ׳’׳™׳‘׳•׳™ ׳׳ setTimeout ׳₪׳™׳’׳¨
   }
 }
 
 function triggerFinish() {
-  if (!interval) return;                              // מוגן מקריאה כפולה
+  if (!interval) return;                              // ׳׳•׳’׳ ׳׳§׳¨׳™׳׳” ׳›׳₪׳•׳׳”
   playSound(true);
-  toast('⏰ הטיימר הסתיים!');
+  toast('ג° ׳”׳˜׳™׳™׳׳¨ ׳”׳¡׳×׳™׳™׳!');
   if ('Notification' in window && Notification.permission === 'granted') {
-    try { new Notification('⏰ הטיימר הסתיים', { body: 'קרלוס דאשבורד' }); } catch (e) {}
+    try { new Notification('ג° ׳”׳˜׳™׳™׳׳¨ ׳”׳¡׳×׳™׳™׳', { body: '׳§׳¨׳׳•׳¡ ׳“׳׳©׳‘׳•׳¨׳“' }); } catch (e) {}
   }
   finishTimer();
 }
 
 document.addEventListener('visibilitychange', () => {
-  if (!document.hidden && interval) tick();           // סנכרון מיידי בחזרה לטאב
+  if (!document.hidden && interval) tick();           // ׳¡׳ ׳›׳¨׳•׳ ׳׳™׳™׳“׳™ ׳‘׳—׳–׳¨׳” ׳׳˜׳׳‘
 });
 
 $('#tw-start').addEventListener('click', () => {
   if (timerMode === 'timer') {
     plannedTotal = configuredSeconds();
-    if (plannedTotal <= 0) { toast('קבע דקות או שניות', false); return; }
+    if (plannedTotal <= 0) { toast('׳§׳‘׳¢ ׳“׳§׳•׳× ׳׳• ׳©׳ ׳™׳•׳×', false); return; }
   } else {
     plannedTotal = 0;
   }
@@ -1037,17 +1037,17 @@ function finishTimer() {
 // ---------- Attribution dialog (event delegation, bound once) ----------
 function openAttrib(seconds) {
   pendingSeconds = seconds;
-  $('#attrib-dur').textContent = 'משך: ' + fmt(seconds);
+  $('#attrib-dur').textContent = '׳׳©׳: ' + fmt(seconds);
   $('#attrib-note').value = '';
   $('#attrib-domains').innerHTML = `
-    <div class="attrib-domains-label">בחר נושא:</div>
+    <div class="attrib-domains-label">׳‘׳—׳¨ ׳ ׳•׳©׳:</div>
     <div class="attrib-radios">
       ${DOMAINS.map((d, i) => `<label class="attrib-radio">
         <input type="radio" name="attrib-domain" value="${d.id}" data-label="${d.label}" ${i === 4 ? 'checked' : ''}>
         <span>${d.label}</span>
       </label>`).join('')}
     </div>
-    <button id="attrib-save" type="button" class="attrib-save">💾 שמור זמן</button>
+    <button id="attrib-save" type="button" class="attrib-save">נ’¾ ׳©׳׳•׳¨ ׳–׳׳</button>
   `;
   const chimeLooping = (localStorage.getItem('carlos-sound') || 'chime') === 'chime' && timerMode === 'timer';
   $('#attrib-silence').classList.toggle('hidden', !chimeLooping);
@@ -1057,14 +1057,14 @@ function openAttrib(seconds) {
   $('#attrib-save').addEventListener('click', async () => {
     silenceChime();
     const sel = document.querySelector('input[name="attrib-domain"]:checked');
-    if (!sel) { toast('בחר נושא', false); return; }
+    if (!sel) { toast('׳‘׳—׳¨ ׳ ׳•׳©׳', false); return; }
     const note = $('#attrib-note').value.trim();
     await api('/api/timer', {
       domain: sel.value, label: sel.dataset.label, mode: timerMode,
       seconds: pendingSeconds, note: note, started_at: startedAt
     });
     closeAttrib();
-    toast('✓ נרשם: ' + fmt(pendingSeconds) + ' · ' + sel.dataset.label + (note ? ' · "' + note + '"' : ''));
+    toast('ג“ ׳ ׳¨׳©׳: ' + fmt(pendingSeconds) + ' ֲ· ' + sel.dataset.label + (note ? ' ֲ· "' + note + '"' : ''));
     loadState();
   });
 }
@@ -1083,16 +1083,16 @@ $('#attrib-domains').addEventListener('click', async (e) => {
     seconds: pendingSeconds, note: note, started_at: startedAt
   });
   closeAttrib();
-  toast('✓ נרשם: ' + fmt(pendingSeconds) + ' · ' + b.dataset.label + (note ? ' · "' + note + '"' : ''));
+  toast('ג“ ׳ ׳¨׳©׳: ' + fmt(pendingSeconds) + ' ֲ· ' + b.dataset.label + (note ? ' ֲ· "' + note + '"' : ''));
   loadState();
 });
 $('#attrib-close').addEventListener('click', () => {
   closeAttrib();
-  toast('החלון נסגר — הזמן לא נרשם');
+  toast('׳”׳—׳׳•׳ ׳ ׳¡׳’׳¨ ג€” ׳”׳–׳׳ ׳׳ ׳ ׳¨׳©׳');
 });
 $('#attrib-silence').addEventListener('click', () => {
   silenceChime();
-  toast('🔕 הצלצול הושתק');
+  toast('נ”• ׳”׳¦׳׳¦׳•׳ ׳”׳•׳©׳×׳§');
 });
 
 // ---------- Manual time entry ----------
@@ -1102,13 +1102,13 @@ $('#tw-manual').addEventListener('click', (e) => {
   if (!box.classList.contains('hidden')) { box.classList.add('hidden'); return; }
   box.innerHTML =
     `<select id="m-domain">${DOMAINS.map(d => `<option value="${d.id}">${d.label}</option>`).join('')}</select>
-     <input type="number" id="m-min" min="1" placeholder="דקות">
-     <input type="text" id="m-note" placeholder="הערה (אופציונלי)">
-     <button id="m-save">שמור זמן</button>`;
+     <input type="number" id="m-min" min="1" placeholder="׳“׳§׳•׳×">
+     <input type="text" id="m-note" placeholder="׳”׳¢׳¨׳” (׳׳•׳₪׳¦׳™׳•׳ ׳׳™)">
+     <button id="m-save">׳©׳׳•׳¨ ׳–׳׳</button>`;
   box.classList.remove('hidden');
   $('#m-save').addEventListener('click', async () => {
     const min = parseInt($('#m-min').value);
-    if (!min) { toast('כתוב כמה דקות', false); return; }
+    if (!min) { toast('׳›׳×׳•׳‘ ׳›׳׳” ׳“׳§׳•׳×', false); return; }
     const d = DOMAINS.find(x => x.id === $('#m-domain').value);
     const note = $('#m-note').value.trim();
     await api('/api/timer', {
@@ -1116,7 +1116,7 @@ $('#tw-manual').addEventListener('click', (e) => {
       seconds: min * 60, note: note, started_at: new Date().toISOString()
     });
     box.classList.add('hidden');
-    toast('✓ ' + min + ' דקות נרשמו · ' + d.label);
+    toast('ג“ ' + min + ' ׳“׳§׳•׳× ׳ ׳¨׳©׳׳• ֲ· ' + d.label);
     loadState();
   });
 });
@@ -1146,19 +1146,19 @@ function renderContacts(state) {
 
   let html = active.length
     ? active.map(renderItem).join('')
-    : '<div class="muted-text" style="padding:8px 0">אין עדיין — לחץ "+ הוסף"</div>';
+    : '<div class="muted-text" style="padding:8px 0">׳׳™׳ ׳¢׳“׳™׳™׳ ג€” ׳׳—׳¥ "+ ׳”׳•׳¡׳£"</div>';
 
   // Archive section
   if (archived.length > 0) {
     if (showArchive) {
       html += `<div class="ct-archive-divider">
-        <span class="ct-archive-label">📦 ארכיון (${archived.length})</span>
-        <button class="ct-archive-toggle" id="ct-hide-archive">✕ הסתר ארכיון</button>
+        <span class="ct-archive-label">נ“¦ ׳׳¨׳›׳™׳•׳ (${archived.length})</span>
+        <button class="ct-archive-toggle" id="ct-hide-archive">ג• ׳”׳¡׳×׳¨ ׳׳¨׳›׳™׳•׳</button>
       </div>`;
       html += '<div class="ct-archive-list">' + archived.map(renderItem).join('') + '</div>';
     } else {
       html += `<div class="ct-archive-divider">
-        <button class="ct-archive-toggle" id="ct-show-archive">📦 הצג ארכיון (${archived.length})</button>
+        <button class="ct-archive-toggle" id="ct-show-archive">נ“¦ ׳”׳¦׳’ ׳׳¨׳›׳™׳•׳ (${archived.length})</button>
       </div>`;
     }
   }
@@ -1179,26 +1179,26 @@ function renderContacts(state) {
 }
 
 function clientCard(c) {
-  const sub = [c.city, c.phone].filter(Boolean).join(' · ');
+  const sub = [c.city, c.phone].filter(Boolean).join(' ֲ· ');
   const photo = c.photo_url
     ? `<img src="${c.photo_url}" class="ct-avatar" alt="">`
-    : `<span class="ct-avatar ct-avatar-empty">👤</span>`;
+    : `<span class="ct-avatar ct-avatar-empty">נ‘₪</span>`;
   const archCls = c.archived ? ' ct-card-archived' : '';
   return `<div class="ct-card${archCls}" data-id="${c.id}" data-type="client">
     <div class="ct-summary">
       ${photo}
-      <div><strong>${c.name || '(ללא שם)'}</strong>
+      <div><strong>${c.name || '(׳׳׳ ׳©׳)'}</strong>
       <span class="muted-text">${sub || ' '}</span></div>
     </div>
   </div>`;
 }
 
 function eventCard(e) {
-  const statusLabel = { lead: '🟡 ליד', booked: '🟢 סגור', done: '⚪ בוצע' }[e.status] || '';
+  const statusLabel = { lead: 'נ¡ ׳׳™׳“', booked: 'נ¢ ׳¡׳’׳•׳¨', done: 'ג× ׳‘׳•׳¦׳¢' }[e.status] || '';
   const archCls = e.archived ? ' ct-card-archived' : '';
   return `<div class="ct-card${archCls}" data-id="${e.id}" data-type="event">
     <div class="ct-summary">
-      <strong>${e.date || '(ללא תאריך)'} · ${e.contact || ''}</strong>
+      <strong>${e.date || '(׳׳׳ ׳×׳׳¨׳™׳)'} ֲ· ${e.contact || ''}</strong>
       <span class="muted-text">${statusLabel}</span>
     </div>
   </div>`;
@@ -1216,7 +1216,7 @@ function expandCard(card, type, id) {
 function fld(name, label, value, type, options) {
   const v = (value == null ? '' : String(value)).replace(/"/g, '&quot;');
   if (type === 'textarea') {
-    const ph = name === 'notes' ? 'כתוב בחופשיות על השיחה — קרלוס ישאב את הפרטים' : '';
+    const ph = name === 'notes' ? '׳›׳×׳•׳‘ ׳‘׳—׳•׳₪׳©׳™׳•׳× ׳¢׳ ׳”׳©׳™׳—׳” ג€” ׳§׳¨׳׳•׳¡ ׳™׳©׳׳‘ ׳׳× ׳”׳₪׳¨׳˜׳™׳' : '';
     return `<label>${label}<textarea name="${name}" placeholder="${ph}">${v}</textarea></label>`;
   }
   if (type === 'select' && options) {
@@ -1226,40 +1226,40 @@ function fld(name, label, value, type, options) {
   if (type === 'number') return `<label>${label}<input type="number" name="${name}" value="${v}"></label>`;
   if (type === 'date') return `<label>${label}<input type="date" name="${name}" value="${v}"></label>`;
   if (type === 'time') return `<label>${label}<input type="time" name="${name}" value="${v}"></label>`;
-  if (type === 'file_upload') return `<label>${label}<input type="file" data-upload-target="${name}" accept="image/*,video/*"><div class="hint muted-text">קובץ עד 20MB יישמר אצלך מקומית</div></label>`;
+  if (type === 'file_upload') return `<label>${label}<input type="file" data-upload-target="${name}" accept="image/*,video/*"><div class="hint muted-text">׳§׳•׳‘׳¥ ׳¢׳“ 20MB ׳™׳™׳©׳׳¨ ׳׳¦׳׳ ׳׳§׳•׳׳™׳×</div></label>`;
   return `<label>${label}<input type="text" name="${name}" value="${v}"></label>`;
 }
 
 function clientForm(c) {
   const photoHtml = c.photo_url
-    ? `<div class="client-photo-wrap"><img src="${c.photo_url}" class="client-photo-thumb" alt="תמונה">
-        <button type="button" class="client-photo-remove" title="הסר תמונה">✕</button></div>`
-    : `<div class="client-photo-wrap client-photo-empty">👤</div>`;
+    ? `<div class="client-photo-wrap"><img src="${c.photo_url}" class="client-photo-thumb" alt="׳×׳׳•׳ ׳”">
+        <button type="button" class="client-photo-remove" title="׳”׳¡׳¨ ׳×׳׳•׳ ׳”">ג•</button></div>`
+    : `<div class="client-photo-wrap client-photo-empty">נ‘₪</div>`;
   return `<div class="ct-form">
     <div class="client-photo-row">
       <div class="client-photo-area" data-url="${c.photo_url || ''}">
         ${photoHtml}
       </div>
       <label class="client-photo-label">
-        <span class="client-photo-btn">📷 העלה תמונה</span>
+        <span class="client-photo-btn">נ“· ׳”׳¢׳׳” ׳×׳׳•׳ ׳”</span>
         <input type="file" class="client-photo-input" accept="image/*" style="display:none">
       </label>
     </div>
-    ${fld('name', 'שם', c.name)}
-    ${fld('contact', 'איש קשר', c.contact)}
-    ${fld('city', 'עיר', c.city)}
-    ${fld('phone', 'טלפון', c.phone)}
-    ${fld('email', 'מייל', c.email)}
-    ${fld('source', 'מקור הפניה', c.source)}
-    ${fld('treatment_type', 'סוג טיפול / כאב', c.treatment_type)}
-    ${fld('notes', 'הערות', c.notes, 'textarea')}
+    ${fld('name', '׳©׳', c.name)}
+    ${fld('contact', '׳׳™׳© ׳§׳©׳¨', c.contact)}
+    ${fld('city', '׳¢׳™׳¨', c.city)}
+    ${fld('phone', '׳˜׳׳₪׳•׳', c.phone)}
+    ${fld('email', '׳׳™׳™׳', c.email)}
+    ${fld('source', '׳׳§׳•׳¨ ׳”׳₪׳ ׳™׳”', c.source)}
+    ${fld('treatment_type', '׳¡׳•׳’ ׳˜׳™׳₪׳•׳ / ׳›׳׳‘', c.treatment_type)}
+    ${fld('notes', '׳”׳¢׳¨׳•׳×', c.notes, 'textarea')}
     ${c.id ? contactTasksSection(c.id, 'client') : ''}
     <div class="ct-actions">
-      <button class="ct-save">שמור</button>
-      ${c.id && !c.archived ? '<button class="ct-archive">📦 העבר לארכיון</button>' : ''}
-      ${c.id && c.archived ? '<button class="ct-unarchive">↩ החזר לפעילים</button>' : ''}
-      ${c.id ? '<button class="ct-del">✕ מחק</button>' : ''}
-      <button class="ct-cancel">סגור</button>
+      <button class="ct-save">׳©׳׳•׳¨</button>
+      ${c.id && !c.archived ? '<button class="ct-archive">נ“¦ ׳”׳¢׳‘׳¨ ׳׳׳¨׳›׳™׳•׳</button>' : ''}
+      ${c.id && c.archived ? '<button class="ct-unarchive">ג†© ׳”׳—׳–׳¨ ׳׳₪׳¢׳™׳׳™׳</button>' : ''}
+      ${c.id ? '<button class="ct-del">ג• ׳׳—׳§</button>' : ''}
+      <button class="ct-cancel">׳¡׳’׳•׳¨</button>
     </div>
   </div>`;
 }
@@ -1267,30 +1267,30 @@ function clientForm(c) {
 function eventForm(e) {
   const s = e.status || 'lead';
   return `<div class="ct-form">
-    ${fld('date', 'תאריך', e.date, 'date')}
-    ${fld('contact', 'איש קשר', e.contact)}
-    ${fld('phone', 'טלפון', e.phone)}
-    ${fld('source', 'מקור הפניה', e.source)}
-    ${fld('location', 'מיקום', e.location)}
-    ${fld('attendees', 'כמות אנשים', e.attendees, 'number')}
-    ${fld('style', 'סגנון מוזיקלי', e.style)}
-    ${fld('hours', 'שעות', e.hours)}
-    ${fld('payment', 'תשלום (₪)', e.payment, 'number')}
-    <label>סטטוס
+    ${fld('date', '׳×׳׳¨׳™׳', e.date, 'date')}
+    ${fld('contact', '׳׳™׳© ׳§׳©׳¨', e.contact)}
+    ${fld('phone', '׳˜׳׳₪׳•׳', e.phone)}
+    ${fld('source', '׳׳§׳•׳¨ ׳”׳₪׳ ׳™׳”', e.source)}
+    ${fld('location', '׳׳™׳§׳•׳', e.location)}
+    ${fld('attendees', '׳›׳׳•׳× ׳׳ ׳©׳™׳', e.attendees, 'number')}
+    ${fld('style', '׳¡׳’׳ ׳•׳ ׳׳•׳–׳™׳§׳׳™', e.style)}
+    ${fld('hours', '׳©׳¢׳•׳×', e.hours)}
+    ${fld('payment', '׳×׳©׳׳•׳ (ג‚×)', e.payment, 'number')}
+    <label>׳¡׳˜׳˜׳•׳¡
       <select name="status">
-        <option value="lead" ${s==='lead'?'selected':''}>🟡 ליד</option>
-        <option value="booked" ${s==='booked'?'selected':''}>🟢 סגור</option>
-        <option value="done" ${s==='done'?'selected':''}>⚪ בוצע</option>
+        <option value="lead" ${s==='lead'?'selected':''}>נ¡ ׳׳™׳“</option>
+        <option value="booked" ${s==='booked'?'selected':''}>נ¢ ׳¡׳’׳•׳¨</option>
+        <option value="done" ${s==='done'?'selected':''}>ג× ׳‘׳•׳¦׳¢</option>
       </select>
     </label>
-    ${fld('notes', 'הערות', e.notes, 'textarea')}
+    ${fld('notes', '׳”׳¢׳¨׳•׳×', e.notes, 'textarea')}
     ${e.id ? contactTasksSection(e.id, 'event') : ''}
     <div class="ct-actions">
-      <button class="ct-save">שמור</button>
-      ${e.id && !e.archived ? '<button class="ct-archive">📦 העבר לארכיון</button>' : ''}
-      ${e.id && e.archived ? '<button class="ct-unarchive">↩ החזר לפעילים</button>' : ''}
-      ${e.id ? '<button class="ct-del">✕ מחק</button>' : ''}
-      <button class="ct-cancel">סגור</button>
+      <button class="ct-save">׳©׳׳•׳¨</button>
+      ${e.id && !e.archived ? '<button class="ct-archive">נ“¦ ׳”׳¢׳‘׳¨ ׳׳׳¨׳›׳™׳•׳</button>' : ''}
+      ${e.id && e.archived ? '<button class="ct-unarchive">ג†© ׳”׳—׳–׳¨ ׳׳₪׳¢׳™׳׳™׳</button>' : ''}
+      ${e.id ? '<button class="ct-del">ג• ׳׳—׳§</button>' : ''}
+      <button class="ct-cancel">׳¡׳’׳•׳¨</button>
     </div>
   </div>`;
 }
@@ -1304,14 +1304,14 @@ function contactTasksSection(contactId, type) {
         <span>${t.title}</span>
         ${t.due_date ? `<span class="due-chip">${dueLabel(t)}</span>` : ''}
       </div>`).join('')
-    : '<div class="muted-text" style="font-size:.85rem">אין משימות פתוחות</div>';
+    : '<div class="muted-text" style="font-size:.85rem">׳׳™׳ ׳׳©׳™׳׳•׳× ׳₪׳×׳•׳—׳•׳×</div>';
   return `<div class="ct-tasks">
-    <div class="ct-tasks-title">📋 משימות (${tasks.length})</div>
+    <div class="ct-tasks-title">נ“‹ ׳׳©׳™׳׳•׳× (${tasks.length})</div>
     <div class="ct-tasks-list">${rows}</div>
     <div class="ct-tasks-add">
-      <input type="text" class="ct-task-new" placeholder="+ משימה חדשה">
-      <input type="date" class="ct-task-date" title="תאריך (אופציונלי)">
-      <button type="button" class="ct-task-add">הוסף</button>
+      <input type="text" class="ct-task-new" placeholder="+ ׳׳©׳™׳׳” ׳—׳“׳©׳”">
+      <input type="date" class="ct-task-date" title="׳×׳׳¨׳™׳ (׳׳•׳₪׳¦׳™׳•׳ ׳׳™)">
+      <button type="button" class="ct-task-add">׳”׳•׳¡׳£</button>
     </div>
   </div>`;
 }
@@ -1334,7 +1334,7 @@ function collectForm(card) {
 function bindFormButtons(card, type, id) {
   const apiBase = '/api/' + (type === 'client' ? 'client' : 'event');
 
-  // תמונת פרופיל ללקוח
+  // ׳×׳׳•׳ ׳× ׳₪׳¨׳•׳₪׳™׳ ׳׳׳§׳•׳—
   if (type === 'client') {
     const photoInput = card.querySelector('.client-photo-input');
     const photoArea  = card.querySelector('.client-photo-area');
@@ -1342,7 +1342,7 @@ function bindFormButtons(card, type, id) {
       photoInput.addEventListener('change', async (e) => {
         const file = e.target.files[0];
         if (!file) return;
-        if (file.size > 20 * 1024 * 1024) { toast('הקובץ גדול מ-20MB', false); return; }
+        if (file.size > 20 * 1024 * 1024) { toast('׳”׳§׳•׳‘׳¥ ׳’׳“׳•׳ ׳-20MB', false); return; }
         const reader = new FileReader();
         reader.onload = async () => {
           const dataBase64 = String(reader.result).split(',')[1];
@@ -1350,12 +1350,12 @@ function bindFormButtons(card, type, id) {
             const r = await api('/api/upload', { filename: file.name, dataBase64 });
             if (r && r.url) {
               photoArea.dataset.url = r.url;
-              photoArea.innerHTML = `<img src="${r.url}" class="client-photo-thumb" alt="תמונה">
-                <button type="button" class="client-photo-remove" title="הסר תמונה">✕</button>`;
+              photoArea.innerHTML = `<img src="${r.url}" class="client-photo-thumb" alt="׳×׳׳•׳ ׳”">
+                <button type="button" class="client-photo-remove" title="׳”׳¡׳¨ ׳×׳׳•׳ ׳”">ג•</button>`;
               bindPhotoRemove(photoArea);
-              toast('✓ תמונה הועלתה');
+              toast('ג“ ׳×׳׳•׳ ׳” ׳”׳•׳¢׳׳×׳”');
             }
-          } catch (err) { toast('שגיאה בהעלאת תמונה', false); }
+          } catch (err) { toast('׳©׳’׳™׳׳” ׳‘׳”׳¢׳׳׳× ׳×׳׳•׳ ׳”', false); }
         };
         reader.readAsDataURL(file);
       });
@@ -1365,7 +1365,7 @@ function bindFormButtons(card, type, id) {
 
   card.querySelector('.ct-save').addEventListener('click', async () => {
     const data = collectForm(card);
-    // הוסף photo_url מה-data attribute
+    // ׳”׳•׳¡׳£ photo_url ׳׳”-data attribute
     const photoArea = card.querySelector('.client-photo-area');
     if (photoArea) {
       const url = photoArea.dataset.url;
@@ -1373,21 +1373,21 @@ function bindFormButtons(card, type, id) {
     }
     if (id && id !== 'new') {
       await api(apiBase + '/update', { ...data, id });
-      toast('✓ עודכן');
+      toast('ג“ ׳¢׳•׳“׳›׳');
     } else {
-      if (!Object.keys(data).length) { toast('מלא לפחות שדה אחד', false); return; }
+      if (!Object.keys(data).length) { toast('׳׳׳ ׳׳₪׳—׳•׳× ׳©׳“׳” ׳׳—׳“', false); return; }
       await api(apiBase + '/add', data);
-      toast('✓ נוסף');
+      toast('ג“ ׳ ׳•׳¡׳£');
     }
     loadState();
   });
   const delBtn = card.querySelector('.ct-del');
   if (delBtn) {
     delBtn.addEventListener('click', async () => {
-      const label = type === 'event' ? 'האירוע' : 'המטופל';
-      if (!confirm(`האם אתה בטוח שברצונך למחוק את ${label} לצמיתות?\n\nפעולה זו לא ניתנת לביטול.\nאם רק רוצה להסתיר — לחץ "📦 העבר לארכיון" במקום.`)) return;
+      const label = type === 'event' ? '׳”׳׳™׳¨׳•׳¢' : '׳”׳׳˜׳•׳₪׳';
+      if (!confirm(`׳”׳׳ ׳׳×׳” ׳‘׳˜׳•׳— ׳©׳‘׳¨׳¦׳•׳ ׳ ׳׳׳—׳•׳§ ׳׳× ${label} ׳׳¦׳׳™׳×׳•׳×?\n\n׳₪׳¢׳•׳׳” ׳–׳• ׳׳ ׳ ׳™׳×׳ ׳× ׳׳‘׳™׳˜׳•׳.\n׳׳ ׳¨׳§ ׳¨׳•׳¦׳” ׳׳”׳¡׳×׳™׳¨ ג€” ׳׳—׳¥ "נ“¦ ׳”׳¢׳‘׳¨ ׳׳׳¨׳›׳™׳•׳" ׳‘׳׳§׳•׳.`)) return;
       await api(apiBase + '/delete', { id });
-      toast('🗑️ נמחק לצמיתות');
+      toast('נ—‘ן¸ ׳ ׳׳—׳§ ׳׳¦׳׳™׳×׳•׳×');
       loadState();
     });
   }
@@ -1395,7 +1395,7 @@ function bindFormButtons(card, type, id) {
   if (archBtn) {
     archBtn.addEventListener('click', async () => {
       await api(apiBase + '/update', { id, archived: true });
-      toast('📦 הועבר לארכיון');
+      toast('נ“¦ ׳”׳•׳¢׳‘׳¨ ׳׳׳¨׳›׳™׳•׳');
       loadState();
     });
   }
@@ -1403,7 +1403,7 @@ function bindFormButtons(card, type, id) {
   if (unarchBtn) {
     unarchBtn.addEventListener('click', async () => {
       await api(apiBase + '/update', { id, archived: false });
-      toast('↩ הוחזר לפעילים');
+      toast('ג†© ׳”׳•׳—׳–׳¨ ׳׳₪׳¢׳™׳׳™׳');
       loadState();
     });
   }
@@ -1413,7 +1413,7 @@ function bindFormButtons(card, type, id) {
   card.querySelectorAll('.ct-task-check').forEach(cb =>
     cb.addEventListener('change', async () => {
       await api('/api/task', { action: 'toggle', id: cb.dataset.taskId });
-      toast('✓ משימה הושלמה');
+      toast('ג“ ׳׳©׳™׳׳” ׳”׳•׳©׳׳׳”');
       loadState();
     }));
   const tAdd = card.querySelector('.ct-task-add');
@@ -1427,7 +1427,7 @@ function bindFormButtons(card, type, id) {
       payload[type === 'client' ? 'client_id' : 'event_id'] = id;
       if (tDate && tDate.value) payload.due_date = tDate.value;
       await api('/api/task', payload);
-      toast('✓ משימה נוספה');
+      toast('ג“ ׳׳©׳™׳׳” ׳ ׳•׳¡׳₪׳”');
       loadState();
     };
     tAdd.addEventListener('click', addCT);
@@ -1441,7 +1441,7 @@ document.querySelectorAll('.ct-tab').forEach(t =>
     if (lastState) renderContacts(lastState);
   }));
 
-// ---------- Capture (שיחה חופשית) ----------
+// ---------- Capture (׳©׳™׳—׳” ׳—׳•׳₪׳©׳™׳×) ----------
 document.getElementById('capture-btn')?.addEventListener('click', () => {
   document.getElementById('capture-box').classList.remove('hidden');
   document.getElementById('capture-btn').classList.add('hidden');
@@ -1455,7 +1455,7 @@ document.getElementById('capture-cancel')?.addEventListener('click', () => {
 });
 document.getElementById('capture-save')?.addEventListener('click', async () => {
   const text = (document.getElementById('capture-text').value || '').trim();
-  if (!text) { toast('כתוב את השיחה קודם', false); return; }
+  if (!text) { toast('׳›׳×׳•׳‘ ׳׳× ׳”׳©׳™׳—׳” ׳§׳•׳“׳', false); return; }
   const type = document.querySelector('input[name="capture-type"]:checked')?.value || 'client';
 
   // Parse the text into structured fields using simple regex/heuristics
@@ -1466,17 +1466,17 @@ document.getElementById('capture-save')?.addEventListener('click', async () => {
   resultEl.classList.remove('hidden');
 
   if (res.created) {
-    resultEl.innerHTML = `<div class="capture-ok">✅ ${type === 'client' ? 'לקוח' : 'אירוע'} נוצר!
+    resultEl.innerHTML = `<div class="capture-ok">ג… ${type === 'client' ? '׳׳˜׳•׳₪׳' : '׳׳™׳¨׳•׳¢'} ׳ ׳•׳¦׳¨!
       <div class="capture-fields">${formatParsed(parsed)}</div>
-      <div class="capture-note muted-text">בדוק בכרטיס הלקוח ועדכן אם צריך ✏️</div>
+      <div class="capture-note muted-text">׳‘׳“׳•׳§ ׳‘׳›׳¨׳˜׳™׳¡ ׳”׳׳˜׳•׳₪׳ ׳•׳¢׳“׳›׳ ׳׳ ׳¦׳¨׳™׳ גן¸</div>
     </div>`;
-    toast(type === 'client' ? '✓ לקוח נוסף מהשיחה' : '✓ אירוע נוסף מהשיחה');
+    toast(type === 'client' ? 'ג“ ׳׳˜׳•׳₪׳ ׳ ׳•׳¡׳£ ׳׳”׳©׳™׳—׳”' : 'ג“ ׳׳™׳¨׳•׳¢ ׳ ׳•׳¡׳£ ׳׳”׳©׳™׳—׳”');
     loadState();
   } else {
-    resultEl.innerHTML = `<div class="capture-ok">💾 השיחה נשמרה (carlos/captures/)
-      <div class="capture-note muted-text">הפרטים שנמצאו: ${formatParsed(parsed) || 'לא נמצאו פרטים מובנים — הוסף ידנית'}</div>
+    resultEl.innerHTML = `<div class="capture-ok">נ’¾ ׳”׳©׳™׳—׳” ׳ ׳©׳׳¨׳” (carlos/captures/)
+      <div class="capture-note muted-text">׳”׳₪׳¨׳˜׳™׳ ׳©׳ ׳׳¦׳׳•: ${formatParsed(parsed) || '׳׳ ׳ ׳׳¦׳׳• ׳₪׳¨׳˜׳™׳ ׳׳•׳‘׳ ׳™׳ ג€” ׳”׳•׳¡׳£ ׳™׳“׳ ׳™׳×'}</div>
     </div>`;
-    toast('✓ שיחה נשמרה');
+    toast('ג“ ׳©׳™׳—׳” ׳ ׳©׳׳¨׳”');
   }
 });
 
@@ -1489,20 +1489,20 @@ function parseCaptureText(text, type) {
   const email = text.match(/[\w.+-]+@[\w-]+\.[a-z]{2,}/i);
   if (email) p.email = email[0];
   // City: common Israeli cities
-  const cities = ['תל אביב','ירושלים','חיפה','ראשון לציון','פתח תקווה','אשדוד','באר שבע','נתניה','בני ברק','רמת גן','גבעתיים','הרצליה','חולון','רעננה','כפר סבא','מודיעין','אשקלון','רחובות','בת ים','לוד'];
+  const cities = ['׳×׳ ׳׳‘׳™׳‘','׳™׳¨׳•׳©׳׳™׳','׳—׳™׳₪׳”','׳¨׳׳©׳•׳ ׳׳¦׳™׳•׳','׳₪׳×׳— ׳×׳§׳•׳•׳”','׳׳©׳“׳•׳“','׳‘׳׳¨ ׳©׳‘׳¢','׳ ׳×׳ ׳™׳”','׳‘׳ ׳™ ׳‘׳¨׳§','׳¨׳׳× ׳’׳','׳’׳‘׳¢׳×׳™׳™׳','׳”׳¨׳¦׳׳™׳”','׳—׳•׳׳•׳','׳¨׳¢׳ ׳ ׳”','׳›׳₪׳¨ ׳¡׳‘׳','׳׳•׳“׳™׳¢׳™׳','׳׳©׳§׳׳•׳','׳¨׳—׳•׳‘׳•׳×','׳‘׳× ׳™׳','׳׳•׳“'];
   const cityMatch = cities.find(c => text.includes(c));
   if (cityMatch) p.city = cityMatch;
-  // Date patterns: DD/MM, יום X
-  const hebrewDate = text.match(/יום\s+(ראשון|שני|שלישי|רביעי|חמישי|שישי|שבת)/);
+  // Date patterns: DD/MM, ׳™׳•׳ X
+  const hebrewDate = text.match(/׳™׳•׳\s+(׳¨׳׳©׳•׳|׳©׳ ׳™|׳©׳׳™׳©׳™|׳¨׳‘׳™׳¢׳™|׳—׳׳™׳©׳™|׳©׳™׳©׳™|׳©׳‘׳×)/);
   if (hebrewDate && type === 'event') p.date = hebrewDate[0];
   // Name: first Hebrew word-pair that follows common intros
-  const nameMatch = text.match(/(?:עם|של|לקוח(?:ה)?|ל-?)\s+([א-ת]{2,}\s+[א-ת]{2,})/);
+  const nameMatch = text.match(/(?:׳¢׳|׳©׳|׳׳§׳•׳—(?:׳”)?|׳-?)\s+([׳-׳×]{2,}\s+[׳-׳×]{2,})/);
   if (nameMatch) {
     if (type === 'client') p.name = nameMatch[1];
     else p.contact = nameMatch[1];
   } else {
     // Single Hebrew name after common words
-    const singleName = text.match(/(?:עם|לקוח(?:ה)?|ל-?)\s+([א-ת]{2,8})/);
+    const singleName = text.match(/(?:׳¢׳|׳׳§׳•׳—(?:׳”)?|׳-?)\s+([׳-׳×]{2,8})/);
     if (singleName) {
       if (type === 'client') p.name = singleName[1];
       else p.contact = singleName[1];
@@ -1514,7 +1514,7 @@ function parseCaptureText(text, type) {
 }
 
 function formatParsed(p) {
-  const labels = { name:'שם', contact:'איש קשר', phone:'טלפון', email:'מייל', city:'עיר', date:'תאריך', notes:'' };
+  const labels = { name:'׳©׳', contact:'׳׳™׳© ׳§׳©׳¨', phone:'׳˜׳׳₪׳•׳', email:'׳׳™׳™׳', city:'׳¢׳™׳¨', date:'׳×׳׳¨׳™׳', notes:'' };
   return Object.entries(p)
     .filter(([k, v]) => v && k !== 'notes')
     .map(([k, v]) => `<span class="cp-field">${labels[k] || k}: <strong>${v}</strong></span>`)
@@ -1526,7 +1526,7 @@ function bindPhotoRemove(photoArea) {
   if (!btn) return;
   btn.addEventListener('click', () => {
     photoArea.dataset.url = '';
-    photoArea.innerHTML = `<div class="client-photo-empty">👤</div>`;
+    photoArea.innerHTML = `<div class="client-photo-empty">נ‘₪</div>`;
   });
 }
 
@@ -1548,7 +1548,7 @@ $('#cal-link').addEventListener('click', (e) => {
     'width=960,height=720,left=120,top=80');
 });
 
-// ---------- Habits history — last 7 days grid ----------
+// ---------- Habits history ג€” last 7 days grid ----------
 function renderHabitsHistory(habits, todayKey) {
   const container = document.getElementById('habits-history-grid');
   if (!container) return;
@@ -1567,14 +1567,14 @@ function renderHabitsHistory(habits, todayKey) {
   const headRow = `<tr>
     <th></th>
     ${days.map(d => `<th class="${d.isToday ? 'hh-label-today' : ''}">${d.label}</th>`).join('')}
-    <th class="hh-sum">סה"כ</th>
+    <th class="hh-sum">׳¡׳”"׳›</th>
   </tr>`;
 
   const bodyRows = habits.habits.map(h => {
     const cells = days.map(d => {
       const done = (completions[d.key] || []).includes(h.id);
       const cls = d.isToday ? 'hh-dot-today' : (done ? 'hh-dot-done' : 'hh-dot-miss');
-      return `<td class="hh-dot ${cls}"><span>${done ? '✓' : '·'}</span></td>`;
+      return `<td class="hh-dot ${cls}"><span>${done ? 'ג“' : 'ֲ·'}</span></td>`;
     });
     const total = days.filter(d => (completions[d.key] || []).includes(h.id)).length;
     const sumCls = total >= 5 ? 'hh-sum-good' : '';
@@ -1588,7 +1588,7 @@ function renderHabitsHistory(habits, todayKey) {
   container.innerHTML = `<table class="hh-table"><thead>${headRow}</thead><tbody>${bodyRows}</tbody></table>`;
 }
 
-// ---------- Sidebar — Focus (editable) ----------
+// ---------- Sidebar ג€” Focus (editable) ----------
 function renderSbFocus(items, dateKey) {
   const body = document.getElementById('sb-focus-body');
   const dateEl = document.getElementById('sb-focus-date');
@@ -1601,14 +1601,14 @@ function renderSbFocus(items, dateKey) {
   const itemsHtml = items.length
     ? items.map((it, i) =>
         `<div class="sbf-item">
-          <span class="sbf-emoji">${it.emoji || '•'}</span>
+          <span class="sbf-emoji">${it.emoji || 'ג€¢'}</span>
           <span class="sbf-text">${it.text || ''}</span>
-          <button class="sbf-edit-btn" data-idx="${i}" title="ערוך">✏️</button>
-          <button class="sbf-del-btn"  data-idx="${i}" title="הסר">✕</button>
+          <button class="sbf-edit-btn" data-idx="${i}" title="׳¢׳¨׳•׳">גן¸</button>
+          <button class="sbf-del-btn"  data-idx="${i}" title="׳”׳¡׳¨">ג•</button>
         </div>`).join('')
-    : '<div class="muted-text" style="font-size:.88rem;padding:6px 0">לא הוגדר פוקוס להיום</div>';
+    : '<div class="muted-text" style="font-size:.88rem;padding:6px 0">׳׳ ׳”׳•׳’׳“׳¨ ׳₪׳•׳§׳•׳¡ ׳׳”׳™׳•׳</div>';
 
-  body.innerHTML = itemsHtml + `<button class="sbf-add-btn">+ הוסף פוקוס</button>`;
+  body.innerHTML = itemsHtml + `<button class="sbf-add-btn">+ ׳”׳•׳¡׳£ ׳₪׳•׳§׳•׳¡</button>`;
 
   body.querySelectorAll('.sbf-edit-btn').forEach(btn =>
     btn.addEventListener('click', () => openSbFocusForm(items, parseInt(btn.dataset.idx))));
@@ -1617,7 +1617,7 @@ function renderSbFocus(items, dateKey) {
       const idx = parseInt(btn.dataset.idx);
       const updated = items.filter((_, i) => i !== idx);
       await api('/api/focus/update', { focus_today: updated });
-      toast('✓ הוסר');
+      toast('ג“ ׳”׳•׳¡׳¨');
       loadState();
     }));
   body.querySelector('.sbf-add-btn').addEventListener('click', () => openSbFocusForm(items, -1));
@@ -1626,7 +1626,7 @@ function renderSbFocus(items, dateKey) {
 function openSbFocusForm(items, idx) {
   const body = document.getElementById('sb-focus-body');
   if (!body) return;
-  const it = idx >= 0 ? items[idx] : { emoji: '🎯', text: '' };
+  const it = idx >= 0 ? items[idx] : { emoji: 'נ¯', text: '' };
 
   // Remove existing form if open
   body.querySelector('.sbf-form')?.remove();
@@ -1635,26 +1635,26 @@ function openSbFocusForm(items, idx) {
   form.className = 'sbf-form';
   form.innerHTML = `
     <div class="sbf-form-row">
-      <input type="text" id="sbf-emoji" value="${it.emoji || '🎯'}" maxlength="2" placeholder="🎯">
-      <input type="text" id="sbf-text"  value="${(it.text || '').replace(/"/g,'&quot;')}" placeholder="פוקוס להיום...">
+      <input type="text" id="sbf-emoji" value="${it.emoji || 'נ¯'}" maxlength="2" placeholder="נ¯">
+      <input type="text" id="sbf-text"  value="${(it.text || '').replace(/"/g,'&quot;')}" placeholder="׳₪׳•׳§׳•׳¡ ׳׳”׳™׳•׳...">
     </div>
     <div class="sbf-form-btns">
-      <button id="sbf-save">💾 שמור</button>
-      <button id="sbf-cancel" class="sbf-cancel">ביטול</button>
+      <button id="sbf-save">נ’¾ ׳©׳׳•׳¨</button>
+      <button id="sbf-cancel" class="sbf-cancel">׳‘׳™׳˜׳•׳</button>
     </div>`;
   body.appendChild(form);
   form.querySelector('#sbf-text').focus();
 
   form.querySelector('#sbf-cancel').addEventListener('click', () => loadState());
   const doSave = async () => {
-    const emoji = form.querySelector('#sbf-emoji').value.trim() || '•';
+    const emoji = form.querySelector('#sbf-emoji').value.trim() || 'ג€¢';
     const text  = form.querySelector('#sbf-text').value.trim();
-    if (!text) { toast('כתוב טקסט', false); return; }
+    if (!text) { toast('׳›׳×׳•׳‘ ׳˜׳§׳¡׳˜', false); return; }
     const updated = [...items];
     if (idx >= 0) updated[idx] = { emoji, text };
     else updated.push({ emoji, text });
     await api('/api/focus/update', { focus_today: updated });
-    toast('✓ פוקוס עודכן');
+    toast('ג“ ׳₪׳•׳§׳•׳¡ ׳¢׳•׳“׳›׳');
     loadState();
   };
   form.querySelector('#sbf-save').addEventListener('click', doSave);
@@ -1664,7 +1664,7 @@ function openSbFocusForm(items, idx) {
   });
 }
 
-// ---------- Sidebar — Calendar ----------
+// ---------- Sidebar ג€” Calendar ----------
 function renderSbCalendar(cal, todayKey) {
   const el = document.getElementById('sb-calendar');
   if (!el) return;
@@ -1682,7 +1682,7 @@ function renderSbCalendar(cal, todayKey) {
         .map(a => ({
           time: a.time,
           end_time: a.time_to || '',
-          title: `📅 ${a.patient_name}${a.service ? ' · ' + a.service : ''}`,
+          title: `נ“… ${a.patient_name}${a.service ? ' ֲ· ' + a.service : ''}`,
           location: '',
           _isBooking: true
         }))
@@ -1692,23 +1692,23 @@ function renderSbCalendar(cal, todayKey) {
     .sort((a, b) => (a.time || '').localeCompare(b.time || ''));
 
   if (!allEvents.length) {
-    el.innerHTML = `<div class="cal-empty">אין אירועים או היומן לא עודכן עדיין</div>
-      <div class="cal-stale">💡 שאל את קרלוס "מה יש לי ביומן היום" כדי לעדכן</div>`;
+    el.innerHTML = `<div class="cal-empty">׳׳™׳ ׳׳™׳¨׳•׳¢׳™׳ ׳׳• ׳”׳™׳•׳׳ ׳׳ ׳¢׳•׳“׳›׳ ׳¢׳“׳™׳™׳</div>
+      <div class="cal-stale">נ’¡ ׳©׳׳ ׳׳× ׳§׳¨׳׳•׳¡ "׳׳” ׳™׳© ׳׳™ ׳‘׳™׳•׳׳ ׳”׳™׳•׳" ׳›׳“׳™ ׳׳¢׳“׳›׳</div>`;
     return;
   }
 
   const isStale = cal && cal.date !== todayKey && effectiveCalEvents.length === calEvents.length;
   const eventsHtml = allEvents.map(ev => `
     <div class="cal-event${ev._isBooking ? ' cal-event-booking' : ''}">
-      <span class="cal-time">${ev.time || ''}${ev.end_time ? '–' + ev.end_time : ''}</span>
+      <span class="cal-time">${ev.time || ''}${ev.end_time ? 'ג€“' + ev.end_time : ''}</span>
       <div>
         <div class="cal-title">${ev.title || ''}</div>
-        ${ev.location ? `<div class="cal-loc">📍 ${ev.location}</div>` : ''}
+        ${ev.location ? `<div class="cal-loc">נ“ ${ev.location}</div>` : ''}
       </div>
     </div>`).join('');
 
   el.innerHTML = eventsHtml + (isStale
-    ? `<div class="cal-stale">⚠️ יומן Google מ-${cal.date || 'תאריך לא ידוע'}</div>` : '');
+    ? `<div class="cal-stale">ג ן¸ ׳™׳•׳׳ Google ׳-${cal.date || '׳×׳׳¨׳™׳ ׳׳ ׳™׳“׳•׳¢'}</div>` : '');
 }
 
 // ---------- Section collapse (all collapsible sections) ----------
@@ -1719,11 +1719,11 @@ function initSectionToggles() {
     if (!tgl || !body) return;
     const id = section.id || '';
     const stored = id ? localStorage.getItem('carlos-sec-' + id) : null;
-    if (stored === '1') { body.style.display = 'none'; tgl.textContent = '▸'; }
+    if (stored === '1') { body.style.display = 'none'; tgl.textContent = 'ג–¸'; }
     tgl.addEventListener('click', () => {
       const isCollapsed = body.style.display === 'none';
       body.style.display = isCollapsed ? '' : 'none';
-      tgl.textContent = isCollapsed ? '▾' : '▸';
+      tgl.textContent = isCollapsed ? 'ג–¾' : 'ג–¸';
       if (id) localStorage.setItem('carlos-sec-' + id, isCollapsed ? '0' : '1');
     });
   });
@@ -1738,8 +1738,8 @@ function initSectionToggles() {
       const b = s.querySelector('.section-body');
       return b && b.style.display !== 'none';
     });
-    collapseAllBtn.textContent = anyExpanded ? '⊟' : '⊞';
-    collapseAllBtn.title = anyExpanded ? 'כווץ את כל החלונות' : 'הרחב את כל החלונות';
+    collapseAllBtn.textContent = anyExpanded ? 'ג' : 'ג';
+    collapseAllBtn.title = anyExpanded ? '׳›׳•׳•׳¥ ׳׳× ׳›׳ ׳”׳—׳׳•׳ ׳•׳×' : '׳”׳¨׳—׳‘ ׳׳× ׳›׳ ׳”׳—׳׳•׳ ׳•׳×';
   };
   collapseAllBtn.addEventListener('click', () => {
     const sections = document.querySelectorAll('.card.collapsible');
@@ -1752,7 +1752,7 @@ function initSectionToggles() {
       const tgl  = section.querySelector('.section-toggle');
       if (!body || !tgl) return;
       body.style.display = anyExpanded ? 'none' : '';
-      tgl.textContent    = anyExpanded ? '▸' : '▾';
+      tgl.textContent    = anyExpanded ? 'ג–¸' : 'ג–¾';
       if (section.id) localStorage.setItem('carlos-sec-' + section.id, anyExpanded ? '1' : '0');
     });
     updateIcon();
@@ -1776,10 +1776,10 @@ document.getElementById('booking-cal-link')?.addEventListener('click', (e) => {
 
   async function doAsk() {
     const text = input.value.trim();
-    if (!text) { toast('כתוב שאלה קודם', false); return; }
+    if (!text) { toast('׳›׳×׳•׳‘ ׳©׳׳׳” ׳§׳•׳“׳', false); return; }
     input.disabled = true;
     btn.disabled   = true;
-    btn.textContent = '⏳ קרלוס חושב...';
+    btn.textContent = 'ג³ ׳§׳¨׳׳•׳¡ ׳—׳•׳©׳‘...';
     resp.classList.add('hidden');
     try {
       const r = await api('/api/ask', { text });
@@ -1790,12 +1790,12 @@ document.getElementById('booking-cal-link')?.addEventListener('click', (e) => {
       // refresh dashboard if Carlos updated any files
       setTimeout(() => loadState(), 800);
     } catch (e) {
-      resp.textContent = 'שגיאה בחיבור לקרלוס';
+      resp.textContent = '׳©׳’׳™׳׳” ׳‘׳—׳™׳‘׳•׳¨ ׳׳§׳¨׳׳•׳¡';
       resp.classList.remove('hidden');
     } finally {
       input.disabled = false;
       btn.disabled   = false;
-      btn.textContent = '▶ שלח';
+      btn.textContent = 'ג–¶ ׳©׳׳—';
       input.value = '';
     }
   }
@@ -1808,10 +1808,10 @@ document.getElementById('booking-cal-link')?.addEventListener('click', (e) => {
 
 // ---------- Playbook viewer ----------
 const PB_LABELS = {
-  'treatments': '💆 טיפולים',
-  'dj-events':  '🎵 DJ אירועים',
-  'product':    '🚀 כלי למטפלים',
-  'learning':   '📚 לימוד מוזיקה'
+  'treatments': 'נ’† ׳˜׳™׳₪׳•׳׳™׳',
+  'dj-events':  'נµ DJ ׳׳™׳¨׳•׳¢׳™׳',
+  'product':    'נ€ ׳›׳׳™ ׳׳׳˜׳₪׳׳™׳',
+  'learning':   'נ“ ׳׳™׳׳•׳“ ׳׳•׳–׳™׳§׳”'
 };
 
 async function openPlaybook(domain) {
@@ -1819,8 +1819,8 @@ async function openPlaybook(domain) {
   const titleEl = document.getElementById('pb-modal-title');
   const bodyEl = document.getElementById('pb-modal-body');
   if (!modal) return;
-  titleEl.textContent = '📖 ' + (PB_LABELS[domain] || domain);
-  bodyEl.innerHTML = '<div class="muted-text">טוען...</div>';
+  titleEl.textContent = 'נ“– ' + (PB_LABELS[domain] || domain);
+  bodyEl.innerHTML = '<div class="muted-text">׳˜׳•׳¢׳...</div>';
   modal.classList.remove('hidden');
   try {
     const r = await fetch('/api/playbook/' + domain);
@@ -1828,7 +1828,7 @@ async function openPlaybook(domain) {
     const md = await r.text();
     bodyEl.innerHTML = mdToHtml(md);
   } catch (e) {
-    bodyEl.innerHTML = `<div class="muted-text">שגיאה בטעינת הפלייבוק: ${e.message}</div>`;
+    bodyEl.innerHTML = `<div class="muted-text">׳©׳’׳™׳׳” ׳‘׳˜׳¢׳™׳ ׳× ׳”׳₪׳׳™׳™׳‘׳•׳§: ${e.message}</div>`;
   }
 }
 
@@ -1864,86 +1864,86 @@ document.getElementById('playbook-modal')?.addEventListener('click', (e) => {
     document.getElementById('playbook-modal').classList.add('hidden');
 });
 
-// Floating chat bubble removed — use sidebar "שאל קרלוס" panel instead
+// Floating chat bubble removed ג€” use sidebar "׳©׳׳ ׳§׳¨׳׳•׳¡" panel instead
 
 // ---------- Help Modal ----------
 const HELP_SECTIONS = [
-  { icon: '🎯', title: 'מה זה הדאשבורד?', body: `כלי ניהול יומי אישי — משימות, לקוחות, הרגלים, תוכן, וזמן, הכל במקום אחד.<br>
-    הכל רץ <strong>מקומית על המחשב שלך</strong> — לא בענן, הנתונים שמורים אצלך בלבד.<br>
-    הפעלה: לחיצה כפולה על <strong>start-dashboard.bat</strong> ← הדפדפן נפתח אוטומטית.` },
+  { icon: 'נ¯', title: '׳׳” ׳–׳” ׳”׳“׳׳©׳‘׳•׳¨׳“?', body: `׳›׳׳™ ׳ ׳™׳”׳•׳ ׳™׳•׳׳™ ׳׳™׳©׳™ ג€” ׳׳©׳™׳׳•׳×, ׳׳§׳•׳—׳•׳×, ׳”׳¨׳’׳׳™׳, ׳×׳•׳›׳, ׳•׳–׳׳, ׳”׳›׳ ׳‘׳׳§׳•׳ ׳׳—׳“.<br>
+    ׳”׳›׳ ׳¨׳¥ <strong>׳׳§׳•׳׳™׳× ׳¢׳ ׳”׳׳—׳©׳‘ ׳©׳׳</strong> ג€” ׳׳ ׳‘׳¢׳ ׳, ׳”׳ ׳×׳•׳ ׳™׳ ׳©׳׳•׳¨׳™׳ ׳׳¦׳׳ ׳‘׳׳‘׳“.<br>
+    ׳”׳₪׳¢׳׳”: ׳׳—׳™׳¦׳” ׳›׳₪׳•׳׳” ׳¢׳ <strong>start-dashboard.bat</strong> ג† ׳”׳“׳₪׳“׳₪׳ ׳ ׳₪׳×׳— ׳׳•׳˜׳•׳׳˜׳™׳×.` },
 
-  { icon: '📌', title: 'משימות', body: `<strong>הוספה:</strong> כתוב בשדה "משימה חדשה" + לחץ "הוסף". אפשר לצרף תאריך ושעה.<br>
-    <strong>השלמה:</strong> לחץ על ✓ — המשימה עוברת לסטריקאות בתחתית (עם אפשרות ביטול).<br>
-    <strong>עריכה:</strong> לחץ ✏️ ליד משימה — ניתן לשנות כותרת, תאריך, הערות, או למחוק.<br>
-    <strong>מחר:</strong> קטע נפרד לתכנון משימות של מחר. משימה עם תאריך מחר לא תופיע בקטע הנוכחי.<br>
-    <strong>חיפוש:</strong> שדה 🔍 מסנן בזמן אמת לפי שם המשימה.<br>
-    <strong>⚠️ אדום</strong> = משימה שעבר תאריכה — יש לטפל בה.` },
+  { icon: 'נ“', title: '׳׳©׳™׳׳•׳×', body: `<strong>׳”׳•׳¡׳₪׳”:</strong> ׳›׳×׳•׳‘ ׳‘׳©׳“׳” "׳׳©׳™׳׳” ׳—׳“׳©׳”" + ׳׳—׳¥ "׳”׳•׳¡׳£". ׳׳₪׳©׳¨ ׳׳¦׳¨׳£ ׳×׳׳¨׳™׳ ׳•׳©׳¢׳”.<br>
+    <strong>׳”׳©׳׳׳”:</strong> ׳׳—׳¥ ׳¢׳ ג“ ג€” ׳”׳׳©׳™׳׳” ׳¢׳•׳‘׳¨׳× ׳׳¡׳˜׳¨׳™׳§׳׳•׳× ׳‘׳×׳—׳×׳™׳× (׳¢׳ ׳׳₪׳©׳¨׳•׳× ׳‘׳™׳˜׳•׳).<br>
+    <strong>׳¢׳¨׳™׳›׳”:</strong> ׳׳—׳¥ גן¸ ׳׳™׳“ ׳׳©׳™׳׳” ג€” ׳ ׳™׳×׳ ׳׳©׳ ׳•׳× ׳›׳•׳×׳¨׳×, ׳×׳׳¨׳™׳, ׳”׳¢׳¨׳•׳×, ׳׳• ׳׳׳—׳•׳§.<br>
+    <strong>׳׳—׳¨:</strong> ׳§׳˜׳¢ ׳ ׳₪׳¨׳“ ׳׳×׳›׳ ׳•׳ ׳׳©׳™׳׳•׳× ׳©׳ ׳׳—׳¨. ׳׳©׳™׳׳” ׳¢׳ ׳×׳׳¨׳™׳ ׳׳—׳¨ ׳׳ ׳×׳•׳₪׳™׳¢ ׳‘׳§׳˜׳¢ ׳”׳ ׳•׳›׳—׳™.<br>
+    <strong>׳—׳™׳₪׳•׳©:</strong> ׳©׳“׳” נ” ׳׳¡׳ ׳ ׳‘׳–׳׳ ׳׳׳× ׳׳₪׳™ ׳©׳ ׳”׳׳©׳™׳׳”.<br>
+    <strong>ג ן¸ ׳׳“׳•׳</strong> = ׳׳©׳™׳׳” ׳©׳¢׳‘׳¨ ׳×׳׳¨׳™׳›׳” ג€” ׳™׳© ׳׳˜׳₪׳ ׳‘׳”.` },
 
-  { icon: '👥', title: 'לקוחות ואירועים', body: `<strong>לשוניות:</strong> 💆 לקוחות | 🎵 אירועים — מועברים בלחיצה.<br>
-    <strong>הוספה ידנית:</strong> "+ הוסף ידנית" פותח טופס מפורט. לקוח: שם, עיר, טלפון, מייל, מקור, סוג טיפול. אירוע: תאריך, מיקום, אנשים, תשלום, סגנון מוזיקלי, סטטוס.<br>
-    <strong>תמונת פרופיל:</strong> בטופס הלקוח — לחץ "📷 העלה תמונה" (עד 20MB).<br>
-    <strong>לכידת שיחה:</strong> לחץ "🗣️ לכידת שיחה" ← כתוב בחופשיות מה דיברתם — המערכת שואבת אוטומטית שם, טלפון, עיר.<br>
-    <strong>משימות צמודות:</strong> בכל כרטיס — "📋 משימות" לניהול משימות ספציפיות ללקוח/אירוע.<br>
-    <strong>חיפוש:</strong> שדה 🔍 מחפש לפי שם, טלפון, עיר.` },
+  { icon: 'נ‘¥', title: '׳׳§׳•׳—׳•׳× ׳•׳׳™׳¨׳•׳¢׳™׳', body: `<strong>׳׳©׳•׳ ׳™׳•׳×:</strong> נ’† ׳׳§׳•׳—׳•׳× | נµ ׳׳™׳¨׳•׳¢׳™׳ ג€” ׳׳•׳¢׳‘׳¨׳™׳ ׳‘׳׳—׳™׳¦׳”.<br>
+    <strong>׳”׳•׳¡׳₪׳” ׳™׳“׳ ׳™׳×:</strong> "+ ׳”׳•׳¡׳£ ׳™׳“׳ ׳™׳×" ׳₪׳•׳×׳— ׳˜׳•׳₪׳¡ ׳׳₪׳•׳¨׳˜. ׳׳§׳•׳—: ׳©׳, ׳¢׳™׳¨, ׳˜׳׳₪׳•׳, ׳׳™׳™׳, ׳׳§׳•׳¨, ׳¡׳•׳’ ׳˜׳™׳₪׳•׳. ׳׳™׳¨׳•׳¢: ׳×׳׳¨׳™׳, ׳׳™׳§׳•׳, ׳׳ ׳©׳™׳, ׳×׳©׳׳•׳, ׳¡׳’׳ ׳•׳ ׳׳•׳–׳™׳§׳׳™, ׳¡׳˜׳˜׳•׳¡.<br>
+    <strong>׳×׳׳•׳ ׳× ׳₪׳¨׳•׳₪׳™׳:</strong> ׳‘׳˜׳•׳₪׳¡ ׳”׳׳§׳•׳— ג€” ׳׳—׳¥ "נ“· ׳”׳¢׳׳” ׳×׳׳•׳ ׳”" (׳¢׳“ 20MB).<br>
+    <strong>׳׳›׳™׳“׳× ׳©׳™׳—׳”:</strong> ׳׳—׳¥ "נ—£ן¸ ׳׳›׳™׳“׳× ׳©׳™׳—׳”" ג† ׳›׳×׳•׳‘ ׳‘׳—׳•׳₪׳©׳™׳•׳× ׳׳” ׳“׳™׳‘׳¨׳×׳ ג€” ׳”׳׳¢׳¨׳›׳× ׳©׳•׳׳‘׳× ׳׳•׳˜׳•׳׳˜׳™׳× ׳©׳, ׳˜׳׳₪׳•׳, ׳¢׳™׳¨.<br>
+    <strong>׳׳©׳™׳׳•׳× ׳¦׳׳•׳“׳•׳×:</strong> ׳‘׳›׳ ׳›׳¨׳˜׳™׳¡ ג€” "נ“‹ ׳׳©׳™׳׳•׳×" ׳׳ ׳™׳”׳•׳ ׳׳©׳™׳׳•׳× ׳¡׳₪׳¦׳™׳₪׳™׳•׳× ׳׳׳§׳•׳—/׳׳™׳¨׳•׳¢.<br>
+    <strong>׳—׳™׳₪׳•׳©:</strong> ׳©׳“׳” נ” ׳׳—׳₪׳© ׳׳₪׳™ ׳©׳, ׳˜׳׳₪׳•׳, ׳¢׳™׳¨.` },
 
-  { icon: '🌱', title: 'הרגלים', body: `לחץ ✓ על הרגל שביצעת היום — הוא יסומן כ"הושלם".<br>
-    לחץ שוב לביטול הסימון.<br>
-    כל הרגל מציג: <strong>X/7 שבוע</strong> · <strong>X/28 חודש</strong> · <strong>🔥 רצף ימים</strong>.<br>
-    קטע "📆 הרגלים — שבוע שעבר" מציג טבלת שבוע מלאה לכל הרגל.` },
+  { icon: 'נ±', title: '׳”׳¨׳’׳׳™׳', body: `׳׳—׳¥ ג“ ׳¢׳ ׳”׳¨׳’׳ ׳©׳‘׳™׳¦׳¢׳× ׳”׳™׳•׳ ג€” ׳”׳•׳ ׳™׳¡׳•׳׳ ׳›"׳”׳•׳©׳׳".<br>
+    ׳׳—׳¥ ׳©׳•׳‘ ׳׳‘׳™׳˜׳•׳ ׳”׳¡׳™׳׳•׳.<br>
+    ׳›׳ ׳”׳¨׳’׳ ׳׳¦׳™׳’: <strong>X/7 ׳©׳‘׳•׳¢</strong> ֲ· <strong>X/28 ׳—׳•׳“׳©</strong> ֲ· <strong>נ”¥ ׳¨׳¦׳£ ׳™׳׳™׳</strong>.<br>
+    ׳§׳˜׳¢ "נ“† ׳”׳¨׳’׳׳™׳ ג€” ׳©׳‘׳•׳¢ ׳©׳¢׳‘׳¨" ׳׳¦׳™׳’ ׳˜׳‘׳׳× ׳©׳‘׳•׳¢ ׳׳׳׳” ׳׳›׳ ׳”׳¨׳’׳.` },
 
-  { icon: '⏱️', title: 'טיימר', body: `הווידג'ט הקטן בפינה השמאלית למטה.<br>
-    <strong>סטופר:</strong> ▶ התחל → ■ עצור → בחר תחום → 💾 שמור זמן.<br>
-    <strong>טיימר:</strong> הגדר דקות/שניות → ▶ התחל → צלצול בסיום → שמור זמן.<br>
-    <strong>➕ ידני:</strong> הוסף זמן שעבדת בלי שהטיימר רץ.<br>
-    כל הזמן שנרשם מופיע בקטע "⏱️ זמן שנרשם היום".` },
+  { icon: 'ג±ן¸', title: '׳˜׳™׳™׳׳¨', body: `׳”׳•׳•׳™׳“׳’'׳˜ ׳”׳§׳˜׳ ׳‘׳₪׳™׳ ׳” ׳”׳©׳׳׳׳™׳× ׳׳׳˜׳”.<br>
+    <strong>׳¡׳˜׳•׳₪׳¨:</strong> ג–¶ ׳”׳×׳—׳ ג†’ ג–  ׳¢׳¦׳•׳¨ ג†’ ׳‘׳—׳¨ ׳×׳—׳•׳ ג†’ נ’¾ ׳©׳׳•׳¨ ׳–׳׳.<br>
+    <strong>׳˜׳™׳™׳׳¨:</strong> ׳”׳’׳“׳¨ ׳“׳§׳•׳×/׳©׳ ׳™׳•׳× ג†’ ג–¶ ׳”׳×׳—׳ ג†’ ׳¦׳׳¦׳•׳ ׳‘׳¡׳™׳•׳ ג†’ ׳©׳׳•׳¨ ׳–׳׳.<br>
+    <strong>ג• ׳™׳“׳ ׳™:</strong> ׳”׳•׳¡׳£ ׳–׳׳ ׳©׳¢׳‘׳“׳× ׳‘׳׳™ ׳©׳”׳˜׳™׳™׳׳¨ ׳¨׳¥.<br>
+    ׳›׳ ׳”׳–׳׳ ׳©׳ ׳¨׳©׳ ׳׳•׳₪׳™׳¢ ׳‘׳§׳˜׳¢ "ג±ן¸ ׳–׳׳ ׳©׳ ׳¨׳©׳ ׳”׳™׳•׳".` },
 
-  { icon: '📲', title: 'תוכן השבוע', body: `נהל רילסים ופוסטים בשלבים: <strong>רעיון → טיוטה → מוכן → פורסם</strong>.<br>
-    לחץ על הסטטוס כדי להתקדם שלב. "פורסם" מעדכן אוטומטית את מכסת השבוע.<br>
-    ✏️ לעריכת תוכן הפוסט, קישור Docs, תאריך תזמון, קובץ מדיה מצורף.<br>
-    שיוך לתחום: 💆 טיפולים / 🎵 אירועים / 🚀 כלי / ⚪ כללי.` },
+  { icon: 'נ“²', title: '׳×׳•׳›׳ ׳”׳©׳‘׳•׳¢', body: `׳ ׳”׳ ׳¨׳™׳׳¡׳™׳ ׳•׳₪׳•׳¡׳˜׳™׳ ׳‘׳©׳׳‘׳™׳: <strong>׳¨׳¢׳™׳•׳ ג†’ ׳˜׳™׳•׳˜׳” ג†’ ׳׳•׳›׳ ג†’ ׳₪׳•׳¨׳¡׳</strong>.<br>
+    ׳׳—׳¥ ׳¢׳ ׳”׳¡׳˜׳˜׳•׳¡ ׳›׳“׳™ ׳׳”׳×׳§׳“׳ ׳©׳׳‘. "׳₪׳•׳¨׳¡׳" ׳׳¢׳“׳›׳ ׳׳•׳˜׳•׳׳˜׳™׳× ׳׳× ׳׳›׳¡׳× ׳”׳©׳‘׳•׳¢.<br>
+    גן¸ ׳׳¢׳¨׳™׳›׳× ׳×׳•׳›׳ ׳”׳₪׳•׳¡׳˜, ׳§׳™׳©׳•׳¨ Docs, ׳×׳׳¨׳™׳ ׳×׳–׳׳•׳, ׳§׳•׳‘׳¥ ׳׳“׳™׳” ׳׳¦׳•׳¨׳£.<br>
+    ׳©׳™׳•׳ ׳׳×׳—׳•׳: נ’† ׳˜׳™׳₪׳•׳׳™׳ / נµ ׳׳™׳¨׳•׳¢׳™׳ / נ€ ׳›׳׳™ / ג× ׳›׳׳׳™.` },
 
-  { icon: '📊', title: 'מכסות שבועיות ויומיות', body: `<strong>שבועי (📈):</strong> יעדים לשבוע — רילסים, פוסטים, שעות, שיווק, וכו\'.<br>
-    <strong>יומי (📊):</strong> אותם יעדים אבל ליום הנוכחי — מתאפסים כל בוקר.<br>
-    ✏️ לשינוי יעד בכל שורה.<br>
-    <strong>איפוס שבועי:</strong> כל ראשון בשבוע כל המכסות מתאפסות אוטומטית.` },
+  { icon: 'נ“', title: '׳׳›׳¡׳•׳× ׳©׳‘׳•׳¢׳™׳•׳× ׳•׳™׳•׳׳™׳•׳×', body: `<strong>׳©׳‘׳•׳¢׳™ (נ“ˆ):</strong> ׳™׳¢׳“׳™׳ ׳׳©׳‘׳•׳¢ ג€” ׳¨׳™׳׳¡׳™׳, ׳₪׳•׳¡׳˜׳™׳, ׳©׳¢׳•׳×, ׳©׳™׳•׳•׳§, ׳•׳›׳•\'.<br>
+    <strong>׳™׳•׳׳™ (נ“):</strong> ׳׳•׳×׳ ׳™׳¢׳“׳™׳ ׳׳‘׳ ׳׳™׳•׳ ׳”׳ ׳•׳›׳—׳™ ג€” ׳׳×׳׳₪׳¡׳™׳ ׳›׳ ׳‘׳•׳§׳¨.<br>
+    גן¸ ׳׳©׳™׳ ׳•׳™ ׳™׳¢׳“ ׳‘׳›׳ ׳©׳•׳¨׳”.<br>
+    <strong>׳׳™׳₪׳•׳¡ ׳©׳‘׳•׳¢׳™:</strong> ׳›׳ ׳¨׳׳©׳•׳ ׳‘׳©׳‘׳•׳¢ ׳›׳ ׳”׳׳›׳¡׳•׳× ׳׳×׳׳₪׳¡׳•׳× ׳׳•׳˜׳•׳׳˜׳™׳×.` },
 
-  { icon: '🌅', title: 'בריפינג בוקר', body: `מציג סיכום שנשמר בקובץ <code>sync/morning-briefing.md</code>.<br>
-    כותב לשם בצורה אוטומטית כשקרלוס מייצר בריפינג (מחייב חיבור).<br>
-    ניתן גם לערוך את הקובץ ישירות בנוטפד.` },
+  { icon: 'נ…', title: '׳‘׳¨׳™׳₪׳™׳ ׳’ ׳‘׳•׳§׳¨', body: `׳׳¦׳™׳’ ׳¡׳™׳›׳•׳ ׳©׳ ׳©׳׳¨ ׳‘׳§׳•׳‘׳¥ <code>sync/morning-briefing.md</code>.<br>
+    ׳›׳•׳×׳‘ ׳׳©׳ ׳‘׳¦׳•׳¨׳” ׳׳•׳˜׳•׳׳˜׳™׳× ׳›׳©׳§׳¨׳׳•׳¡ ׳׳™׳™׳¦׳¨ ׳‘׳¨׳™׳₪׳™׳ ׳’ (׳׳—׳™׳™׳‘ ׳—׳™׳‘׳•׳¨).<br>
+    ׳ ׳™׳×׳ ׳’׳ ׳׳¢׳¨׳•׳ ׳׳× ׳”׳§׳•׳‘׳¥ ׳™׳©׳™׳¨׳•׳× ׳‘׳ ׳•׳˜׳₪׳“.` },
 
-  { icon: '📧', title: 'סיכום מיילים', body: `מציג סיכום שנשמר בקובץ <code>sync/email-summary.md</code>.<br>
-    מתעדכן אוטומטית כשמתחברים ל-Gmail דרך Composio.<br>
-    ניתן לכתוב בקובץ ידנית כל סיכום שתרצה.` },
+  { icon: 'נ“§', title: '׳¡׳™׳›׳•׳ ׳׳™׳™׳׳™׳', body: `׳׳¦׳™׳’ ׳¡׳™׳›׳•׳ ׳©׳ ׳©׳׳¨ ׳‘׳§׳•׳‘׳¥ <code>sync/email-summary.md</code>.<br>
+    ׳׳×׳¢׳“׳›׳ ׳׳•׳˜׳•׳׳˜׳™׳× ׳›׳©׳׳×׳—׳‘׳¨׳™׳ ׳-Gmail ׳“׳¨׳ Composio.<br>
+    ׳ ׳™׳×׳ ׳׳›׳×׳•׳‘ ׳‘׳§׳•׳‘׳¥ ׳™׳“׳ ׳™׳× ׳›׳ ׳¡׳™׳›׳•׳ ׳©׳×׳¨׳¦׳”.` },
 
-  { icon: '📅', title: 'יומן Google Calendar', body: `<strong>סיידבר — יומן היום:</strong> מציג אירועים מ-<code>sync/calendar-today.json</code>.<br>
-    לחץ 🔄 לרענון ידני (מחייב חיבור ל-Google Calendar).<br>
-    ניתן לכתוב לקובץ ידנית: <code>{"date":"YYYY-MM-DD","events":[{"time":"09:00","title":"פגישה"}]}</code>` },
+  { icon: 'נ“…', title: '׳™׳•׳׳ Google Calendar', body: `<strong>׳¡׳™׳™׳“׳‘׳¨ ג€” ׳™׳•׳׳ ׳”׳™׳•׳:</strong> ׳׳¦׳™׳’ ׳׳™׳¨׳•׳¢׳™׳ ׳-<code>sync/calendar-today.json</code>.<br>
+    ׳׳—׳¥ נ”„ ׳׳¨׳¢׳ ׳•׳ ׳™׳“׳ ׳™ (׳׳—׳™׳™׳‘ ׳—׳™׳‘׳•׳¨ ׳-Google Calendar).<br>
+    ׳ ׳™׳×׳ ׳׳›׳×׳•׳‘ ׳׳§׳•׳‘׳¥ ׳™׳“׳ ׳™׳×: <code>{"date":"YYYY-MM-DD","events":[{"time":"09:00","title":"׳₪׳’׳™׳©׳”"}]}</code>` },
 
-  { icon: '📝', title: 'יומן יומי', body: `כתוב מחשבות, הרהורים, רעיונות, או סיכום יום.<br>
-    לחץ "שמור ליומן" — הטקסט מצטרף לקובץ <code>journal/YYYY-MM-DD.md</code>.<br>
-    קובץ חדש לכל יום. ניתן לפתוח ולקרוא בנוטפד.` },
+  { icon: 'נ“', title: '׳™׳•׳׳ ׳™׳•׳׳™', body: `׳›׳×׳•׳‘ ׳׳—׳©׳‘׳•׳×, ׳”׳¨׳”׳•׳¨׳™׳, ׳¨׳¢׳™׳•׳ ׳•׳×, ׳׳• ׳¡׳™׳›׳•׳ ׳™׳•׳.<br>
+    ׳׳—׳¥ "׳©׳׳•׳¨ ׳׳™׳•׳׳" ג€” ׳”׳˜׳§׳¡׳˜ ׳׳¦׳˜׳¨׳£ ׳׳§׳•׳‘׳¥ <code>journal/YYYY-MM-DD.md</code>.<br>
+    ׳§׳•׳‘׳¥ ׳—׳“׳© ׳׳›׳ ׳™׳•׳. ׳ ׳™׳×׳ ׳׳₪׳×׳•׳— ׳•׳׳§׳¨׳•׳ ׳‘׳ ׳•׳˜׳₪׳“.` },
 
-  { icon: '📖', title: 'פלייבוקים', body: `מדריכי פעולה לפי תחום עסקי.<br>
-    לחץ על כפתור תחום בסיידבר (💆 / 🎵 / 🚀 / 📚) לפתיחת המדריך.<br>
-    קבצי המדריך נמצאים ב: <code>domains/[תחום]/playbook.md</code><br>
-    ניתן לערוך אותם בנוטפד — הם ייטענו עדכניים בכל פתיחה.` },
+  { icon: 'נ“–', title: '׳₪׳׳™׳™׳‘׳•׳§׳™׳', body: `׳׳“׳¨׳™׳›׳™ ׳₪׳¢׳•׳׳” ׳׳₪׳™ ׳×׳—׳•׳ ׳¢׳¡׳§׳™.<br>
+    ׳׳—׳¥ ׳¢׳ ׳›׳₪׳×׳•׳¨ ׳×׳—׳•׳ ׳‘׳¡׳™׳™׳“׳‘׳¨ (נ’† / נµ / נ€ / נ“) ׳׳₪׳×׳™׳—׳× ׳”׳׳“׳¨׳™׳.<br>
+    ׳§׳‘׳¦׳™ ׳”׳׳“׳¨׳™׳ ׳ ׳׳¦׳׳™׳ ׳‘: <code>domains/[׳×׳—׳•׳]/playbook.md</code><br>
+    ׳ ׳™׳×׳ ׳׳¢׳¨׳•׳ ׳׳•׳×׳ ׳‘׳ ׳•׳˜׳₪׳“ ג€” ׳”׳ ׳™׳™׳˜׳¢׳ ׳• ׳¢׳“׳›׳ ׳™׳™׳ ׳‘׳›׳ ׳₪׳×׳™׳—׳”.` },
 
-  { icon: '📄', title: 'ייצוא PDF', body: `לחץ 📄 בכותרת — הדפדפן פותח חלון הדפסה.<br>
-    <strong>כל הסקשנים נפתחים אוטומטית</strong> לפני ההדפסה.<br>
-    בחלון ההדפסה: "שמור כ-PDF" ← מייצר קובץ PDF מסודר.<br>
-    הסיידבר, הטיימר, וכפתורי הפעולה מוסתרים בהדפסה.` },
+  { icon: 'נ“„', title: '׳™׳™׳¦׳•׳ PDF', body: `׳׳—׳¥ נ“„ ׳‘׳›׳•׳×׳¨׳× ג€” ׳”׳“׳₪׳“׳₪׳ ׳₪׳•׳×׳— ׳—׳׳•׳ ׳”׳“׳₪׳¡׳”.<br>
+    <strong>׳›׳ ׳”׳¡׳§׳©׳ ׳™׳ ׳ ׳₪׳×׳—׳™׳ ׳׳•׳˜׳•׳׳˜׳™׳×</strong> ׳׳₪׳ ׳™ ׳”׳”׳“׳₪׳¡׳”.<br>
+    ׳‘׳—׳׳•׳ ׳”׳”׳“׳₪׳¡׳”: "׳©׳׳•׳¨ ׳›-PDF" ג† ׳׳™׳™׳¦׳¨ ׳§׳•׳‘׳¥ PDF ׳׳¡׳•׳“׳¨.<br>
+    ׳”׳¡׳™׳™׳“׳‘׳¨, ׳”׳˜׳™׳™׳׳¨, ׳•׳›׳₪׳×׳•׳¨׳™ ׳”׳₪׳¢׳•׳׳” ׳׳•׳¡׳×׳¨׳™׳ ׳‘׳”׳“׳₪׳¡׳”.` },
 
-  { icon: '⚙️', title: 'הגדרות', body: `לחץ ⚙️ בכותרת לפתיחת ההגדרות.<br>
-    <strong>שם:</strong> השם שמוצג בברכה ("בוקר טוב דוד").<br>
-    <strong>שם העוזר:</strong> מוצג בכותרת הטאב ובפוטר ("קרלוס דאשבורד").<br>
-    לחץ 💾 שמור — השינויים יופיעו בטעינה הבאה.<br>
-    <em>הגדרות מתקדמות (תחומים, יעדים) — ערוך את <code>config.json</code> ו-<code>weekly_plan.json</code> ישירות.</em>` },
+  { icon: 'ג™ן¸', title: '׳”׳’׳“׳¨׳•׳×', body: `׳׳—׳¥ ג™ן¸ ׳‘׳›׳•׳×׳¨׳× ׳׳₪׳×׳™׳—׳× ׳”׳”׳’׳“׳¨׳•׳×.<br>
+    <strong>׳©׳:</strong> ׳”׳©׳ ׳©׳׳•׳¦׳’ ׳‘׳‘׳¨׳›׳” ("׳‘׳•׳§׳¨ ׳˜׳•׳‘ ׳“׳•׳“").<br>
+    <strong>׳©׳ ׳”׳¢׳•׳–׳¨:</strong> ׳׳•׳¦׳’ ׳‘׳›׳•׳×׳¨׳× ׳”׳˜׳׳‘ ׳•׳‘׳₪׳•׳˜׳¨ ("׳§׳¨׳׳•׳¡ ׳“׳׳©׳‘׳•׳¨׳“").<br>
+    ׳׳—׳¥ נ’¾ ׳©׳׳•׳¨ ג€” ׳”׳©׳™׳ ׳•׳™׳™׳ ׳™׳•׳₪׳™׳¢׳• ׳‘׳˜׳¢׳™׳ ׳” ׳”׳‘׳׳”.<br>
+    <em>׳”׳’׳“׳¨׳•׳× ׳׳×׳§׳“׳׳•׳× (׳×׳—׳•׳׳™׳, ׳™׳¢׳“׳™׳) ג€” ׳¢׳¨׳•׳ ׳׳× <code>config.json</code> ׳•-<code>weekly_plan.json</code> ׳™׳©׳™׳¨׳•׳×.</em>` },
 
-  { icon: '🔧', title: 'הגדרה ראשונית / קבצי מערכת', body: `<strong>config.json</strong> — שם, נתיבים, תחומים עסקיים.<br>
-    <strong>weekly_plan.json</strong> — יעדים שבועיים לכל מכסה.<br>
-    <strong>habits.json</strong> — הוסף/הסר הרגלים: <code>{"id":"h1","emoji":"🏃","label":"ספורט"}</code><br>
-    <strong>תיקיות:</strong> <code>clients/</code> לקוחות · <code>events/</code> אירועים · <code>journal/</code> יומן<br>
-    <strong>לשינויים בקובצי JSON</strong> — פתח בנוטפד, שמור, ורענן את הדפדפן.` }
+  { icon: 'נ”§', title: '׳”׳’׳“׳¨׳” ׳¨׳׳©׳•׳ ׳™׳× / ׳§׳‘׳¦׳™ ׳׳¢׳¨׳›׳×', body: `<strong>config.json</strong> ג€” ׳©׳, ׳ ׳×׳™׳‘׳™׳, ׳×׳—׳•׳׳™׳ ׳¢׳¡׳§׳™׳™׳.<br>
+    <strong>weekly_plan.json</strong> ג€” ׳™׳¢׳“׳™׳ ׳©׳‘׳•׳¢׳™׳™׳ ׳׳›׳ ׳׳›׳¡׳”.<br>
+    <strong>habits.json</strong> ג€” ׳”׳•׳¡׳£/׳”׳¡׳¨ ׳”׳¨׳’׳׳™׳: <code>{"id":"h1","emoji":"נƒ","label":"׳¡׳₪׳•׳¨׳˜"}</code><br>
+    <strong>׳×׳™׳§׳™׳•׳×:</strong> <code>clients/</code> ׳׳§׳•׳—׳•׳× ֲ· <code>events/</code> ׳׳™׳¨׳•׳¢׳™׳ ֲ· <code>journal/</code> ׳™׳•׳׳<br>
+    <strong>׳׳©׳™׳ ׳•׳™׳™׳ ׳‘׳§׳•׳‘׳¦׳™ JSON</strong> ג€” ׳₪׳×׳— ׳‘׳ ׳•׳˜׳₪׳“, ׳©׳׳•׳¨, ׳•׳¨׳¢׳ ׳ ׳׳× ׳”׳“׳₪׳“׳₪׳.` }
 ];
 
 document.getElementById('help-btn')?.addEventListener('click', openHelp);
@@ -1985,7 +1985,7 @@ async function loadHistory() {
   const bodyEl = document.getElementById('history-body');
   const from = document.getElementById('history-from').value;
   const to   = document.getElementById('history-to').value;
-  bodyEl.innerHTML = '<div class="muted-text">טוען...</div>';
+  bodyEl.innerHTML = '<div class="muted-text">׳˜׳•׳¢׳...</div>';
   try {
     const qs = [];
     if (from) qs.push('from=' + from);
@@ -1994,7 +1994,7 @@ async function loadHistory() {
     const data = await r.json();
     renderHistory(data.tasks || []);
   } catch (e) {
-    bodyEl.innerHTML = '<div class="muted-text">שגיאה: ' + e.message + '</div>';
+    bodyEl.innerHTML = '<div class="muted-text">׳©׳’׳™׳׳”: ' + e.message + '</div>';
   }
 }
 let _historyAllTasks = [];
@@ -2011,7 +2011,7 @@ function applyHistorySearch() {
                             (t.notes || '').toLowerCase().includes(q))
     : allTasks;
   if (!tasks.length) {
-    bodyEl.innerHTML = `<div class="muted-text" style="padding:20px;text-align:center">${q ? 'לא נמצאו תוצאות לחיפוש' : 'אין משימות שהושלמו בטווח הנבחר'}</div>`;
+    bodyEl.innerHTML = `<div class="muted-text" style="padding:20px;text-align:center">${q ? '׳׳ ׳ ׳׳¦׳׳• ׳×׳•׳¦׳׳•׳× ׳׳—׳™׳₪׳•׳©' : '׳׳™׳ ׳׳©׳™׳׳•׳× ׳©׳”׳•׳©׳׳׳• ׳‘׳˜׳•׳•׳— ׳”׳ ׳‘׳—׳¨'}</div>`;
     return;
   }
   const groups = {};
@@ -2025,26 +2025,26 @@ function applyHistorySearch() {
       return new Date(d + 'T12:00:00Z').toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
     } catch (e) { return d; }
   };
-  bodyEl.innerHTML = `<div class="history-summary muted-text">סה"כ ${tasks.length} משימות הושלמו ב-${dates.length} ימים</div>` +
+  bodyEl.innerHTML = `<div class="history-summary muted-text">׳¡׳”"׳› ${tasks.length} ׳׳©׳™׳׳•׳× ׳”׳•׳©׳׳׳• ׳‘-${dates.length} ׳™׳׳™׳</div>` +
     dates.map(d => `
       <div class="history-day">
         <div class="history-day-title">${heDate(d)} <span class="history-day-count">(${groups[d].length})</span></div>
         ${groups[d].map(t => {
-          const catLabels = { general: '📌 כללי', health: '💊 בריאות', marketing: '📢 שיווק', music: '🎵 מוזיקה', learning: '📚 לימוד' };
+          const catLabels = { general: 'נ“ ׳›׳׳׳™', health: 'נ’ ׳‘׳¨׳™׳׳•׳×', marketing: 'נ“¢ ׳©׳™׳•׳•׳§', music: 'נµ ׳׳•׳–׳™׳§׳”', learning: 'נ“ ׳׳™׳׳•׳“' };
           const cat = t.category ? `<span class="history-cat">${catLabels[t.category] || t.category}</span>` : '';
-          const urg = t.priority === 'urgent' ? `<span class="history-cat history-urgent">⚠️ דחוף</span>` : '';
-          const due = t.due_date ? `<span class="history-cat">📅 יעד ${t.due_date.slice(8,10)}/${t.due_date.slice(5,7)}</span>` : '';
+          const urg = t.priority === 'urgent' ? `<span class="history-cat history-urgent">ג ן¸ ׳“׳—׳•׳£</span>` : '';
+          const due = t.due_date ? `<span class="history-cat">נ“… ׳™׳¢׳“ ${t.due_date.slice(8,10)}/${t.due_date.slice(5,7)}</span>` : '';
           const hasNotes = t.notes && t.notes.trim();
           const notes = hasNotes
             ? `<div class="history-notes history-notes-collapsed" data-collapsed="1">
-                 <button class="history-notes-toggle" data-id="${t.id}" title="הצג/הסתר">▸</button>
-                 <span class="history-notes-label">📝 הערה</span>
+                 <button class="history-notes-toggle" data-id="${t.id}" title="׳”׳¦׳’/׳”׳¡׳×׳¨">ג–¸</button>
+                 <span class="history-notes-label">נ“ ׳”׳¢׳¨׳”</span>
                  <div class="history-notes-content">${t.notes.replace(/</g,'&lt;').replace(/\n/g,'<br>')}</div>
                </div>`
             : '';
           return `<div class="history-item" data-id="${t.id}">
-            <button class="history-del-btn" data-id="${t.id}" title="הסר מהרשימה">✕</button>
-            <span class="history-title">✓ ${t.title.replace(/</g,'&lt;')}</span>
+            <button class="history-del-btn" data-id="${t.id}" title="׳”׳¡׳¨ ׳׳”׳¨׳©׳™׳׳”">ג•</button>
+            <span class="history-title">ג“ ${t.title.replace(/</g,'&lt;')}</span>
             ${urg}
             ${due}
             ${cat}
@@ -2057,9 +2057,9 @@ function applyHistorySearch() {
   bodyEl.querySelectorAll('.history-del-btn').forEach(btn =>
     btn.addEventListener('click', async (e) => {
       e.stopPropagation();
-      if (!confirm('להסיר את המשימה מההיסטוריה? הפעולה אינה הפיכה.')) return;
+      if (!confirm('׳׳”׳¡׳™׳¨ ׳׳× ׳”׳׳©׳™׳׳” ׳׳”׳”׳™׳¡׳˜׳•׳¨׳™׳”? ׳”׳₪׳¢׳•׳׳” ׳׳™׳ ׳” ׳”׳₪׳™׳›׳”.')) return;
       await api('/api/task/delete', { id: btn.dataset.id });
-      toast('🗑️ הוסר מההיסטוריה');
+      toast('נ—‘ן¸ ׳”׳•׳¡׳¨ ׳׳”׳”׳™׳¡׳˜׳•׳¨׳™׳”');
       loadHistory();
       loadState();
     }));
@@ -2071,7 +2071,7 @@ function applyHistorySearch() {
       box.setAttribute('data-collapsed', isCollapsed ? '0' : '1');
       box.classList.toggle('history-notes-collapsed', !isCollapsed);
       const btn = box.querySelector('.history-notes-toggle');
-      if (btn) btn.textContent = isCollapsed ? '▾' : '▸';
+      if (btn) btn.textContent = isCollapsed ? 'ג–¾' : 'ג–¸';
     };
     box.addEventListener('click', toggle);
   });
@@ -2119,16 +2119,16 @@ function _renderHabitsSettings() {
   const habits = (lastState && lastState.habits && lastState.habits.habits) || [];
 
   if (!habits.length) {
-    listEl.innerHTML = '<div class="muted-text" style="font-size:.85rem">אין הרגלים עדיין — הוסף למטה</div>';
+    listEl.innerHTML = '<div class="muted-text" style="font-size:.85rem">׳׳™׳ ׳”׳¨׳’׳׳™׳ ׳¢׳“׳™׳™׳ ג€” ׳”׳•׳¡׳£ ׳׳׳˜׳”</div>';
   } else {
     listEl.innerHTML = habits.map(h => `
       <div class="habit-settings-row" data-id="${h.id}" style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">
-        <button class="hs-emoji-btn" data-id="${h.id}" title="שנה אמוג'י"
+        <button class="hs-emoji-btn" data-id="${h.id}" title="׳©׳ ׳” ׳׳׳•׳’'׳™"
           style="font-size:1.4rem;border:none;background:transparent;cursor:pointer;min-width:32px">${h.emoji}</button>
         <input type="text" class="hs-label-inp" data-id="${h.id}" value="${h.label.replace(/"/g,'&quot;')}"
           style="flex:1;padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:inherit">
-        <button class="hs-save-btn" data-id="${h.id}" style="padding:4px 10px;background:var(--primary);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:.8rem">שמור</button>
-        <button class="hs-del-btn" data-id="${h.id}" style="padding:4px 8px;background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:.8rem">✕</button>
+        <button class="hs-save-btn" data-id="${h.id}" style="padding:4px 10px;background:var(--primary);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:.8rem">׳©׳׳•׳¨</button>
+        <button class="hs-del-btn" data-id="${h.id}" style="padding:4px 8px;background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:.8rem">ג•</button>
       </div>`).join('');
   }
 
@@ -2149,13 +2149,13 @@ function _renderHabitsSettings() {
       const label = row.querySelector('.hs-label-inp').value.trim();
       if (!label) return;
       await api('/api/habit/update', { id: btn.dataset.id, emoji, label });
-      toast('✓ הרגל עודכן');
+      toast('ג“ ׳”׳¨׳’׳ ׳¢׳•׳“׳›׳');
       loadState();
       setTimeout(_renderHabitsSettings, 500);
     });
   });
 
-  // Edit emoji inline — click emoji opens a small picker row
+  // Edit emoji inline ג€” click emoji opens a small picker row
   listEl.querySelectorAll('.hs-emoji-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const row = btn.closest('.habit-settings-row');
@@ -2164,7 +2164,7 @@ function _renderHabitsSettings() {
       const picker = document.createElement('div');
       picker.className = 'hs-emoji-picker';
       picker.style.cssText = 'position:absolute;display:flex;flex-wrap:wrap;gap:4px;padding:8px;background:var(--card);border:1px solid var(--border);border-radius:10px;z-index:200;max-width:240px;box-shadow:0 4px 20px #0004';
-      ['💧','🏃','📚','😴','🧘','🍎','💊','🧹','📝','🎵','💪','🌅','🤸','🚶','🧴','🥗','🍵','✍️','🎯','🛁','😊','⭐','🔥','🌿','🎭'].forEach(e => {
+      ['נ’§','נƒ','נ“','נ˜´','נ§˜','נ','נ’','נ§¹','נ“','נµ','נ’×','נ…','נ₪¸','נ¶','נ§´','נ¥—','נµ','גן¸','נ¯','נ›','נ˜','ג­','נ”¥','נ¿','נ­'].forEach(e => {
         const b = document.createElement('button');
         b.textContent = e;
         b.style.cssText = 'font-size:1.3rem;padding:4px 6px;border:none;border-radius:6px;cursor:pointer;background:transparent';
@@ -2185,9 +2185,9 @@ function _renderHabitsSettings() {
   // Delete habit
   listEl.querySelectorAll('.hs-del-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
-      if (!confirm('למחוק הרגל זה?')) return;
+      if (!confirm('׳׳׳—׳•׳§ ׳”׳¨׳’׳ ׳–׳”?')) return;
       await api('/api/habit/delete', { id: btn.dataset.id });
-      toast('✓ נמחק');
+      toast('ג“ ׳ ׳׳—׳§');
       loadState();
       setTimeout(_renderHabitsSettings, 500);
     });
@@ -2195,13 +2195,13 @@ function _renderHabitsSettings() {
 
   // Add new habit
   document.getElementById('habit-add-settings-btn')?.addEventListener('click', async () => {
-    const emoji = document.getElementById('habit-new-emoji-settings')?.value.trim() || '✅';
+    const emoji = document.getElementById('habit-new-emoji-settings')?.value.trim() || 'ג…';
     const label = document.getElementById('habit-new-label-settings')?.value.trim();
-    if (!label) { toast('כתוב שם להרגל', false); return; }
+    if (!label) { toast('׳›׳×׳•׳‘ ׳©׳ ׳׳”׳¨׳’׳', false); return; }
     await api('/api/habit/add', { emoji, label });
     document.getElementById('habit-new-label-settings').value = '';
-    document.getElementById('habit-new-emoji-settings').value = '✅';
-    toast('✓ הרגל נוסף');
+    document.getElementById('habit-new-emoji-settings').value = 'ג…';
+    toast('ג“ ׳”׳¨׳’׳ ׳ ׳•׳¡׳£');
     loadState();
     setTimeout(_renderHabitsSettings, 500);
   });
@@ -2216,23 +2216,23 @@ async function openSettings() {
   const bodyEl = document.getElementById('settings-body');
   if (!modal || !bodyEl) return;
   modal.classList.remove('hidden');
-  bodyEl.innerHTML = '<div class="muted-text">טוען...</div>';
+  bodyEl.innerHTML = '<div class="muted-text">׳˜׳•׳¢׳...</div>';
   try {
     const s = await api('/api/settings');
     renderSettings(s, bodyEl);
   } catch (e) {
-    bodyEl.innerHTML = '<div class="muted-text">שגיאה: ' + e.message + '</div>';
+    bodyEl.innerHTML = '<div class="muted-text">׳©׳’׳™׳׳”: ' + e.message + '</div>';
   }
 }
 
-// ---------- Connections Panel (תוך ⚙️ הגדרות) ----------
+// ---------- Connections Panel (׳×׳•׳ ג™ן¸ ׳”׳’׳“׳¨׳•׳×) ----------
 async function loadConnectionsDiagnose() {
   const body = document.getElementById('connections-body');
   if (!body) return;
 
   if (window._supabase) {
-    // Cloud mode — show Google connection status
-    body.innerHTML = '<div class="muted-text">טוען...</div>';
+    // Cloud mode ג€” show Google connection status
+    body.innerHTML = '<div class="muted-text">׳˜׳•׳¢׳...</div>';
     try {
       const { data } = await window._supabase.from('google_tokens')
         .select('google_email, updated_at').eq('user_id', window._userId).maybeSingle();
@@ -2240,35 +2240,35 @@ async function loadConnectionsDiagnose() {
         const updated = data.updated_at ? new Date(data.updated_at).toLocaleString('he-IL', { timeZone: 'Asia/Jerusalem' }) : '';
         body.innerHTML = `
           <div style="display:flex;align-items:center;gap:10px;padding:8px 0">
-            <span style="font-size:1.4rem">✅</span>
+            <span style="font-size:1.4rem">ג…</span>
             <div>
-              <div style="font-weight:600">Google מחובר</div>
-              <div class="muted-text" style="font-size:.82rem">${data.google_email} · עודכן: ${updated}</div>
+              <div style="font-weight:600">Google ׳׳—׳•׳‘׳¨</div>
+              <div class="muted-text" style="font-size:.82rem">${data.google_email} ֲ· ׳¢׳•׳“׳›׳: ${updated}</div>
             </div>
-            <button id="conn-google-refresh" style="margin-right:auto;padding:5px 12px;background:var(--primary);color:#fff;border:none;border-radius:8px;cursor:pointer">🔄 רענן</button>
-            <button id="conn-google-disconnect" style="padding:5px 12px;background:transparent;border:1px solid var(--border);border-radius:8px;cursor:pointer;color:var(--muted)">נתק</button>
+            <button id="conn-google-refresh" style="margin-right:auto;padding:5px 12px;background:var(--primary);color:#fff;border:none;border-radius:8px;cursor:pointer">נ”„ ׳¨׳¢׳ ׳</button>
+            <button id="conn-google-disconnect" style="padding:5px 12px;background:transparent;border:1px solid var(--border);border-radius:8px;cursor:pointer;color:var(--muted)">׳ ׳×׳§</button>
           </div>`;
         document.getElementById('conn-google-refresh')?.addEventListener('click', _googleRefreshData);
         document.getElementById('conn-google-disconnect')?.addEventListener('click', _googleDisconnect);
       } else {
         body.innerHTML = `
           <div style="display:flex;align-items:center;gap:10px;padding:8px 0">
-            <span style="font-size:1.4rem">⭕</span>
+            <span style="font-size:1.4rem">ג­•</span>
             <div>
-              <div style="font-weight:600">Google לא מחובר</div>
-              <div class="muted-text" style="font-size:.82rem">חבר כדי לראות יומן ומיילים בדאשבורד</div>
+              <div style="font-weight:600">Google ׳׳ ׳׳—׳•׳‘׳¨</div>
+              <div class="muted-text" style="font-size:.82rem">׳—׳‘׳¨ ׳›׳“׳™ ׳׳¨׳׳•׳× ׳™׳•׳׳ ׳•׳׳™׳™׳׳™׳ ׳‘׳“׳׳©׳‘׳•׳¨׳“</div>
             </div>
-            <button id="conn-google-connect" style="margin-right:auto;padding:6px 14px;background:#4285f4;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600">🔗 חבר Google</button>
+            <button id="conn-google-connect" style="margin-right:auto;padding:6px 14px;background:#4285f4;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600">נ”— ׳—׳‘׳¨ Google</button>
           </div>`;
         document.getElementById('conn-google-connect')?.addEventListener('click', _googleConnect);
       }
     } catch(e) {
-      body.innerHTML = '<div class="muted-text">שגיאה: ' + e.message + '</div>';
+      body.innerHTML = '<div class="muted-text">׳©׳’׳™׳׳”: ' + e.message + '</div>';
     }
     return;
   }
 
-  body.innerHTML = '<div class="conn-loading">טוען סטטוס חיבורים...</div>';
+  body.innerHTML = '<div class="conn-loading">׳˜׳•׳¢׳ ׳¡׳˜׳˜׳•׳¡ ׳—׳™׳‘׳•׳¨׳™׳...</div>';
   try {
     const r = await fetch('/api/setup/diagnose');
     if (!r.ok) throw new Error('HTTP ' + r.status);
@@ -2276,7 +2276,7 @@ async function loadConnectionsDiagnose() {
     renderConnectionChecks(data.checks || [], body);
     renderConnectionLogs(data.recentLog || []);
   } catch (e) {
-    body.innerHTML = '<div class="conn-error">שגיאה בטעינת סטטוס: ' + e.message + '</div>';
+    body.innerHTML = '<div class="conn-error">׳©׳’׳™׳׳” ׳‘׳˜׳¢׳™׳ ׳× ׳¡׳˜׳˜׳•׳¡: ' + e.message + '</div>';
   }
 }
 
@@ -2287,15 +2287,15 @@ function _googleConnect() {
 }
 
 async function _googleDisconnect() {
-  if (!confirm('לנתק את Google? יומן ומיילים לא יוצגו עוד.')) return;
+  if (!confirm('׳׳ ׳×׳§ ׳׳× Google? ׳™׳•׳׳ ׳•׳׳™׳™׳׳™׳ ׳׳ ׳™׳•׳¦׳’׳• ׳¢׳•׳“.')) return;
   await window._supabase.from('google_tokens').delete().eq('user_id', window._userId);
-  toast('✓ Google נותק');
+  toast('ג“ Google ׳ ׳•׳×׳§');
   loadConnectionsDiagnose();
 }
 
 async function _googleRefreshData() {
   const btn = document.getElementById('conn-google-refresh');
-  if (btn) { btn.disabled = true; btn.textContent = '⏳ מרענן...'; }
+  if (btn) { btn.disabled = true; btn.textContent = 'ג³ ׳׳¨׳¢׳ ׳...'; }
   try {
     const { data: { session } } = await window._supabase.auth.getSession();
     const r = await fetch('/.netlify/functions/google-data', {
@@ -2303,30 +2303,30 @@ async function _googleRefreshData() {
     });
     const d = await r.json();
     if (d.connected) {
-      toast('✓ יומן ומיילים עודכנו');
+      toast('ג“ ׳™׳•׳׳ ׳•׳׳™׳™׳׳™׳ ׳¢׳•׳“׳›׳ ׳•');
       loadState();
     } else {
-      toast('שגיאה ברענון', false);
+      toast('׳©׳’׳™׳׳” ׳‘׳¨׳¢׳ ׳•׳', false);
     }
   } catch(e) {
-    toast('שגיאה: ' + e.message, false);
+    toast('׳©׳’׳™׳׳”: ' + e.message, false);
   } finally {
-    if (btn) { btn.disabled = false; btn.textContent = '🔄 רענן'; }
+    if (btn) { btn.disabled = false; btn.textContent = 'נ”„ ׳¨׳¢׳ ׳'; }
   }
 }
 
 function renderConnectionChecks(checks, body) {
-  const icon = (status) => status === 'ok' ? '✓' : status === 'warn' ? '⚠' : '✗';
+  const icon = (status) => status === 'ok' ? 'ג“' : status === 'warn' ? 'ג ' : 'ג—';
   body.innerHTML = checks.map(c => {
     const valueLine = c.value ? `<span class="conn-row-value">${c.value}</span>` : '';
     const messageLine = c.message ? `<div class="conn-row-message">${c.message}</div>` : '';
     let actionBtn = '';
     if (c.fixUrl) {
-      actionBtn = `<a class="conn-row-action" href="${c.fixUrl}" target="_blank" rel="noopener">${c.fixLabel || '🔗 פתח'}</a>`;
+      actionBtn = `<a class="conn-row-action" href="${c.fixUrl}" target="_blank" rel="noopener">${c.fixLabel || 'נ”— ׳₪׳×׳—'}</a>`;
     } else if (c.action === 'scheduleTask') {
-      actionBtn = `<button class="conn-row-action" data-action="scheduleTask">${c.actionLabel || '⏰ תזמן'}</button>`;
+      actionBtn = `<button class="conn-row-action" data-action="scheduleTask">${c.actionLabel || 'ג° ׳×׳–׳׳'}</button>`;
     } else if (c.action === 'runRefresh') {
-      actionBtn = `<button class="conn-row-action" data-action="runRefresh">${c.actionLabel || '🚀 הרץ'}</button>`;
+      actionBtn = `<button class="conn-row-action" data-action="runRefresh">${c.actionLabel || 'נ€ ׳”׳¨׳¥'}</button>`;
     }
     return `<div class="conn-row conn-row-${c.status}">
       <span class="conn-row-icon">${icon(c.status)}</span>
@@ -2349,27 +2349,27 @@ function renderConnectionLogs(logs) {
   const el = document.getElementById('conn-log-content');
   if (!el) return;
   if (!logs.length) {
-    el.innerHTML = '<div class="muted-text">אין לוגים עדיין</div>';
+    el.innerHTML = '<div class="muted-text">׳׳™׳ ׳׳•׳’׳™׳ ׳¢׳“׳™׳™׳</div>';
     return;
   }
   el.innerHTML = logs.map(log => {
     const lines = log.lines.map(l => `<div class="conn-log-line">${l.replace(/</g,'&lt;')}</div>`).join('');
-    return `<div class="conn-log-file"><div class="conn-log-fname">📄 ${log.file}</div>${lines}</div>`;
+    return `<div class="conn-log-file"><div class="conn-log-fname">נ“„ ${log.file}</div>${lines}</div>`;
   }).join('');
 }
 
 async function runRefreshNow() {
   const runBtn = document.getElementById('conn-run-refresh');
   const log = document.getElementById('conn-run-log');
-  if (runBtn) { runBtn.disabled = true; runBtn.textContent = '⏳ מריץ...'; }
+  if (runBtn) { runBtn.disabled = true; runBtn.textContent = 'ג³ ׳׳¨׳™׳¥...'; }
   if (log) {
     log.classList.remove('hidden');
-    log.innerHTML = '<div class="conn-run-spinner">⏳ מתחיל רענון... (יקח 1-2 דקות)</div>';
+    log.innerHTML = '<div class="conn-run-spinner">ג³ ׳׳×׳—׳™׳ ׳¨׳¢׳ ׳•׳... (׳™׳§׳— 1-2 ׳“׳§׳•׳×)</div>';
   }
   try {
     const r = await api('/api/setup/run-refresh', {});
     const pid = r.pid;
-    if (!pid) throw new Error(r.error || 'לא הוחזר PID');
+    if (!pid) throw new Error(r.error || '׳׳ ׳”׳•׳—׳–׳¨ PID');
     // Poll status every 3 seconds
     const startTime = Date.now();
     const poll = async () => {
@@ -2381,43 +2381,43 @@ async function runRefreshNow() {
           const success = status.exitCode === 0;
           if (log) {
             log.innerHTML = success
-              ? `<div class="conn-run-success">✅ הצליח! (${elapsed} שניות)</div>`
-              : `<div class="conn-run-error">⚠ נכשל (exit=${status.exitCode}). נסה שוב.</div>`;
+              ? `<div class="conn-run-success">ג… ׳”׳¦׳׳™׳—! (${elapsed} ׳©׳ ׳™׳•׳×)</div>`
+              : `<div class="conn-run-error">ג  ׳ ׳›׳©׳ (exit=${status.exitCode}). ׳ ׳¡׳” ׳©׳•׳‘.</div>`;
           }
-          if (runBtn) { runBtn.disabled = false; runBtn.textContent = '🚀 הרץ רענון עכשיו'; }
+          if (runBtn) { runBtn.disabled = false; runBtn.textContent = 'נ€ ׳”׳¨׳¥ ׳¨׳¢׳ ׳•׳ ׳¢׳›׳©׳™׳•'; }
           loadConnectionsDiagnose();
           if (success) setTimeout(() => loadState(), 1000);
         } else {
-          if (log) log.innerHTML = `<div class="conn-run-spinner">⏳ רץ... (${elapsed} שניות)</div>`;
+          if (log) log.innerHTML = `<div class="conn-run-spinner">ג³ ׳¨׳¥... (${elapsed} ׳©׳ ׳™׳•׳×)</div>`;
           setTimeout(poll, 3000);
         }
       } catch (e) {
-        if (log) log.innerHTML = `<div class="conn-run-error">שגיאה: ${e.message}</div>`;
-        if (runBtn) { runBtn.disabled = false; runBtn.textContent = '🚀 הרץ רענון עכשיו'; }
+        if (log) log.innerHTML = `<div class="conn-run-error">׳©׳’׳™׳׳”: ${e.message}</div>`;
+        if (runBtn) { runBtn.disabled = false; runBtn.textContent = 'נ€ ׳”׳¨׳¥ ׳¨׳¢׳ ׳•׳ ׳¢׳›׳©׳™׳•'; }
       }
     };
     setTimeout(poll, 3000);
   } catch (e) {
-    if (log) log.innerHTML = `<div class="conn-run-error">שגיאה: ${e.message}</div>`;
-    if (runBtn) { runBtn.disabled = false; runBtn.textContent = '🚀 הרץ רענון עכשיו'; }
+    if (log) log.innerHTML = `<div class="conn-run-error">׳©׳’׳™׳׳”: ${e.message}</div>`;
+    if (runBtn) { runBtn.disabled = false; runBtn.textContent = 'נ€ ׳”׳¨׳¥ ׳¨׳¢׳ ׳•׳ ׳¢׳›׳©׳™׳•'; }
   }
 }
 
 async function scheduleDailyTask() {
   const btns = document.querySelectorAll('[data-action="scheduleTask"]');
-  btns.forEach(b => { b.disabled = true; b.textContent = '⏳ מתזמן...'; });
+  btns.forEach(b => { b.disabled = true; b.textContent = 'ג³ ׳׳×׳–׳׳...'; });
   try {
     const r = await api('/api/setup/schedule-task', {});
     if (r.ok) {
-      toast('✅ רענון יומי תוזמן ל-07:00');
+      toast('ג… ׳¨׳¢׳ ׳•׳ ׳™׳•׳׳™ ׳×׳•׳–׳׳ ׳-07:00');
       loadConnectionsDiagnose();
     } else {
-      toast('שגיאה: ' + (r.error || 'לא ידוע'), false);
-      btns.forEach(b => { b.disabled = false; b.textContent = '⏰ תזמן עכשיו'; });
+      toast('׳©׳’׳™׳׳”: ' + (r.error || '׳׳ ׳™׳“׳•׳¢'), false);
+      btns.forEach(b => { b.disabled = false; b.textContent = 'ג° ׳×׳–׳׳ ׳¢׳›׳©׳™׳•'; });
     }
   } catch (e) {
-    toast('שגיאה: ' + e.message, false);
-    btns.forEach(b => { b.disabled = false; b.textContent = '⏰ תזמן עכשיו'; });
+    toast('׳©׳’׳™׳׳”: ' + e.message, false);
+    btns.forEach(b => { b.disabled = false; b.textContent = 'ג° ׳×׳–׳׳ ׳¢׳›׳©׳™׳•'; });
   }
 }
 
@@ -2425,57 +2425,57 @@ function renderSettings(s, bodyEl) {
   const isLite = (s.edition || 'full') === 'lite';
   bodyEl.innerHTML = `
     <div class="settings-section">
-      <div class="settings-section-title">👤 פרופיל</div>
-      <label>שם<input type="text" id="settings-name" value="${(s.userName||'').replace(/"/g,'&quot;').replace(/</g,'&lt;')}" placeholder="השם שלך"></label>
-      <label>שם העוזר<input type="text" id="settings-asst" value="${(s.assistantName||'').replace(/"/g,'&quot;').replace(/</g,'&lt;')}" placeholder="קרלוס"></label>
+      <div class="settings-section-title">נ‘₪ ׳₪׳¨׳•׳₪׳™׳</div>
+      <label>׳©׳<input type="text" id="settings-name" value="${(s.userName||'').replace(/"/g,'&quot;').replace(/</g,'&lt;')}" placeholder="׳”׳©׳ ׳©׳׳"></label>
+      <label>׳©׳ ׳”׳¢׳•׳–׳¨<input type="text" id="settings-asst" value="${(s.assistantName||'').replace(/"/g,'&quot;').replace(/</g,'&lt;')}" placeholder="׳§׳¨׳׳•׳¡"></label>
     </div>
 
     <div class="settings-section">
-      <div class="settings-section-title">🤖 AI (אופציונלי)</div>
+      <div class="settings-section-title">נ₪– AI (׳׳•׳₪׳¦׳™׳•׳ ׳׳™)</div>
       <label class="settings-toggle-row">
-        <span>פיצ'רי AI מלאים <span class="settings-hint">(יומן + מייל + צ'אט — דורש Claude Code)</span></span>
+        <span>׳₪׳™׳¦'׳¨׳™ AI ׳׳׳׳™׳ <span class="settings-hint">(׳™׳•׳׳ + ׳׳™׳™׳ + ׳¦'׳׳˜ ג€” ׳“׳•׳¨׳© Claude Code)</span></span>
         <input type="checkbox" id="settings-edition" ${!isLite ? 'checked' : ''}>
       </label>
       <div class="settings-api-row">
-        <label>מפתח Anthropic <span class="settings-hint">— לבריפינג בוקר חכם בלי Claude Code</span></label>
-        <input type="text" id="settings-apikey" value="" placeholder="${s.apiKeySet ? '●●●●●●●● (מוגדר ✓)' : 'sk-ant-...'}" autocomplete="off">
+        <label>׳׳₪׳×׳— Anthropic <span class="settings-hint">ג€” ׳׳‘׳¨׳™׳₪׳™׳ ׳’ ׳‘׳•׳§׳¨ ׳—׳›׳ ׳‘׳׳™ Claude Code</span></label>
+        <input type="text" id="settings-apikey" value="" placeholder="${s.apiKeySet ? 'ג—ג—ג—ג—ג—ג—ג—ג— (׳׳•׳’׳“׳¨ ג“)' : 'sk-ant-...'}" autocomplete="off">
         <div class="settings-hint" style="margin-top:4px">
-          🔗 <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">קבל מפתח חינם</a> — קרדיט $5 לחשבון חדש, מספיק ל-100+ בריפינגים
+          נ”— <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">׳§׳‘׳ ׳׳₪׳×׳— ׳—׳™׳ ׳</a> ג€” ׳§׳¨׳“׳™׳˜ $5 ׳׳—׳©׳‘׳•׳ ׳—׳“׳©, ׳׳¡׳₪׳™׳§ ׳-100+ ׳‘׳¨׳™׳₪׳™׳ ׳’׳™׳
         </div>
       </div>
     </div>
 
     <div class="settings-section" id="habits-settings-section">
-      <div class="settings-section-title">🏃 הרגלים</div>
+      <div class="settings-section-title">נƒ ׳”׳¨׳’׳׳™׳</div>
       <div id="habits-settings-list"></div>
       <div style="margin-top:10px">
-        <div class="settings-section-title" style="font-size:.8rem;margin-bottom:6px">הוסף הרגל חדש</div>
+        <div class="settings-section-title" style="font-size:.8rem;margin-bottom:6px">׳”׳•׳¡׳£ ׳”׳¨׳’׳ ׳—׳“׳©</div>
         <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px" id="habit-emoji-grid">
-          ${['💧','🏃','📚','😴','🧘','🍎','💊','🧹','📝','🎵','💪','🌅','🤸','🚶','🧴','🥗','🍵','✍️','🎯','🛁'].map(e =>
+          ${['נ’§','נƒ','נ“','נ˜´','נ§˜','נ','נ’','נ§¹','נ“','נµ','נ’×','נ…','נ₪¸','נ¶','נ§´','נ¥—','נµ','גן¸','נ¯','נ›'].map(e =>
             `<button class="habit-emoji-pick" data-e="${e}" style="font-size:1.3rem;padding:4px 6px;border:2px solid transparent;border-radius:8px;cursor:pointer;background:var(--card)">${e}</button>`
           ).join('')}
         </div>
         <div style="display:flex;gap:6px;align-items:center">
-          <input type="text" id="habit-new-emoji-settings" value="✅" maxlength="2"
+          <input type="text" id="habit-new-emoji-settings" value="ג…" maxlength="2"
             style="width:42px;text-align:center;font-size:1.3rem;padding:4px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:inherit">
-          <input type="text" id="habit-new-label-settings" placeholder="שם ההרגל..."
+          <input type="text" id="habit-new-label-settings" placeholder="׳©׳ ׳”׳”׳¨׳’׳..."
             style="flex:1;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:inherit">
-          <button id="habit-add-settings-btn" style="padding:6px 14px;background:var(--primary);color:#fff;border:none;border-radius:6px;cursor:pointer;white-space:nowrap">+ הוסף</button>
+          <button id="habit-add-settings-btn" style="padding:6px 14px;background:var(--primary);color:#fff;border:none;border-radius:6px;cursor:pointer;white-space:nowrap">+ ׳”׳•׳¡׳£</button>
         </div>
       </div>
     </div>
 
     <div class="settings-section connections-section">
-      <div class="settings-section-title">🔌 חיבורים</div>
+      <div class="settings-section-title">נ” ׳—׳™׳‘׳•׳¨׳™׳</div>
       <div id="connections-body" class="connections-body"></div>
     </div>
 
     <div class="settings-actions">
-      <button id="settings-save">💾 שמור</button>
-      <button id="settings-cancel-btn" class="settings-cancel-btn">ביטול</button>
+      <button id="settings-save">נ’¾ ׳©׳׳•׳¨</button>
+      <button id="settings-cancel-btn" class="settings-cancel-btn">׳‘׳™׳˜׳•׳</button>
     </div>`;
 
-  // ── Habits section ────────────────────────────────────────
+  // ג”€ג”€ Habits section ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
   _renderHabitsSettings();
 
   // Load diagnose immediately after rendering
@@ -2490,7 +2490,7 @@ function renderSettings(s, bodyEl) {
 
   document.getElementById('settings-save').addEventListener('click', async () => {
     const btn = document.getElementById('settings-save');
-    btn.disabled = true; btn.textContent = '⏳';
+    btn.disabled = true; btn.textContent = 'ג³';
     try {
       const editionChk = document.getElementById('settings-edition');
       const apiKeyEl   = document.getElementById('settings-apikey');
@@ -2501,13 +2501,13 @@ function renderSettings(s, bodyEl) {
       };
       if (apiKeyEl && apiKeyEl.value.trim()) payload.anthropicKey = apiKeyEl.value.trim();
       await api('/api/settings/update', payload);
-      toast('✓ הגדרות נשמרו');
+      toast('ג“ ׳”׳’׳“׳¨׳•׳× ׳ ׳©׳׳¨׳•');
       document.getElementById('settings-modal').classList.add('hidden');
       loadState();
     } catch (e) {
-      toast('שגיאה בשמירה', false);
+      toast('׳©׳’׳™׳׳” ׳‘׳©׳׳™׳¨׳”', false);
     } finally {
-      btn.disabled = false; btn.textContent = '💾 שמור';
+      btn.disabled = false; btn.textContent = 'נ’¾ ׳©׳׳•׳¨';
     }
   });
 }
@@ -2529,7 +2529,7 @@ let _darkMode = localStorage.getItem('carlos-theme') !== 'light';
 function applyTheme() {
   document.body.classList.toggle('light-mode', !_darkMode);
   const btn = document.getElementById('theme-btn');
-  if (btn) btn.textContent = _darkMode ? '🌙' : '☀️';
+  if (btn) btn.textContent = _darkMode ? 'נ™' : 'ג˜€ן¸';
 }
 document.getElementById('theme-btn')?.addEventListener('click', () => {
   _darkMode = !_darkMode;
@@ -2542,7 +2542,7 @@ function _esc(s) {
   return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-// Parse "14" → "14:00", "930" → "09:30", "14:00" → "14:00"
+// Parse "14" ג†’ "14:00", "930" ג†’ "09:30", "14:00" ג†’ "14:00"
 function _parseTime(raw) {
   const s = String(raw || '').trim().replace(/[^\d:]/g, '');
   if (!s) return '';
@@ -2578,7 +2578,7 @@ function _generateSlots(date, from, to, sessionMin) {
   return result;
 }
 
-// ── Build Google Calendar intent URL from appointment data ──
+// ג”€ג”€ Build Google Calendar intent URL from appointment data ג”€ג”€
 function buildGCalUrl(d) {
   if (!d || !d.date || !d.time) return null;
   const ds = d.date.replace(/-/g, '');
@@ -2594,10 +2594,10 @@ function buildGCalUrl(d) {
     const eM = totalMin % 60;
     endStr = ds + 'T' + String(eH % 24).padStart(2, '0') + String(eM).padStart(2, '0') + '00';
   }
-  const details = [d.phone ? `טלפון: ${d.phone}` : '', d.notes ? `הערות: ${d.notes}` : ''].filter(Boolean).join('\n');
+  const details = [d.phone ? `׳˜׳׳₪׳•׳: ${d.phone}` : '', d.notes ? `׳”׳¢׳¨׳•׳×: ${d.notes}` : ''].filter(Boolean).join('\n');
   const params = new URLSearchParams({
     action: 'TEMPLATE',
-    text: `תור: ${d.name} · ${d.service}`,
+    text: `׳×׳•׳¨: ${d.name} ֲ· ${d.service}`,
     dates: `${ds}T${ts}/${endStr}`,
     ctz: 'Asia/Jerusalem',
     details
@@ -2605,7 +2605,7 @@ function buildGCalUrl(d) {
   return `https://calendar.google.com/calendar/render?${params}`;
 }
 
-// ── Global booking alert banner (top of dashboard) ──
+// ג”€ג”€ Global booking alert banner (top of dashboard) ג”€ג”€
 function renderBookingAlerts(notifications, appointments) {
   const bar = document.getElementById('booking-alert-bar');
   if (!bar) return;
@@ -2619,11 +2619,11 @@ function renderBookingAlerts(notifications, appointments) {
         if (live) apptData = { ...apptData, notes: live.notes };
       }
       const gcUrl = buildGCalUrl(apptData);
-      const calBtn = gcUrl ? `<a class="booking-alert-cal" href="${gcUrl}" target="_blank" title="הוסף ליומן Google">📅</a>` : '';
+      const calBtn = gcUrl ? `<a class="booking-alert-cal" href="${gcUrl}" target="_blank" title="׳”׳•׳¡׳£ ׳׳™׳•׳׳ Google">נ“…</a>` : '';
       return `<div class="booking-alert">
-        <span>🔔 ${_esc(n.text)}</span>
+        <span>נ”” ${_esc(n.text)}</span>
         ${calBtn}
-        <button class="booking-alert-dismiss" data-id="${_esc(n.id)}">✕</button>
+        <button class="booking-alert-dismiss" data-id="${_esc(n.id)}">ג•</button>
       </div>`;
     }).join('') + '</div>';
   bar.querySelectorAll('.booking-alert-dismiss').forEach(btn => {
@@ -2637,44 +2637,44 @@ function renderBookingAlerts(notifications, appointments) {
 function renderTunnelBar(el, running, tunnelUrl) {
   if (running && tunnelUrl) {
     el.innerHTML = `<div class="bk-tunnel-active">
-      <span>🟢 גישה ציבורית פעילה</span>
+      <span>נ¢ ׳’׳™׳©׳” ׳¦׳™׳‘׳•׳¨׳™׳× ׳₪׳¢׳™׳׳”</span>
       <span class="bk-tunnel-url">${_esc(tunnelUrl + '/book')}</span>
-      <button id="bk-copy-tunnel" class="bk-tunnel-copy-btn">📋 העתק</button>
-      <button id="bk-stop-tunnel" class="bk-tunnel-stop-btn">⏹ עצור</button>
+      <button id="bk-copy-tunnel" class="bk-tunnel-copy-btn">נ“‹ ׳”׳¢׳×׳§</button>
+      <button id="bk-stop-tunnel" class="bk-tunnel-stop-btn">ג¹ ׳¢׳¦׳•׳¨</button>
     </div>`;
     document.getElementById('bk-copy-tunnel')?.addEventListener('click', () => {
-      navigator.clipboard.writeText(tunnelUrl + '/book').then(() => toast('קישור הועתק ✓'));
+      navigator.clipboard.writeText(tunnelUrl + '/book').then(() => toast('׳§׳™׳©׳•׳¨ ׳”׳•׳¢׳×׳§ ג“'));
     });
     document.getElementById('bk-stop-tunnel')?.addEventListener('click', async () => {
       await api('/api/tunnel/stop', {});
       renderTunnelBar(el, false, null);
-      toast('גישה ציבורית הופסקה');
+      toast('׳’׳™׳©׳” ׳¦׳™׳‘׳•׳¨׳™׳× ׳”׳•׳₪׳¡׳§׳”');
     });
   } else {
     const cfAvail = window._cfAvailable !== false;
     el.innerHTML = cfAvail
       ? `<div class="bk-tunnel-off">
-          <span>🔴 גישה ציבורית כבויה — מטופלים לא יוכלו לגשת לדף הזימון</span>
-          <button id="bk-start-tunnel" class="bk-tunnel-start-btn">🌐 הפעל עכשיו</button>
+          <span>נ”´ ׳’׳™׳©׳” ׳¦׳™׳‘׳•׳¨׳™׳× ׳›׳‘׳•׳™׳” ג€” ׳׳˜׳•׳₪׳׳™׳ ׳׳ ׳™׳•׳›׳׳• ׳׳’׳©׳× ׳׳“׳£ ׳”׳–׳™׳׳•׳</span>
+          <button id="bk-start-tunnel" class="bk-tunnel-start-btn">נ ׳”׳₪׳¢׳ ׳¢׳›׳©׳™׳•</button>
         </div>`
       : `<div class="bk-tunnel-off">
-          <span class="muted-text">🔌 גישה ציבורית לא זמינה — <code>cloudflared.exe</code> לא נמצא בתיקיית קרלוס</span>
+          <span class="muted-text">נ” ׳’׳™׳©׳” ׳¦׳™׳‘׳•׳¨׳™׳× ׳׳ ׳–׳׳™׳ ׳” ג€” <code>cloudflared.exe</code> ׳׳ ׳ ׳׳¦׳ ׳‘׳×׳™׳§׳™׳™׳× ׳§׳¨׳׳•׳¡</span>
         </div>`;
     document.getElementById('bk-start-tunnel')?.addEventListener('click', async () => {
-      el.innerHTML = '<div class="bk-tunnel-loading">⏳ מתחבר לשרתי Cloudflare... (בדרך כלל 10–15 שניות)</div>';
+      el.innerHTML = '<div class="bk-tunnel-loading">ג³ ׳׳×׳—׳‘׳¨ ׳׳©׳¨׳×׳™ Cloudflare... (׳‘׳“׳¨׳ ׳›׳׳ 10ג€“15 ׳©׳ ׳™׳•׳×)</div>';
       try {
         const r = await api('/api/tunnel/start', {});
         if (r && r.url) {
           navigator.clipboard.writeText(r.url + '/book').catch(() => {});
           renderTunnelBar(el, true, r.url);
-          toast('🌐 גישה ציבורית פעילה — קישור הועתק ✓');
+          toast('נ ׳’׳™׳©׳” ׳¦׳™׳‘׳•׳¨׳™׳× ׳₪׳¢׳™׳׳” ג€” ׳§׳™׳©׳•׳¨ ׳”׳•׳¢׳×׳§ ג“');
         } else {
           renderTunnelBar(el, false, null);
-          toast('שגיאה בהפעלה — נסה שוב', false);
+          toast('׳©׳’׳™׳׳” ׳‘׳”׳₪׳¢׳׳” ג€” ׳ ׳¡׳” ׳©׳•׳‘', false);
         }
       } catch(e) {
         renderTunnelBar(el, false, null);
-        toast('שגיאה — נסה שוב', false);
+        toast('׳©׳’׳™׳׳” ג€” ׳ ׳¡׳” ׳©׳•׳‘', false);
       }
     });
   }
@@ -2687,7 +2687,7 @@ function renderBooking(data) {
   const slotsMgrEl = document.getElementById('booking-slots-mgr');
   if (!upcomingEl || !slotsMgrEl) return;
 
-  // ── Tunnel control UI ──
+  // ג”€ג”€ Tunnel control UI ג”€ג”€
   {
     let urlBar = document.getElementById('bk-url-bar');
     if (!urlBar) {
@@ -2698,19 +2698,19 @@ function renderBooking(data) {
     api('/api/tunnel/status').then(status => renderTunnelBar(urlBar, status.running, status.url));
   }
 
-  // ── Upcoming appointments ──
+  // ג”€ג”€ Upcoming appointments ג”€ג”€
   const now = new Date();
   const upcoming = appointments
     .filter(a => a.status !== 'cancelled' && new Date(a.date + 'T' + a.time) >= now)
     .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
 
   if (upcoming.length === 0) {
-    upcomingEl.innerHTML = '<div class="muted-text" style="padding:6px 0">אין זימונים קרובים</div>';
+    upcomingEl.innerHTML = '<div class="muted-text" style="padding:6px 0">׳׳™׳ ׳–׳™׳׳•׳ ׳™׳ ׳§׳¨׳•׳‘׳™׳</div>';
   } else {
     upcomingEl.innerHTML = upcoming.map(a => {
       const d = new Date(a.date + 'T' + a.time);
       const dateStr = d.toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'numeric' });
-      const durStr = a.time_to ? `–${a.time_to}` : (a.duration_min ? ` · ${a.duration_min} דק׳` : '');
+      const durStr = a.time_to ? `ג€“${a.time_to}` : (a.duration_min ? ` ֲ· ${a.duration_min} ׳“׳§׳³` : '');
       // Build Google Calendar link
       const [ay, am, ad] = a.date.split('-');
       const [ah, amin2] = a.time.split(':');
@@ -2725,95 +2725,95 @@ function renderBooking(data) {
         const eM = String(totalMin % 60).padStart(2,'0');
         gcEnd = `${ay}${am}${ad}T${eH}${eM}00`;
       }
-      const gcTitle = encodeURIComponent(`תור: ${a.patient_name}${a.service ? ' · ' + a.service : ''}`);
-      const gcDetails = encodeURIComponent(`טלפון: ${a.patient_phone || '—'}${a.notes ? '\nהערות: ' + a.notes : ''}`);
+      const gcTitle = encodeURIComponent(`׳×׳•׳¨: ${a.patient_name}${a.service ? ' ֲ· ' + a.service : ''}`);
+      const gcDetails = encodeURIComponent(`׳˜׳׳₪׳•׳: ${a.patient_phone || 'ג€”'}${a.notes ? '\n׳”׳¢׳¨׳•׳×: ' + a.notes : ''}`);
       const gcUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${gcTitle}&dates=${gcStart}/${gcEnd}&details=${gcDetails}`;
       // Format notes with line breaks
       const notesHtml = a.notes
-        ? '<div class="bk-appt-notes">📝 ' + _esc(a.notes).replace(/\n/g, '<br>') + '</div>'
+        ? '<div class="bk-appt-notes">נ“ ' + _esc(a.notes).replace(/\n/g, '<br>') + '</div>'
         : '';
       return `<div class="bk-appt">
         <div style="flex:1">
           <div class="bk-appt-name">${_esc(a.patient_name)}</div>
-          <div class="bk-appt-detail">${dateStr} · ${a.time}${durStr}</div>
-          <div class="bk-appt-detail">${_esc(a.service || '')}${a.patient_phone ? ' · ' + _esc(a.patient_phone) : ''}</div>
+          <div class="bk-appt-detail">${dateStr} ֲ· ${a.time}${durStr}</div>
+          <div class="bk-appt-detail">${_esc(a.service || '')}${a.patient_phone ? ' ֲ· ' + _esc(a.patient_phone) : ''}</div>
           ${notesHtml}
-          <a href="${gcUrl}" target="_blank" class="bk-gcal-link" title="הוסף ליומן Google">📅 הוסף ליומן Google</a>
+          <a href="${gcUrl}" target="_blank" class="bk-gcal-link" title="׳”׳•׳¡׳£ ׳׳™׳•׳׳ Google">נ“… ׳”׳•׳¡׳£ ׳׳™׳•׳׳ Google</a>
         </div>
-        <button class="bk-cancel-btn" data-id="${_esc(a.id)}">ביטול</button>
+        <button class="bk-cancel-btn" data-id="${_esc(a.id)}">׳‘׳™׳˜׳•׳</button>
       </div>`;
     }).join('');
     upcomingEl.querySelectorAll('.bk-cancel-btn').forEach(btn => {
       btn.addEventListener('click', async () => {
-        if (!confirm('לבטל את הזימון?')) return;
+        if (!confirm('׳׳‘׳˜׳ ׳׳× ׳”׳–׳™׳׳•׳?')) return;
         await api('/api/booking/cancel', { id: btn.dataset.id });
         loadState();
-        toast('זימון בוטל');
+        toast('׳–׳™׳׳•׳ ׳‘׳•׳˜׳');
       });
     });
   }
 
-  // ── Free slots list ──
+  // ג”€ג”€ Free slots list ג”€ג”€
   const freeSlots = slots
     .filter(s => !s.booked)
     .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
 
-  let slotsHtml = `<div class="bk-sub-title" style="margin-top:14px">חריצים פנויים (${freeSlots.length})</div>`;
+  let slotsHtml = `<div class="bk-sub-title" style="margin-top:14px">׳—׳¨׳™׳¦׳™׳ ׳₪׳ ׳•׳™׳™׳ (${freeSlots.length})</div>`;
   if (freeSlots.length === 0) {
-    slotsHtml += '<div class="muted-text" style="padding:4px 0">אין חריצים — הוסף למטה</div>';
+    slotsHtml += '<div class="muted-text" style="padding:4px 0">׳׳™׳ ׳—׳¨׳™׳¦׳™׳ ג€” ׳”׳•׳¡׳£ ׳׳׳˜׳”</div>';
   } else {
     slotsHtml += freeSlots.map(sl => {
       const d = new Date(sl.date + 'T' + sl.time);
       const dateStr = d.toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'numeric' });
-      const rangeStr = sl.time_to ? `${sl.time}–${sl.time_to}` : `${sl.time}${sl.duration_min ? ' (' + sl.duration_min + ' דק׳)' : ''}`;
+      const rangeStr = sl.time_to ? `${sl.time}ג€“${sl.time_to}` : `${sl.time}${sl.duration_min ? ' (' + sl.duration_min + ' ׳“׳§׳³)' : ''}`;
       return `<div class="bk-slot">
-        <span><b>${rangeStr}</b> · ${dateStr}</span>
-        <button class="bk-del-slot" data-id="${_esc(sl.id)}" title="מחק חריץ">✕</button>
+        <span><b>${rangeStr}</b> ֲ· ${dateStr}</span>
+        <button class="bk-del-slot" data-id="${_esc(sl.id)}" title="׳׳—׳§ ׳—׳¨׳™׳¥">ג•</button>
       </div>`;
     }).join('');
   }
 
-  // ── Add slots form — range + session duration ──
+  // ג”€ג”€ Add slots form ג€” range + session duration ג”€ג”€
   slotsHtml += `
   <div class="bk-add-form">
-    <div class="bk-sub-title" style="margin-bottom:10px">➕ הוסף זמן פנוי</div>
+    <div class="bk-sub-title" style="margin-bottom:10px">ג• ׳”׳•׳¡׳£ ׳–׳׳ ׳₪׳ ׳•׳™</div>
     <div class="bk-add-row">
       <div class="bk-add-field">
-        <label>תאריך</label>
+        <label>׳×׳׳¨׳™׳</label>
         <input type="date" id="bk-new-date">
       </div>
       <div class="bk-add-field">
-        <label>משעה</label>
+        <label>׳׳©׳¢׳”</label>
         <input type="text" id="bk-new-from" placeholder="14" maxlength="5">
       </div>
-      <div class="bk-add-sep">עד</div>
+      <div class="bk-add-sep">׳¢׳“</div>
       <div class="bk-add-field">
-        <label>עד שעה</label>
+        <label>׳¢׳“ ׳©׳¢׳”</label>
         <input type="text" id="bk-new-to" placeholder="16" maxlength="5">
       </div>
     </div>
     <div class="bk-dur-row">
-      <span class="bk-dur-label">משך כל פגישה:</span>
-      <label class="bk-dur-opt"><input type="radio" name="bk-dur" value="30"> 30 דק׳</label>
-      <label class="bk-dur-opt"><input type="radio" name="bk-dur" value="45"> 45 דק׳</label>
-      <label class="bk-dur-opt"><input type="radio" name="bk-dur" value="60" checked> 60 דק׳</label>
-      <label class="bk-dur-opt"><input type="radio" name="bk-dur" value="90"> 90 דק׳</label>
-      <label class="bk-dur-opt"><input type="radio" name="bk-dur" value="custom"> אחר:
-        <input type="number" id="bk-dur-custom" min="15" step="5" value="45" style="width:52px;margin-right:4px">דק׳
+      <span class="bk-dur-label">׳׳©׳ ׳›׳ ׳₪׳’׳™׳©׳”:</span>
+      <label class="bk-dur-opt"><input type="radio" name="bk-dur" value="30"> 30 ׳“׳§׳³</label>
+      <label class="bk-dur-opt"><input type="radio" name="bk-dur" value="45"> 45 ׳“׳§׳³</label>
+      <label class="bk-dur-opt"><input type="radio" name="bk-dur" value="60" checked> 60 ׳“׳§׳³</label>
+      <label class="bk-dur-opt"><input type="radio" name="bk-dur" value="90"> 90 ׳“׳§׳³</label>
+      <label class="bk-dur-opt"><input type="radio" name="bk-dur" value="custom"> ׳׳—׳¨:
+        <input type="number" id="bk-dur-custom" min="15" step="5" value="45" style="width:52px;margin-right:4px">׳“׳§׳³
       </label>
     </div>
     <div id="bk-slot-preview" class="bk-preview-box"></div>
-    <button id="bk-add-slot" class="bk-add-btn" disabled>+ הוסף חריצים</button>
+    <button id="bk-add-slot" class="bk-add-btn" disabled>+ ׳”׳•׳¡׳£ ׳—׳¨׳™׳¦׳™׳</button>
   </div>`;
 
   slotsMgrEl.innerHTML = slotsHtml;
 
-  // ── Delete slot ──
+  // ג”€ג”€ Delete slot ג”€ג”€
   slotsMgrEl.querySelectorAll('.bk-del-slot').forEach(btn => {
     btn.addEventListener('click', async () => {
       await api('/api/booking/slot/delete', { id: btn.dataset.id });
       loadState();
-      toast('חריץ נמחק');
+      toast('׳—׳¨׳™׳¥ ׳ ׳׳—׳§');
     });
   });
 
@@ -2821,7 +2821,7 @@ function renderBooking(data) {
   const newDateEl = document.getElementById('bk-new-date');
   if (newDateEl) newDateEl.value = todayStr();
 
-  // ── Live preview & button update ──
+  // ג”€ג”€ Live preview & button update ג”€ג”€
   function getSessionMin() {
     const val = document.querySelector('input[name="bk-dur"]:checked')?.value;
     if (val === 'custom') return parseInt(document.getElementById('bk-dur-custom').value) || 60;
@@ -2837,32 +2837,32 @@ function renderBooking(data) {
     if (!from || !to) {
       prev.innerHTML = '';
       addBtn.disabled = true;
-      addBtn.textContent = '+ הוסף חריצים';
+      addBtn.textContent = '+ ׳”׳•׳¡׳£ ׳—׳¨׳™׳¦׳™׳';
       return;
     }
     const totalMin = _timeDiffMin(from, to);
     if (totalMin <= 0) {
-      prev.innerHTML = '<span style="color:var(--warning)">⚠ שעת הסיום חייבת להיות אחרי שעת ההתחלה</span>';
+      prev.innerHTML = '<span style="color:var(--warning)">ג  ׳©׳¢׳× ׳”׳¡׳™׳•׳ ׳—׳™׳™׳‘׳× ׳׳”׳™׳•׳× ׳׳—׳¨׳™ ׳©׳¢׳× ׳”׳”׳×׳—׳׳”</span>';
       addBtn.disabled = true;
       return;
     }
     const chosenDate = document.getElementById('bk-new-date').value || todayStr();
     if (chosenDate < todayStr()) {
-      prev.innerHTML = '<span style="color:var(--warning)">⚠ לא ניתן להוסיף חריצים בתאריך שעבר</span>';
+      prev.innerHTML = '<span style="color:var(--warning)">ג  ׳׳ ׳ ׳™׳×׳ ׳׳”׳•׳¡׳™׳£ ׳—׳¨׳™׳¦׳™׳ ׳‘׳×׳׳¨׳™׳ ׳©׳¢׳‘׳¨</span>';
       addBtn.disabled = true;
       return;
     }
     const sessionMin = getSessionMin();
     const generated = _generateSlots(chosenDate, from, to, sessionMin);
     if (!generated.length) {
-      prev.innerHTML = '<span style="color:var(--warning)">⚠ הטווח קצר מדי למשך הפגישה שנבחר</span>';
+      prev.innerHTML = '<span style="color:var(--warning)">ג  ׳”׳˜׳•׳•׳— ׳§׳¦׳¨ ׳׳“׳™ ׳׳׳©׳ ׳”׳₪׳’׳™׳©׳” ׳©׳ ׳‘׳—׳¨</span>';
       addBtn.disabled = true;
       return;
     }
-    prev.innerHTML = generated.map(s => `<div class="bk-prev-slot">✓ ${s.time}–${s.time_to}</div>`).join('') +
-      `<div class="bk-prev-total">${generated.length} חריצים · ${sessionMin} דק׳ כל אחד</div>`;
+    prev.innerHTML = generated.map(s => `<div class="bk-prev-slot">ג“ ${s.time}ג€“${s.time_to}</div>`).join('') +
+      `<div class="bk-prev-total">${generated.length} ׳—׳¨׳™׳¦׳™׳ ֲ· ${sessionMin} ׳“׳§׳³ ׳›׳ ׳׳—׳“</div>`;
     addBtn.disabled = false;
-    addBtn.textContent = `+ הוסף ${generated.length} חריצ${generated.length === 1 ? '' : 'ים'}`;
+    addBtn.textContent = `+ ׳”׳•׳¡׳£ ${generated.length} ׳—׳¨׳™׳¦${generated.length === 1 ? '' : '׳™׳'}`;
   }
 
   // Attach listeners
@@ -2879,20 +2879,20 @@ function renderBooking(data) {
   slotsMgrEl.querySelectorAll('input[name="bk-dur"]').forEach(r => r.addEventListener('change', updatePreview));
   document.getElementById('bk-dur-custom')?.addEventListener('input', updatePreview);
 
-  // ── Add slots ──
+  // ג”€ג”€ Add slots ג”€ג”€
   document.getElementById('bk-add-slot')?.addEventListener('click', async () => {
     const date = document.getElementById('bk-new-date').value;
     const from = _parseTime(document.getElementById('bk-new-from').value);
     const to   = _parseTime(document.getElementById('bk-new-to').value);
-    if (!date || !from || !to) { toast('נא למלא תאריך, שעת התחלה וסיום', false); return; }
+    if (!date || !from || !to) { toast('׳ ׳ ׳׳׳׳ ׳×׳׳¨׳™׳, ׳©׳¢׳× ׳”׳×׳—׳׳” ׳•׳¡׳™׳•׳', false); return; }
     const sessionMin = getSessionMin();
     const generated = _generateSlots(date, from, to, sessionMin);
-    if (!generated.length) { toast('הטווח קצר מדי', false); return; }
+    if (!generated.length) { toast('׳”׳˜׳•׳•׳— ׳§׳¦׳¨ ׳׳“׳™', false); return; }
     const btn = document.getElementById('bk-add-slot');
-    btn.disabled = true; btn.textContent = '⏳ שומר...';
+    btn.disabled = true; btn.textContent = 'ג³ ׳©׳•׳׳¨...';
     await api('/api/booking/slot/add-batch', { slots: generated });
     loadState();
-    toast(`${generated.length} חריצים נוספו ✓`);
+    toast(`${generated.length} ׳—׳¨׳™׳¦׳™׳ ׳ ׳•׳¡׳₪׳• ג“`);
   });
 
   updatePreview();
@@ -2905,27 +2905,27 @@ function openBookingProfileModal() {
     if (!modal || !body) return;
     const currentPublicUrl = (prof.public_url || '').replace(/\/$/, '');
     body.innerHTML = `
-      <h3 style="margin:0 0 14px;color:var(--text)">✏️ ערוך דף ציבורי</h3>
+      <h3 style="margin:0 0 14px;color:var(--text)">גן¸ ׳¢׳¨׳•׳ ׳“׳£ ׳¦׳™׳‘׳•׳¨׳™</h3>
       <div style="display:flex;flex-direction:column;gap:10px">
-        <label style="color:var(--text-muted);font-size:.85rem">🔗 קישור ציבורי (Cloudflare / ngrok)</label>
+        <label style="color:var(--text-muted);font-size:.85rem">נ”— ׳§׳™׳©׳•׳¨ ׳¦׳™׳‘׳•׳¨׳™ (Cloudflare / ngrok)</label>
         <input id="bkp-puburl" class="settings-input" value="${_esc(currentPublicUrl)}" placeholder="https://xxx.trycloudflare.com">
         <div style="font-size:.76rem;color:var(--text-muted);margin-top:-6px;line-height:1.4">
-          הכנס את ה-URL של ה-Cloudflare tunnel שלך (בלי /book בסוף).<br>
-          כפתור 🔗 ישתמש בזה בעת העתקת הקישור למטופלים.
+          ׳”׳›׳ ׳¡ ׳׳× ׳”-URL ׳©׳ ׳”-Cloudflare tunnel ׳©׳׳ (׳‘׳׳™ /book ׳‘׳¡׳•׳£).<br>
+          ׳›׳₪׳×׳•׳¨ נ”— ׳™׳©׳×׳׳© ׳‘׳–׳” ׳‘׳¢׳× ׳”׳¢׳×׳§׳× ׳”׳§׳™׳©׳•׳¨ ׳׳׳˜׳•׳₪׳׳™׳.
         </div>
-        <label style="color:var(--text-muted);font-size:.85rem">שם</label>
+        <label style="color:var(--text-muted);font-size:.85rem">׳©׳</label>
         <input id="bkp-name" class="settings-input" value="${_esc(prof.name || '')}">
-        <label style="color:var(--text-muted);font-size:.85rem">תפקיד</label>
+        <label style="color:var(--text-muted);font-size:.85rem">׳×׳₪׳§׳™׳“</label>
         <input id="bkp-title" class="settings-input" value="${_esc(prof.title || '')}">
-        <label style="color:var(--text-muted);font-size:.85rem">על עצמי (ביו)</label>
+        <label style="color:var(--text-muted);font-size:.85rem">׳¢׳ ׳¢׳¦׳׳™ (׳‘׳™׳•)</label>
         <textarea id="bkp-bio" class="settings-input" rows="3" style="resize:vertical">${_esc(prof.bio || '')}</textarea>
-        <label style="color:var(--text-muted);font-size:.85rem">שירותים (שורה לכל שירות)</label>
+        <label style="color:var(--text-muted);font-size:.85rem">׳©׳™׳¨׳•׳×׳™׳ (׳©׳•׳¨׳” ׳׳›׳ ׳©׳™׳¨׳•׳×)</label>
         <textarea id="bkp-services" class="settings-input" rows="4" style="resize:vertical">${(prof.services || []).join('\n')}</textarea>
-        <label style="color:var(--text-muted);font-size:.85rem">מיקום</label>
+        <label style="color:var(--text-muted);font-size:.85rem">׳׳™׳§׳•׳</label>
         <input id="bkp-location" class="settings-input" value="${_esc(prof.location || '')}">
-        <label style="color:var(--text-muted);font-size:.85rem">קישור לתמונה (URL, אופציונלי)</label>
+        <label style="color:var(--text-muted);font-size:.85rem">׳§׳™׳©׳•׳¨ ׳׳×׳׳•׳ ׳” (URL, ׳׳•׳₪׳¦׳™׳•׳ ׳׳™)</label>
         <input id="bkp-photo" class="settings-input" value="${_esc(prof.photo_url || '')}">
-        <button id="bkp-save" style="margin-top:8px;background:var(--accent);color:#fff;border:none;padding:8px 20px;border-radius:8px;cursor:pointer;font-size:.95rem">💾 שמור</button>
+        <button id="bkp-save" style="margin-top:8px;background:var(--accent);color:#fff;border:none;padding:8px 20px;border-radius:8px;cursor:pointer;font-size:.95rem">נ’¾ ׳©׳׳•׳¨</button>
       </div>`;
     modal.classList.remove('hidden');
     document.getElementById('bkp-save')?.addEventListener('click', async () => {
@@ -2940,7 +2940,7 @@ function openBookingProfileModal() {
       };
       await api('/api/booking/profile/update', updated);
       modal.classList.add('hidden');
-      toast('פרופיל עודכן ✓');
+      toast('׳₪׳¨׳•׳₪׳™׳ ׳¢׳•׳“׳›׳ ג“');
     });
   });
 }
@@ -2949,7 +2949,7 @@ document.getElementById('copy-booking-link')?.addEventListener('click', () => {
   api('/api/tunnel/status').then(status => {
     const url = status.url ? status.url + '/book' : window.location.origin + '/book';
     navigator.clipboard.writeText(url)
-      .then(() => toast(status.url ? 'קישור הועתק ✓' : 'הועתק (localhost) — הפעל גישה ציבורית בסקציית הזימונים'))
+      .then(() => toast(status.url ? '׳§׳™׳©׳•׳¨ ׳”׳•׳¢׳×׳§ ג“' : '׳”׳•׳¢׳×׳§ (localhost) ג€” ׳”׳₪׳¢׳ ׳’׳™׳©׳” ׳¦׳™׳‘׳•׳¨׳™׳× ׳‘׳¡׳§׳¦׳™׳™׳× ׳”׳–׳™׳׳•׳ ׳™׳'))
       .catch(() => toast(url));
   });
 });
@@ -2980,22 +2980,22 @@ function initWelcome() {
     const role = (document.getElementById('welcome-role')?.value || '').trim();
     if (!name) {
       document.getElementById('welcome-name')?.focus();
-      toast('נא להכניס שם 😊', false);
+      toast('׳ ׳ ׳׳”׳›׳ ׳™׳¡ ׳©׳ נ˜', false);
       return;
     }
-    btn.disabled = true; btn.textContent = '⏳ שומר...';
+    btn.disabled = true; btn.textContent = 'ג³ ׳©׳•׳׳¨...';
     try {
       await api('/api/settings/update', {
         userName: name,
-        assistantName: 'קרלוס',
+        assistantName: '׳§׳¨׳׳•׳¡',
         ...(role ? { userRole: role } : {})
       });
       hideWelcome();
       loadState();
-      toast('ברוך הבא, ' + name + '! 🎉');
+      toast('׳‘׳¨׳•׳ ׳”׳‘׳, ' + name + '! נ‰');
     } catch (e) {
-      btn.disabled = false; btn.textContent = '✅ בוא נתחיל';
-      toast('שגיאה בשמירה — נסה שוב', false);
+      btn.disabled = false; btn.textContent = 'ג… ׳‘׳•׳ ׳ ׳×׳—׳™׳';
+      toast('׳©׳’׳™׳׳” ׳‘׳©׳׳™׳¨׳” ג€” ׳ ׳¡׳” ׳©׳•׳‘', false);
     }
   });
 
@@ -3025,11 +3025,11 @@ function _initApp() {
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.get('google_connected') === '1') {
     history.replaceState({}, '', window.location.pathname);
-    toast('✅ Google חובר בהצלחה! מרענן נתונים...');
+    toast('ג… Google ׳—׳•׳‘׳¨ ׳‘׳”׳¦׳׳—׳”! ׳׳¨׳¢׳ ׳ ׳ ׳×׳•׳ ׳™׳...');
     setTimeout(_googleRefreshData, 800);
   } else if (urlParams.get('google_error')) {
     history.replaceState({}, '', window.location.pathname);
-    toast('שגיאה בחיבור Google: ' + decodeURIComponent(urlParams.get('google_error')), false);
+    toast('׳©׳’׳™׳׳” ׳‘׳—׳™׳‘׳•׳¨ Google: ' + decodeURIComponent(urlParams.get('google_error')), false);
   }
   loadState();
   // Auto-poll for new bookings every 30s
@@ -3041,10 +3041,11 @@ function _initApp() {
   }, 30000);
 }
 
-// If running locally (no Supabase auth layer) or auth already resolved → start now.
-// If running in SaaS mode → auth guard calls window._startApp() after it resolves.
+// If running locally (no Supabase auth layer) or auth already resolved ג†’ start now.
+// If running in SaaS mode ג†’ auth guard calls window._startApp() after it resolves.
 if (!window._supabase || window._userId) {
   _initApp();
 } else {
   window._startApp = _initApp;
 }
+
