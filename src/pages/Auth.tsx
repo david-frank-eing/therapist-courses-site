@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,13 +31,15 @@ const Auth = () => {
 
   const { user, signIn, signUp, resetPassword } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectTo = searchParams.get("redirect") || "/";
   const { toast } = useToast();
 
   useEffect(() => {
     if (user) {
-      navigate("/");
+      navigate(redirectTo);
     }
-  }, [user, navigate]);
+  }, [user, navigate, redirectTo]);
 
   const switchMode = (next: Mode) => {
     setMode(next);
@@ -96,7 +98,7 @@ const Auth = () => {
           }
         } else {
           toast({ title: "התחברת בהצלחה!", description: "ברוכים הבאים למרחב למטפלים" });
-          navigate("/");
+          navigate(redirectTo);
         }
       } else {
         const { error } = await signUp(email, password, fullName);
@@ -112,7 +114,7 @@ const Auth = () => {
           }
         } else {
           toast({ title: "נרשמת בהצלחה!", description: "ברוכים הבאים למרחב למטפלים" });
-          navigate("/");
+          navigate(redirectTo);
         }
       }
     } catch (error) {

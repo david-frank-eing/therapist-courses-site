@@ -655,7 +655,7 @@ function renderHabits(habits, date) {
 }
 
 function renderTimeToday(timeLog, date) {
-  const sessions = (timeLog.sessions || []).filter(s => (s.ended_at || '').slice(0, 10) === date);
+  const sessions = ((timeLog && timeLog.entries) || []).filter(s => (s.ended_at || '').slice(0, 10) === date);
   const el = $('#time-list');
   if (!sessions.length) { el.innerHTML = '<span class="muted-text">עדיין לא נרשם זמן היום</span>'; return; }
   const total = sessions.reduce((sum, x) => sum + (x.seconds || 0), 0);
@@ -2318,8 +2318,8 @@ ${_hTip('כשמגיע תור חדש — מופיע 🔔 בכותרת הדאשב�
 <div class="hs-settings-list">
   <div class="hs-sl-row"><span class="hs-sl-icon">👤</span><div><strong>פרופיל</strong><div class="hs-sl-sub">שנה את שמך ואת שם העוזר</div></div></div>
   <div class="hs-sl-row"><span class="hs-sl-icon">🏃</span><div><strong>הרגלים</strong><div class="hs-sl-sub">הוסף / מחק / שנה הרגלים יומיים</div></div></div>
-  <div class="hs-sl-row hs-sl-highlight"><span class="hs-sl-icon">📂</span><div><strong>תחומי עבודה</strong><span class="hs-sl-badge">✏️ ניתן לעריכה</span><div class="hs-sl-sub">שנה שם, אמוג'י, הוסף או מחק תחומים (טיפולים / מוזיקה / כלי / כללי...)<br>הם מופיעים בתפריט התוכן ובפלייבוקים</div></div></div>
-  <div class="hs-sl-row hs-sl-highlight"><span class="hs-sl-icon">📲</span><div><strong>סוגי תוכן</strong><span class="hs-sl-badge">✏️ ניתן לעריכה</span><div class="hs-sl-sub">הוסף / מחק / שנה שם של סוגי תוכן (רילס, פוסט, סטורי...) — מופיעים בתפריט הוספת תוכן</div></div></div>
+  <div class="hs-sl-row"><span class="hs-sl-icon">📂</span><div><strong>תחומי עבודה</strong><div class="hs-sl-sub">שנה שם, אמוג'י, הוסף או מחק תחומים (טיפולים / מוזיקה / כלי / כללי...) — מופיעים בתפריט התוכן ובפלייבוקים</div></div></div>
+  <div class="hs-sl-row"><span class="hs-sl-icon">📲</span><div><strong>סוגי תוכן</strong><div class="hs-sl-sub">הוסף / מחק / שנה שם של סוגי תוכן (רילס, פוסט, סטורי...) — מופיעים בתפריט הוספת תוכן</div></div></div>
   <div class="hs-sl-row"><span class="hs-sl-icon">🔌</span><div><strong>חיבורים</strong><div class="hs-sl-sub">חבר Gmail ו-Google Calendar</div></div></div>
   <div class="hs-sl-row"><span class="hs-sl-icon">📖</span><div><strong>פלייבוקים</strong><div class="hs-sl-sub">מדריך תוכן לכל תחום עבודה — מה לפרסם, איך לתקשר, רעיונות</div></div></div>
   <div class="hs-sl-row"><span class="hs-sl-icon">✏️</span><div><strong>פרופיל זימון</strong><div class="hs-sl-sub">הגדר את דף הזימון הציבורי שלך</div></div></div>
@@ -3232,6 +3232,30 @@ document.getElementById('export-pdf-btn')?.addEventListener('click', () => {
   // Restore collapsed state after dialog closes
   setTimeout(() => collapsed.forEach(b => { b.style.display = 'none'; }), 500);
 });
+
+// ---------- Timer collapse ----------
+(function() {
+  const stored = localStorage.getItem('tw-collapsed');
+  const isMobile = window.innerWidth <= 768;
+  let collapsed = stored !== null ? stored === '1' : isMobile;
+
+  function applyCollapse() {
+    const body = document.getElementById('tw-body');
+    const btn  = document.getElementById('tw-collapse-btn');
+    if (!body || !btn) return;
+    body.style.display = collapsed ? 'none' : '';
+    btn.textContent = collapsed ? '▴' : '▾';
+    btn.title = collapsed ? 'הרחב סטופר' : 'מזער סטופר';
+  }
+
+  document.getElementById('tw-collapse-btn')?.addEventListener('click', () => {
+    collapsed = !collapsed;
+    localStorage.setItem('tw-collapsed', collapsed ? '1' : '0');
+    applyCollapse();
+  });
+
+  applyCollapse();
+})();
 
 // ---------- Dark / Light Theme ----------
 let _darkMode = localStorage.getItem('carlos-theme') !== 'light';

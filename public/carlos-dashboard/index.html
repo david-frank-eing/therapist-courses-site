@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title id="page-title">קרלוס · דאשבורד</title>
-  <link rel="stylesheet" href="style.css?v=64">
+  <link rel="stylesheet" href="style.css?v=68">
 </head>
 <body>
   <div id="toast-area"></div>
@@ -295,24 +295,27 @@
         <option value="stopwatch">סטופר</option>
         <option value="timer">טיימר</option>
       </select>
+      <button id="tw-collapse-btn" title="מזער / הרחב">▾</button>
     </div>
-    <div id="tw-minutes-row" class="hidden">
-      <input type="number" id="tw-amount" value="25" min="1">
-      <select id="tw-unit">
-        <option value="minutes">דקות</option>
-        <option value="seconds">שניות</option>
-      </select>
+    <div id="tw-body">
+      <div id="tw-minutes-row" class="hidden">
+        <input type="number" id="tw-amount" value="25" min="1">
+        <select id="tw-unit">
+          <option value="minutes">דקות</option>
+          <option value="seconds">שניות</option>
+        </select>
+      </div>
+      <div id="tw-display">00:00:00</div>
+      <div class="tw-controls">
+        <button id="tw-start">▶ התחל</button>
+        <button id="tw-stop" class="hidden">■ עצור</button>
+      </div>
+      <div class="tw-links">
+        <a id="tw-manual" href="#">➕ ידני</a>
+        <a id="tw-sound" href="#">🔔 צלצול</a>
+      </div>
+      <div id="tw-manual-box" class="hidden"></div>
     </div>
-    <div id="tw-display">00:00:00</div>
-    <div class="tw-controls">
-      <button id="tw-start">▶ התחל</button>
-      <button id="tw-stop" class="hidden">■ עצור</button>
-    </div>
-    <div class="tw-links">
-      <a id="tw-manual" href="#">➕ ידני</a>
-      <a id="tw-sound" href="#">🔔 צלצול</a>
-    </div>
-    <div id="tw-manual-box" class="hidden"></div>
   </div>
 
   <div id="attrib-overlay" class="overlay hidden">
@@ -447,6 +450,6 @@
     })();
   </script>
   <script src="supabase-api.js?v=1"></script>
-  <script src="app.js?v=66"></script>
+  <script src="app.js?v=68"></script>
 </body>
 </html>
