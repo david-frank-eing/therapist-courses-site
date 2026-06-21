@@ -195,6 +195,15 @@ export const Header = () => {
                 ניהול
               </Link>
             )}
+            {profile && ['premium','vip'].includes(profile.subscription_tier) && (
+              <a
+                href="/carlos-dashboard/"
+                onClick={() => setIsMenuOpen(false)}
+                className="px-4 py-3 font-medium bg-primary text-primary-foreground rounded-lg text-center"
+              >
+                🎛️ דאשבורד קרלוס
+              </a>
+            )}
             <div className="mt-2 pt-2 border-t border-border">
               {user ? (
                 <>
