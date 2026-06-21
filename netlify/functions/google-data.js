@@ -195,69 +195,25 @@ ${urgentSection}
 📧 מיילים
 ${emailLine}`;
 
+  const _upsert = (body) => fetch(`${supabaseUrl}/rest/v1/sync_data?on_conflict=user_id,key`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json', 'apikey': supabaseKey,
+      'Authorization': 'Bearer ' + supabaseKey, 'Prefer': 'resolution=merge-duplicates'
+    },
+    body: JSON.stringify(body)
+  });
+
   await Promise.all([
-    fetch(`${supabaseUrl}/rest/v1/sync_data`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json', 'apikey': supabaseKey,
-        'Authorization': 'Bearer ' + supabaseKey, 'Prefer': 'resolution=merge-duplicates'
-      },
-      body: JSON.stringify({
-        user_id: userId, key: 'calendar-today',
-        value: { date: todayStr, events: calendarEvents, updated_at: now },
-        updated_at: now
-      })
-    }),
-    fetch(`${supabaseUrl}/rest/v1/sync_data`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json', 'apikey': supabaseKey,
-        'Authorization': 'Bearer ' + supabaseKey, 'Prefer': 'resolution=merge-duplicates'
-      },
-      body: JSON.stringify({
-        user_id: userId, key: 'email-summary',
-        text_value: emailSummary, updated_at: now
-      })
-    }),
-    fetch(`${supabaseUrl}/rest/v1/sync_data`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json', 'apikey': supabaseKey,
-        'Authorization': 'Bearer ' + supabaseKey, 'Prefer': 'resolution=merge-duplicates'
-      },
-      body: JSON.stringify({
-        user_id: userId, key: 'morning-briefing',
-        text_value: briefingText, updated_at: now
-      })
-    }),
-    fetch(`${supabaseUrl}/rest/v1/sync_data`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json', 'apikey': supabaseKey,
-        'Authorization': 'Bearer ' + supabaseKey, 'Prefer': 'resolution=merge-duplicates'
-      },
-      body: JSON.stringify({
-        user_id: userId, key: 'calendar-upcoming',
-        value: { events: tomorrowEvents, updated_at: now },
-        updated_at: now
-      })
-    }),
-    fetch(`${supabaseUrl}/rest/v1/sync_data`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json', 'apikey': supabaseKey,
-        'Authorization': 'Bearer ' + supabaseKey, 'Prefer': 'resolution=merge-duplicates'
-      },
-      body: JSON.stringify({
-        user_id: userId, key: 'last-refresh',
-        value: {
-          date: todayStr,
-          time: new Date().toLocaleTimeString('he-IL', { timeZone: 'Asia/Jerusalem', hour: '2-digit', minute: '2-digit' }),
-          status: 'success'
-        },
-        updated_at: now
-      })
-    })
+    _upsert({ user_id: userId, key: 'calendar-today', value: { date: todayStr, events: calendarEvents, updated_at: now }, updated_at: now }),
+    _upsert({ user_id: userId, key: 'email-summary', text_value: emailSummary, updated_at: now }),
+    _upsert({ user_id: userId, key: 'morning-briefing', text_value: briefingText, updated_at: now }),
+    _upsert({ user_id: userId, key: 'calendar-upcoming', value: { events: tomorrowEvents, updated_at: now }, updated_at: now }),
+    _upsert({ user_id: userId, key: 'last-refresh', value: {
+      date: todayStr,
+      time: new Date().toLocaleTimeString('he-IL', { timeZone: 'Asia/Jerusalem', hour: '2-digit', minute: '2-digit' }),
+      status: 'success'
+    }, updated_at: now })
   ]);
 
   return json(200, {
