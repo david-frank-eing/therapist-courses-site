@@ -81,7 +81,7 @@ async function _sbGetState(sb, uid) {
   const daily = dailyRow ? { date_for: dailyRow.date_for, quotas: dailyRow.quotas || {} }
     : { date_for: today, quotas: {} };
 
-  // Config / domains
+  // Config / domains / content_types
   const configRow = configRes.data && configRes.data[0];
   const domains = configRow && configRow.domains
     ? (typeof configRow.domains === 'string' ? JSON.parse(configRow.domains) : configRow.domains)
@@ -90,6 +90,12 @@ async function _sbGetState(sb, uid) {
         { id: 'music', emoji: '🎵', label: 'מוזיקה' },
         { id: 'product', emoji: '🚀', label: 'כלי' },
         { id: 'unassigned', emoji: '⚪', label: 'כללי' }
+      ];
+  const contentTypes = configRow && configRow.content_types
+    ? (typeof configRow.content_types === 'string' ? JSON.parse(configRow.content_types) : configRow.content_types)
+    : [
+        { id: 'reel', emoji: '🎬', label: 'רילס' },
+        { id: 'post', emoji: '📝', label: 'פוסט' }
       ];
 
   // Calendar
@@ -140,7 +146,8 @@ async function _sbGetState(sb, uid) {
       assistantName: (configRow && configRow.assistant_name) || 'קרלוס',
       edition: 'full',
       aiBriefing: false,
-      domains
+      domains,
+      contentTypes
     },
     bookingData: {
       slots: slotsRes.data || [],
@@ -541,6 +548,7 @@ window._sbApi = async function(url, body) {
     const update = { updated_at: new Date().toISOString() };
     if (body.assistantName !== undefined) update.assistant_name = body.assistantName;
     if (body.domains !== undefined) update.domains = body.domains;
+    if (body.content_types !== undefined) update.content_types = body.content_types;
     if (body.categories !== undefined) update.categories = body.categories;
     const { error } = await sb.from('dashboard_config').upsert(
       { user_id: uid, ...update }, { onConflict: 'user_id' }

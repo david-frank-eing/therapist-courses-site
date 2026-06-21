@@ -71,6 +71,7 @@ async function loadState() {
   renderBriefing(s.briefing);
   renderEmail(s.emailSummary);
   renderTomorrow(s.tasks, s.calendarUpcoming);
+  renderContentSelects(s.userConfig && s.userConfig.contentTypes, s.userConfig && s.userConfig.domains);
   renderContent(s.content, s.weekly);
   renderTasks(s.tasks, s.date, s.completedToday || []);
   renderContacts(s);
@@ -686,8 +687,103 @@ const STATUS_LABEL = {
 };
 const NEXT_LABEL = { idea: '→ טיוטה', draft: '→ מוכן', ready: '→ פורסם' };
 
-// CONTENT_DOMAINS reads from DOMAINS (loaded from config.json in loadState)
 const domainLabel = id => (DOMAINS.find(d => d.id === id) || DOMAINS[DOMAINS.length - 1]).label;
+
+function renderContentSelects(contentTypes, domains) {
+  const typeEl   = document.getElementById('new-content-type');
+  const domainEl = document.getElementById('new-content-domain');
+  if (typeEl && contentTypes && contentTypes.length) {
+    const prev = typeEl.value;
+    typeEl.innerHTML = contentTypes.map(t =>
+      `<option value="${_esc(t.id)}">${_esc(t.emoji)} ${_esc(t.label)}</option>`
+    ).join('');
+    if (contentTypes.find(t => t.id === prev)) typeEl.value = prev;
+  }
+  if (domainEl && domains && domains.length) {
+    const prev = domainEl.value;
+    domainEl.innerHTML = domains.map(d =>
+      `<option value="${_esc(d.id)}">${_esc(d.emoji)} ${_esc(d.label)}</option>`
+    ).join('');
+    if (domains.find(d => d.id === prev)) domainEl.value = prev;
+  }
+}
+
+function _renderContentTypesSettings(contentTypes) {
+  const listEl = document.getElementById('content-types-settings-list');
+  if (!listEl) return;
+  let types = contentTypes && contentTypes.length ? JSON.parse(JSON.stringify(contentTypes))
+    : [{ id: 'reel', emoji: '🎬', label: 'רילס' }, { id: 'post', emoji: '📝', label: 'פוסט' }];
+
+  function _redraw() {
+    listEl.innerHTML = `
+      <div style="font-size:.8rem;color:var(--text-muted);margin-bottom:8px">סוגי התוכן שמופיעים בתפריט הוספת תוכן — ערוך, הוסף, או מחק</div>
+      <div id="ct-rows" style="display:flex;flex-direction:column;gap:6px"></div>
+      <div style="margin-top:8px;display:flex;gap:6px;align-items:center">
+        <button id="ct-new-emoji" title="בחר אמוג'י"
+          style="font-size:1.3rem;min-width:40px;padding:4px 6px;border:1px solid var(--border);border-radius:8px;background:var(--card);cursor:pointer">📋</button>
+        <input id="ct-new-label" type="text" placeholder="שם סוג תוכן חדש..."
+          style="flex:1;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:inherit;direction:rtl">
+        <button id="ct-add-btn"
+          style="padding:6px 12px;background:var(--primary);color:#fff;border:none;border-radius:6px;cursor:pointer;white-space:nowrap">+ הוסף</button>
+      </div>
+      <button id="ct-save-btn"
+        style="margin-top:10px;background:var(--primary);color:#fff;border:none;padding:7px 18px;border-radius:8px;cursor:pointer;font-size:.88rem">💾 שמור סוגי תוכן</button>`;
+
+    const rows = listEl.querySelector('#ct-rows');
+    types.forEach((t, i) => {
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;gap:6px;align-items:center';
+      row.innerHTML = `
+        <button class="ct-emoji-btn" data-ci="${i}" title="בחר אמוג'י"
+          style="font-size:1.2rem;min-width:38px;padding:3px 6px;border:1px solid var(--border);border-radius:7px;background:var(--card);cursor:pointer">${_esc(t.emoji)}</button>
+        <input type="text" value="${_esc(t.label)}" data-ci="${i}"
+          style="flex:1;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:inherit;direction:rtl">
+        <button data-del="${i}"
+          style="background:transparent;border:1px solid #ff606044;color:#ff6060;padding:4px 9px;border-radius:6px;cursor:pointer;font-size:.85rem">✕</button>`;
+      rows.appendChild(row);
+    });
+
+    rows.querySelectorAll('.ct-emoji-btn').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        _openEmojiPicker(btn, em => { types[parseInt(btn.dataset.ci)].emoji = em; btn.textContent = em; });
+      });
+    });
+    rows.querySelectorAll('input[data-ci]').forEach(inp => {
+      inp.addEventListener('input', () => { types[parseInt(inp.dataset.ci)].label = inp.value; });
+    });
+    rows.querySelectorAll('[data-del]').forEach(btn => {
+      btn.addEventListener('click', () => { types.splice(parseInt(btn.dataset.del), 1); _redraw(); });
+    });
+
+    listEl.querySelector('#ct-new-emoji').addEventListener('click', e => {
+      e.stopPropagation();
+      _openEmojiPicker(listEl.querySelector('#ct-new-emoji'), em => {
+        listEl.querySelector('#ct-new-emoji').textContent = em;
+      });
+    });
+    listEl.querySelector('#ct-add-btn').addEventListener('click', () => {
+      const emoji = listEl.querySelector('#ct-new-emoji').textContent.trim() || '📋';
+      const label = listEl.querySelector('#ct-new-label').value.trim();
+      if (!label) { toast('הזן שם לסוג תוכן', false); return; }
+      const id = label.toLowerCase().replace(/\s+/g,'-').replace(/[^\w-]/g,'') + '-' + Date.now().toString(36);
+      types.push({ id, emoji, label });
+      _redraw();
+    });
+    listEl.querySelector('#ct-save-btn').addEventListener('click', async () => {
+      const btn = listEl.querySelector('#ct-save-btn');
+      btn.disabled = true; btn.textContent = '⏳';
+      const r = await api('/api/settings/update', { content_types: types });
+      if (r && r.ok) {
+        if (lastState && lastState.userConfig) lastState.userConfig.contentTypes = types;
+        renderContentSelects(types, lastState && lastState.userConfig && lastState.userConfig.domains);
+        toast('סוגי תוכן נשמרו ✓');
+      } else { toast('שגיאה בשמירה', false); }
+      btn.disabled = false; btn.textContent = '💾 שמור סוגי תוכן';
+    });
+  }
+  _redraw();
+}
 
 function renderContent(content, weekly) {
   const items = (content && content.items) || [];
@@ -2092,11 +2188,16 @@ ${_hTip('➕ ידני — הכנס דקות שעבדת בלי שהטיימר ר�
 ${_hFlow(['✅ פורסם','🟢 מוכן','✏️ טיוטה','💡 רעיון'])}
 <div style="font-size:.8rem;color:var(--text-muted);margin:-6px 0 10px;text-align:center">לחץ על הסטטוס כדי להתקדם שלב</div>
 <br>
-${_hStep('1','לחץ "+ הוסף תוכן" ← תן כותרת + בחר סוג (רילס / פוסט / סטורי)')}
-${_hStep('2','שייך לתחום עסקי (טיפולים / מוזיקה / כלי / כללי)')}
-${_hStep('3','לחץ ✏️ לעריכה: תוכן, קישור Docs, קובץ מדיה, תאריך')}
-${_hStep('4','כשהפוסט עלה — לחץ עד שמגיע ל"פורסם" ← המכסה מתעדכנת אוטומטית')}
-${_hTip('הסטטיסטיקות בקטע המכסות מתעדכנות בזמן אמת לפי מה שסימנת כ"פורסם"')}` },
+${_hStep('1','לחץ "+ הוסף תוכן" ← תן כותרת + בחר סוג + בחר תחום')}
+${_hStep('2','לחץ ✏️ לעריכה: תוכן, קישור Docs, קובץ מדיה, תאריך')}
+${_hStep('3','כשהפוסט עלה — לחץ עד שמגיע ל"פורסם" ← המכסה מתעדכנת אוטומטית')}
+<div class="hs-editable-note">
+  <span class="hs-editable-badge">✏️ ניתן לעריכה</span>
+  <strong>סוגי התוכן</strong> (רילס / פוסט / וכו') <strong>והתחומים</strong> — ניתנים לשינוי מלא בהגדרות.<br>
+  <span style="font-size:.78rem">⚙️ הגדרות ← "📲 סוגי תוכן" — הוסף סוג חדש, שנה שם ואמוג'י, מחק</span><br>
+  <span style="font-size:.78rem">⚙️ הגדרות ← "📖 פלייבוקים" ← למעלה — שנה את שמות התחומים</span>
+</div>
+${_hTip('הסטטיסטיקות מתעדכנות בזמן אמת לפי מה שסימנת כ"פורסם"')}` },
 
   { icon: '📊', title: 'מכסות — יעדים שבועיים ויומיים', body: `
 <div class="hs-quota-demo">
@@ -2218,6 +2319,7 @@ ${_hTip('כשמגיע תור חדש — מופיע 🔔 בכותרת הדאשב�
   <div class="hs-sl-row"><span class="hs-sl-icon">👤</span><div><strong>פרופיל</strong><div class="hs-sl-sub">שנה את שמך ואת שם העוזר</div></div></div>
   <div class="hs-sl-row"><span class="hs-sl-icon">🏃</span><div><strong>הרגלים</strong><div class="hs-sl-sub">הוסף / מחק / שנה הרגלים יומיים</div></div></div>
   <div class="hs-sl-row"><span class="hs-sl-icon">🔌</span><div><strong>חיבורים</strong><div class="hs-sl-sub">חבר Gmail ו-Google Calendar</div></div></div>
+  <div class="hs-sl-row"><span class="hs-sl-icon">📲</span><div><strong>סוגי תוכן</strong><div class="hs-sl-sub">הוסף / מחק / שנה שם של סוגי תוכן (רילס, פוסט, סטורי...)</div></div></div>
   <div class="hs-sl-row"><span class="hs-sl-icon">📖</span><div><strong>פלייבוקים</strong><div class="hs-sl-sub">ערוך תחומי עבודה ותוכן המדריכים</div></div></div>
   <div class="hs-sl-row"><span class="hs-sl-icon">✏️</span><div><strong>פרופיל זימון</strong><div class="hs-sl-sub">הגדר את דף הזימון הציבורי שלך</div></div></div>
 </div>
@@ -2815,8 +2917,9 @@ async function openSettings() {
   bodyEl.innerHTML = '<div class="muted-text">טוען...</div>';
   try {
     const s = await api('/api/settings');
-    s._playbooks = (lastState && lastState.playbooks) || [];
-    s._domains   = (lastState && lastState.userConfig && lastState.userConfig.domains) || [];
+    s._playbooks      = (lastState && lastState.playbooks) || [];
+    s._domains        = (lastState && lastState.userConfig && lastState.userConfig.domains) || [];
+    s._contentTypes   = (lastState && lastState.userConfig && lastState.userConfig.contentTypes) || [];
     renderSettings(s, bodyEl);
   } catch (e) {
     bodyEl.innerHTML = '<div class="muted-text">שגיאה: ' + e.message + '</div>';
@@ -3063,6 +3166,11 @@ function renderSettings(s, bodyEl) {
       </div>
     </div>
 
+    <div class="settings-section">
+      <div class="settings-section-title">📲 סוגי תוכן</div>
+      <div id="content-types-settings-list"></div>
+    </div>
+
     <div class="settings-section connections-section">
       <div class="settings-section-title">🔌 חיבורים</div>
       <div id="connections-body" class="connections-body"></div>
@@ -3080,6 +3188,9 @@ function renderSettings(s, bodyEl) {
 
   // ── Habits section ────────────────────────────────────────
   _renderHabitsSettings();
+
+  // ── Content types section ─────────────────────────────────
+  _renderContentTypesSettings(s._contentTypes);
 
   // ── Playbooks section ─────────────────────────────────────
   _renderPlaybooksSettings(s._domains, s._playbooks);

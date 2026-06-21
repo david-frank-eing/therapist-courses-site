@@ -1152,6 +1152,8 @@ input[type=checkbox] { width: 18px; height: 18px; cursor: pointer; accent-color:
 .hs-sl-row:first-child { border-top:none; }
 .hs-sl-icon { font-size:1.1rem;flex-shrink:0; }
 .hs-sl-sub { font-size:.76rem;color:var(--text-muted);margin-top:2px; }
+.hs-editable-note { background:#ffcc4418;border:1.5px solid #ffcc4444;border-radius:10px;padding:10px 14px;margin:10px 0;font-size:.83rem;color:var(--text2);line-height:1.7; }
+.hs-editable-badge { display:inline-block;background:#ffcc44;color:#1a1a00;border-radius:6px;padding:1px 8px;font-size:.75rem;font-weight:700;margin-bottom:5px; }
 
 /* ── Section divider ── */
 .section-divider { border: none; border-top: 1px solid var(--sep2); margin: 14px 0; }
