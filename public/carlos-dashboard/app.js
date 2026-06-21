@@ -2893,11 +2893,41 @@ function openBookingProfileModal() {
         <textarea id="bkp-services" class="settings-input" rows="4" style="resize:vertical">${(prof.services || []).join('\n')}</textarea>
         <label style="color:var(--text-muted);font-size:.85rem">מיקום</label>
         <input id="bkp-location" class="settings-input" value="${_esc(prof.location || '')}">
-        <label style="color:var(--text-muted);font-size:.85rem">קישור לתמונה (URL, אופציונלי)</label>
-        <input id="bkp-photo" class="settings-input" value="${_esc(prof.photo_url || '')}">
+        <label style="color:var(--text-muted);font-size:.85rem">תמונת פרופיל</label>
+        <div style="display:flex;align-items:center;gap:12px">
+          ${prof.photo_url ? `<img id="bkp-photo-preview" src="${_esc(prof.photo_url)}" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:2px solid var(--border)">` : `<div id="bkp-photo-preview" style="width:64px;height:64px;border-radius:50%;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:28px">👤</div>`}
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <label style="cursor:pointer;background:var(--accent);color:#fff;padding:6px 14px;border-radius:8px;font-size:.85rem;display:inline-block" for="bkp-photo-file">📷 העלה תמונה</label>
+            <input type="file" id="bkp-photo-file" accept="image/*" style="display:none">
+            <span id="bkp-photo-status" style="font-size:.75rem;color:var(--text-muted)"></span>
+          </div>
+        </div>
+        <input type="hidden" id="bkp-photo" value="${_esc(prof.photo_url || '')}">
         <button id="bkp-save" style="margin-top:8px;background:var(--accent);color:#fff;border:none;padding:8px 20px;border-radius:8px;cursor:pointer;font-size:.95rem">💾 שמור</button>
       </div>`;
     modal.classList.remove('hidden');
+
+    document.getElementById('bkp-photo-file')?.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const status = document.getElementById('bkp-photo-status');
+      status.textContent = '⏳ מעלה...';
+      try {
+        const ext = file.name.split('.').pop();
+        const path = `profile-${Date.now()}.${ext}`;
+        const { data, error } = await window._supabase.storage.from('avatars').upload(path, file, { upsert: true, contentType: file.type });
+        if (error) throw error;
+        const { data: { publicUrl } } = window._supabase.storage.from('avatars').getPublicUrl(path);
+        document.getElementById('bkp-photo').value = publicUrl;
+        const preview = document.getElementById('bkp-photo-preview');
+        preview.outerHTML = `<img id="bkp-photo-preview" src="${publicUrl}" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:2px solid var(--border)">`;
+        status.textContent = '✓ הועלה בהצלחה';
+      } catch(err) {
+        status.textContent = '❌ שגיאה בהעלאה';
+        console.error(err);
+      }
+    });
+
     document.getElementById('bkp-save')?.addEventListener('click', async () => {
       const updated = {
         public_url: document.getElementById('bkp-puburl').value.trim().replace(/\/$/, ''),
