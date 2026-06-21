@@ -26,7 +26,7 @@ async function _sbGetState(sb, uid) {
     tasksRes, completedRes, habitDefsRes, habitLogRes,
     weeklyRes, dailyRes, timeLogRes, contentRes, clientsRes, eventsRes,
     journalRes, emailRes, briefingRes, calRes, calUpRes, refreshRes,
-    configRes, slotsRes, apptsRes, notifsRes, pubLogRes
+    configRes, slotsRes, apptsRes, notifsRes, pubLogRes, bookingProfileRes
   ] = await Promise.all([
     sb.from('tasks').select('*').eq('user_id', uid).eq('status', 'pending').order('created_at'),
     sb.from('tasks').select('*').eq('user_id', uid).eq('status', 'completed').gte('completed_at', today + 'T00:00:00+00:00'),
@@ -48,7 +48,8 @@ async function _sbGetState(sb, uid) {
     sb.from('availability_slots').select('*').eq('user_id', uid).order('date').order('time'),
     sb.from('appointments').select('*').eq('user_id', uid).order('date').order('time'),
     sb.from('booking_notifs').select('*').eq('user_id', uid).order('created_at', { ascending: false }).limit(20),
-    sb.from('publishing_log').select('*').eq('user_id', uid).gte('published_at', ninetyAgo)
+    sb.from('publishing_log').select('*').eq('user_id', uid).gte('published_at', ninetyAgo),
+    sb.from('booking_profiles').select('slug').eq('user_id', uid).maybeSingle()
   ]);
 
   // Build habits in expected format: { habits: [{id, emoji, label}], completions: {'YYYY-MM-DD': [id,...]} }
@@ -142,7 +143,8 @@ async function _sbGetState(sb, uid) {
       slots: slotsRes.data || [],
       appointments: (apptsRes.data || []).filter(a => a.status !== 'cancelled'),
       notifications: notifsRes.data || [],
-      cloudflared_available: false
+      cloudflared_available: false,
+      publicSlug: (bookingProfileRes && bookingProfileRes.data && bookingProfileRes.data.slug) || null
     }
   };
 }

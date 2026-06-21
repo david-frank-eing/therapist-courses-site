@@ -84,7 +84,6 @@ async function loadState() {
   renderHabitsHistory(s.habits, s.date);
   renderSbFocus(s.weekly && s.weekly.focus_today ? s.weekly.focus_today : [], s.date);
   renderSbCalendar(s.calendar, s.date);
-  window._cfAvailable = !!(s.bookingData && s.bookingData.cloudflared_available);
   renderBooking(s.bookingData);
   renderBookingAlerts(s.bookingData && s.bookingData.notifications, s.bookingData && s.bookingData.appointments);
   renderRefreshStatus(s.lastRefresh, s.date);
@@ -2632,49 +2631,22 @@ function renderBookingAlerts(notifications, appointments) {
   });
 }
 
-function renderTunnelBar(el, running, tunnelUrl) {
-  if (running && tunnelUrl) {
+function renderPublicBookingBar(el, slug) {
+  const origin = 'https://stupendous-lily-f8cd84.netlify.app';
+  if (slug) {
+    const url = `${origin}/book/${slug}`;
     el.innerHTML = `<div class="bk-tunnel-active">
-      <span>🟢 גישה ציבורית פעילה</span>
-      <span class="bk-tunnel-url">${_esc(tunnelUrl + '/book')}</span>
+      <span>🟢 דף זימון ציבורי פעיל</span>
+      <span class="bk-tunnel-url">${_esc(url)}</span>
       <button id="bk-copy-tunnel" class="bk-tunnel-copy-btn">📋 העתק</button>
-      <button id="bk-stop-tunnel" class="bk-tunnel-stop-btn">⏹ עצור</button>
     </div>`;
     document.getElementById('bk-copy-tunnel')?.addEventListener('click', () => {
-      navigator.clipboard.writeText(tunnelUrl + '/book').then(() => toast('קישור הועתק ✓'));
-    });
-    document.getElementById('bk-stop-tunnel')?.addEventListener('click', async () => {
-      await api('/api/tunnel/stop', {});
-      renderTunnelBar(el, false, null);
-      toast('גישה ציבורית הופסקה');
+      navigator.clipboard.writeText(url).then(() => toast('קישור הועתק ✓'));
     });
   } else {
-    const cfAvail = window._cfAvailable !== false;
-    el.innerHTML = cfAvail
-      ? `<div class="bk-tunnel-off">
-          <span>🔴 גישה ציבורית כבויה — מטופלים לא יוכלו לגשת לדף הזימון</span>
-          <button id="bk-start-tunnel" class="bk-tunnel-start-btn">🌐 הפעל עכשיו</button>
-        </div>`
-      : `<div class="bk-tunnel-off">
-          <span class="muted-text">🔌 גישה ציבורית לא זמינה — <code>cloudflared.exe</code> לא נמצא בתיקיית קרלוס</span>
-        </div>`;
-    document.getElementById('bk-start-tunnel')?.addEventListener('click', async () => {
-      el.innerHTML = '<div class="bk-tunnel-loading">⏳ מתחבר לשרתי Cloudflare... (בדרך כלל 10–15 שניות)</div>';
-      try {
-        const r = await api('/api/tunnel/start', {});
-        if (r && r.url) {
-          navigator.clipboard.writeText(r.url + '/book').catch(() => {});
-          renderTunnelBar(el, true, r.url);
-          toast('🌐 גישה ציבורית פעילה — קישור הועתק ✓');
-        } else {
-          renderTunnelBar(el, false, null);
-          toast('שגיאה בהפעלה — נסה שוב', false);
-        }
-      } catch(e) {
-        renderTunnelBar(el, false, null);
-        toast('שגיאה — נסה שוב', false);
-      }
-    });
+    el.innerHTML = `<div class="bk-tunnel-off">
+      <span class="muted-text">⚙️ הגדר slug בפרופיל הזימון כדי לקבל קישור ציבורי</span>
+    </div>`;
   }
 }
 
@@ -2685,7 +2657,7 @@ function renderBooking(data) {
   const slotsMgrEl = document.getElementById('booking-slots-mgr');
   if (!upcomingEl || !slotsMgrEl) return;
 
-  // ── Tunnel control UI ──
+  // ── Public booking bar ──
   {
     let urlBar = document.getElementById('bk-url-bar');
     if (!urlBar) {
@@ -2693,7 +2665,7 @@ function renderBooking(data) {
       urlBar.id = 'bk-url-bar';
       upcomingEl.parentElement.insertBefore(urlBar, upcomingEl);
     }
-    api('/api/tunnel/status').then(status => renderTunnelBar(urlBar, status.running, status.url));
+    renderPublicBookingBar(urlBar, data.publicSlug);
   }
 
   // ── Upcoming appointments ──
@@ -2944,12 +2916,13 @@ function openBookingProfileModal() {
 }
 
 document.getElementById('copy-booking-link')?.addEventListener('click', () => {
-  api('/api/tunnel/status').then(status => {
-    const url = status.url ? status.url + '/book' : window.location.origin + '/book';
-    navigator.clipboard.writeText(url)
-      .then(() => toast(status.url ? 'קישור הועתק ✓' : 'הועתק (localhost) — הפעל גישה ציבורית בסקציית הזימונים'))
-      .catch(() => toast(url));
-  });
+  const slug = lastState && lastState.bookingData && lastState.bookingData.publicSlug;
+  const url = slug
+    ? `https://stupendous-lily-f8cd84.netlify.app/book/${slug}`
+    : window.location.origin + '/book';
+  navigator.clipboard.writeText(url)
+    .then(() => toast(slug ? 'קישור הועתק ✓' : 'הגדר slug בפרופיל הזימון קודם'))
+    .catch(() => toast(url));
 });
 
 document.getElementById('booking-edit-profile-btn')?.addEventListener('click', openBookingProfileModal);
