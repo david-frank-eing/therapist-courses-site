@@ -794,7 +794,7 @@ function renderDaily(quotas) { renderQuotaBars('#daily-bars', quotas, 'daily'); 
 
 function renderTaskStats(s) {
   if (!s) return;
-  $('#task-stats').textContent = `✅ הושלמו: ${s.today} היום · ${s.week} השבוע · ${s.total} בסה"כ`;
+  $('#task-stats').textContent = `✅ הושלמו: ${s.completedToday} היום · ${s.completedWeek} השבוע · ${s.total} בסה"כ`;
 }
 
 function renderConsistency(stats) {

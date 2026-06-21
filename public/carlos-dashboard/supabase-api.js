@@ -23,13 +23,14 @@ async function _sbGetState(sb, uid) {
   const ninetyAgo = new Date(Date.now() - 90 * 864e5).toISOString();
 
   const [
-    tasksRes, completedRes, habitDefsRes, habitLogRes,
+    tasksRes, completedRes, completedWeekRes, habitDefsRes, habitLogRes,
     weeklyRes, dailyRes, timeLogRes, contentRes, clientsRes, eventsRes,
     journalRes, emailRes, briefingRes, calRes, calUpRes, refreshRes,
     configRes, slotsRes, apptsRes, notifsRes, pubLogRes, bookingProfileRes
   ] = await Promise.all([
     sb.from('tasks').select('*').eq('user_id', uid).eq('status', 'pending').order('created_at'),
-    sb.from('tasks').select('*').eq('user_id', uid).eq('status', 'completed').gte('completed_at', today + 'T00:00:00+00:00'),
+    sb.from('tasks').select('id').eq('user_id', uid).eq('status', 'completed').gte('completed_at', today + 'T00:00:00+00:00'),
+    sb.from('tasks').select('id').eq('user_id', uid).eq('status', 'completed').gte('completed_at', _getWeekStart(today) + 'T00:00:00+00:00'),
     sb.from('habit_definitions').select('*').eq('user_id', uid).eq('active', true).order('sort_order'),
     sb.from('habits_log').select('*').eq('user_id', uid).gte('date', monthAgo),
     sb.from('weekly_plan').select('*').eq('user_id', uid).order('week_of', { ascending: false }).limit(1),
@@ -107,9 +108,10 @@ async function _sbGetState(sb, uid) {
 
   // Task stats
   const completedToday = completedRes.data || [];
+  const completedWeek = completedWeekRes.data || [];
   const taskStats = {
     completedToday: completedToday.length,
-    completedWeek: completedToday.length,
+    completedWeek: completedWeek.length,
     total: (tasksRes.data || []).length + completedToday.length
   };
 

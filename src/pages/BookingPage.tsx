@@ -81,7 +81,7 @@ export default function BookingPage() {
       user_id: profile.user_id,
       slot_id: selectedSlot.id,
       patient_name: form.name,
-      phone: form.phone,
+      patient_phone: form.phone,
       service: form.service || (profile.services?.[0] || ""),
       notes: form.notes,
       status: "confirmed",
