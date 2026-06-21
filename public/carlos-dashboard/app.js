@@ -121,7 +121,7 @@ function renderRefreshStatus(lastRefresh, todayDate) {
     bar.className = 'auto-refresh-bar auto-refresh-ok';
     msg.innerHTML = `🟢 עודכן ב-${lastRefresh.time} היום &nbsp;<button class="refresh-now-btn" id="refresh-now-btn">🔄</button>`;
     bar.classList.remove('hidden');
-    _bindManualRefresh();
+    document.getElementById('refresh-now-btn')?.addEventListener('click', () => _googleRefreshData());
   } else if (lastRefresh.date === today) {
     // עודכן היום אבל לא הכל הצליח (status: partial / failed)
     bar.className = 'auto-refresh-bar auto-refresh-warn';
