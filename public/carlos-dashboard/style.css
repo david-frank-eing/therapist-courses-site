@@ -1014,6 +1014,9 @@ input[type=checkbox] { width: 18px; height: 18px; cursor: pointer; accent-color:
 .help-section-body code { background:var(--input-bg);border:1px solid var(--border);border-radius:4px;padding:1px 5px;font-size:.82rem;color:#a0c8ff;font-family:"Consolas",monospace; }
 .help-quick-btn { background:var(--card2);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:.8rem;color:var(--text-muted);cursor:pointer;transition:all .15s; }
 .help-quick-btn:hover { background:var(--hover);color:var(--text);border-color:#6c8cff66; }
+.help-qb-active { background:#6c8cff22 !important;border-color:#6c8cff66 !important;color:#a0b4ff !important;font-weight:600; }
+.help-ctrl-btn { background:var(--card);border:1px solid var(--border);border-radius:8px;padding:4px 10px;font-size:.76rem;color:var(--text-muted);cursor:pointer;transition:all .15s;white-space:nowrap; }
+.help-ctrl-btn:hover { background:var(--hover);color:var(--text); }
 #help-search::placeholder { color: var(--text-muted); }
 #help-body mark { background:#6c8cff44;color:var(--text);border-radius:3px;padding:0 2px; }
 

@@ -2245,79 +2245,123 @@ function openHelp() {
   if (!modal || !bodyEl) return;
 
   const collapsed = new Set();
+  let quickMode = false; // true = filter by title only (quick buttons), false = full text search
 
-  function _renderHelp(filter) {
+  function _toggleSection(hid) {
+    const section = bodyEl.querySelector(`#${hid}`);
+    if (!section) return;
+    const bodyDiv = section.querySelector('.help-section-body');
+    const toggle  = section.querySelector('.help-toggle');
+    if (!bodyDiv) return;
+    if (bodyDiv.style.display === 'none') {
+      bodyDiv.style.display = 'block';
+      toggle.textContent = '▲';
+      collapsed.delete(hid);
+    } else {
+      bodyDiv.style.display = 'none';
+      toggle.textContent = '▼';
+      collapsed.add(hid);
+    }
+  }
+
+  function _setAllSections(open) {
+    bodyEl.querySelectorAll('.help-section').forEach(sec => {
+      const bodyDiv = sec.querySelector('.help-section-body');
+      const toggle  = sec.querySelector('.help-toggle');
+      if (!bodyDiv) return;
+      bodyDiv.style.display = open ? 'block' : 'none';
+      toggle.textContent = open ? '▲' : '▼';
+      if (open) collapsed.delete(sec.id);
+      else       collapsed.add(sec.id);
+    });
+  }
+
+  function _renderHelp(filter, titleOnly) {
     const q = (filter || '').trim().toLowerCase();
     const sections = q
-      ? HELP_SECTIONS.filter(s => s.title.toLowerCase().includes(q) || s.body.toLowerCase().includes(q))
+      ? HELP_SECTIONS.filter(s =>
+          titleOnly
+            ? s.title.toLowerCase().includes(q)
+            : s.title.toLowerCase().includes(q) || s.body.toLowerCase().includes(q)
+        )
       : HELP_SECTIONS;
 
-    bodyEl.querySelector('#help-sections-wrap').innerHTML = sections.length
+    const wrap = bodyEl.querySelector('#help-sections-wrap');
+    wrap.innerHTML = sections.length
       ? sections.map((s, i) => {
           const id = 'hs-' + i;
           const isOpen = !collapsed.has(id);
-          const highlight = q
+          const highlight = (q && !titleOnly)
             ? t => t.replace(new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi'), '<mark>$1</mark>')
             : t => t;
           return `<div class="help-section" id="${id}">
             <button class="help-section-title" data-hid="${id}">
               <span>${s.icon} ${highlight(s.title)}</span>
-              <span class="help-toggle">${isOpen ? '▲' : '▼'}</span>
+              <span class="help-toggle" data-hid="${id}">${isOpen ? '▲' : '▼'}</span>
             </button>
             <div class="help-section-body" style="display:${isOpen ? 'block' : 'none'}">${s.body}</div>
           </div>`;
         }).join('')
-      : '<div class="muted-text" style="padding:20px;text-align:center">לא נמצאו תוצאות לחיפוש זה</div>';
+      : '<div class="muted-text" style="padding:20px;text-align:center">לא נמצאו תוצאות</div>';
 
-    bodyEl.querySelectorAll('.help-section-title[data-hid]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const hid = btn.dataset.hid;
-        const bodyDiv = btn.nextElementSibling;
-        const toggle = btn.querySelector('.help-toggle');
-        if (bodyDiv.style.display === 'none') {
-          bodyDiv.style.display = 'block';
-          toggle.textContent = '▲';
-          collapsed.delete(hid);
-        } else {
-          bodyDiv.style.display = 'none';
-          toggle.textContent = '▼';
-          collapsed.add(hid);
-        }
+    wrap.querySelectorAll('.help-section-title[data-hid]').forEach(btn => {
+      btn.addEventListener('click', e => {
+        if (e.target.classList.contains('help-toggle')) return; // handled below
+        _toggleSection(btn.dataset.hid);
       });
+    });
+    wrap.querySelectorAll('.help-toggle[data-hid]').forEach(tog => {
+      tog.style.cssText += ';cursor:pointer;padding:4px 8px;';
+      tog.addEventListener('click', e => { e.stopPropagation(); _toggleSection(tog.dataset.hid); });
     });
   }
 
   bodyEl.innerHTML = `
-    <div style="padding:0 2px 12px">
+    <div style="padding:0 2px 10px">
       <div style="position:relative">
         <input id="help-search" type="text" placeholder="🔍  חפש במדריך..." autocomplete="off"
           style="width:100%;padding:9px 14px 9px 36px;border:1.5px solid #6c8cff55;border-radius:10px;
                  background:var(--input-bg);color:var(--text);font-size:.92rem;box-sizing:border-box;direction:rtl">
-        <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-muted);pointer-events:none">✕</span>
+        <button id="help-search-clear" style="position:absolute;left:8px;top:50%;transform:translateY(-50%);background:transparent;border:none;color:var(--text-muted);cursor:pointer;font-size:1rem;padding:4px">✕</button>
       </div>
-      <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
-        <button class="help-quick-btn" data-q="">הכל</button>
-        <button class="help-quick-btn" data-q="משימות">📌 משימות</button>
-        <button class="help-quick-btn" data-q="לקוחות">👥 לקוחות</button>
-        <button class="help-quick-btn" data-q="הרגלים">🌱 הרגלים</button>
-        <button class="help-quick-btn" data-q="פרטיות">🔐 פרטיות</button>
-        <button class="help-quick-btn" data-q="זימונים">🔔 זימונים</button>
+      <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;align-items:center">
+        <button class="help-quick-btn help-qb-active" data-q="" data-title-only="0">הכל</button>
+        <button class="help-quick-btn" data-q="משימות" data-title-only="1">📌 משימות</button>
+        <button class="help-quick-btn" data-q="לקוחות" data-title-only="1">👥 לקוחות</button>
+        <button class="help-quick-btn" data-q="הרגלים" data-title-only="1">🌱 הרגלים</button>
+        <button class="help-quick-btn" data-q="פרטיות" data-title-only="1">🔐 פרטיות</button>
+        <button class="help-quick-btn" data-q="זימונים" data-title-only="1">🔔 זימונים</button>
+        <div style="margin-right:auto;display:flex;gap:4px">
+          <button id="help-expand-all" class="help-ctrl-btn">פתח הכל ▼</button>
+          <button id="help-collapse-all" class="help-ctrl-btn">כווץ הכל ▲</button>
+        </div>
       </div>
     </div>
     <div id="help-sections-wrap"></div>`;
 
   const searchEl = bodyEl.querySelector('#help-search');
-  const clearBtn = bodyEl.querySelector('span[style*="left:10px"]');
-  searchEl.addEventListener('input', () => _renderHelp(searchEl.value));
-  clearBtn.addEventListener('click', () => { searchEl.value = ''; _renderHelp(''); });
+  bodyEl.querySelector('#help-search-clear').addEventListener('click', () => {
+    searchEl.value = '';
+    bodyEl.querySelectorAll('.help-quick-btn').forEach(b => b.classList.remove('help-qb-active'));
+    bodyEl.querySelector('[data-q=""]').classList.add('help-qb-active');
+    _renderHelp('', false);
+  });
+  searchEl.addEventListener('input', () => {
+    bodyEl.querySelectorAll('.help-quick-btn').forEach(b => b.classList.remove('help-qb-active'));
+    _renderHelp(searchEl.value, false);
+  });
   bodyEl.querySelectorAll('.help-quick-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      searchEl.value = btn.dataset.q;
-      _renderHelp(btn.dataset.q);
+      bodyEl.querySelectorAll('.help-quick-btn').forEach(b => b.classList.remove('help-qb-active'));
+      btn.classList.add('help-qb-active');
+      searchEl.value = '';
+      _renderHelp(btn.dataset.q, btn.dataset.titleOnly === '1');
     });
   });
+  bodyEl.querySelector('#help-expand-all').addEventListener('click',  () => _setAllSections(true));
+  bodyEl.querySelector('#help-collapse-all').addEventListener('click', () => _setAllSections(false));
 
-  _renderHelp('');
+  _renderHelp('', false);
   modal.classList.remove('hidden');
 }
 
