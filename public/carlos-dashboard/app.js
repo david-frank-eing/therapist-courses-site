@@ -2873,16 +2873,9 @@ function openBookingProfileModal() {
     const modal = document.getElementById('settings-modal');
     const body = document.getElementById('settings-body');
     if (!modal || !body) return;
-    const currentPublicUrl = (prof.public_url || '').replace(/\/$/, '');
     body.innerHTML = `
       <h3 style="margin:0 0 14px;color:var(--text)">✏️ ערוך דף ציבורי</h3>
       <div style="display:flex;flex-direction:column;gap:10px">
-        <label style="color:var(--text-muted);font-size:.85rem">🔗 קישור ציבורי (Cloudflare / ngrok)</label>
-        <input id="bkp-puburl" class="settings-input" value="${_esc(currentPublicUrl)}" placeholder="https://xxx.trycloudflare.com">
-        <div style="font-size:.76rem;color:var(--text-muted);margin-top:-6px;line-height:1.4">
-          הכנס את ה-URL של ה-Cloudflare tunnel שלך (בלי /book בסוף).<br>
-          כפתור 🔗 ישתמש בזה בעת העתקת הקישור למטופלים.
-        </div>
         <label style="color:var(--text-muted);font-size:.85rem">שם</label>
         <input id="bkp-name" class="settings-input" value="${_esc(prof.name || '')}">
         <label style="color:var(--text-muted);font-size:.85rem">תפקיד</label>
@@ -2930,7 +2923,6 @@ function openBookingProfileModal() {
 
     document.getElementById('bkp-save')?.addEventListener('click', async () => {
       const updated = {
-        public_url: document.getElementById('bkp-puburl').value.trim().replace(/\/$/, ''),
         name: document.getElementById('bkp-name').value.trim(),
         title: document.getElementById('bkp-title').value.trim(),
         bio: document.getElementById('bkp-bio').value.trim(),
