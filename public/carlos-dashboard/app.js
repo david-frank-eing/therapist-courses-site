@@ -1949,285 +1949,286 @@ document.getElementById('playbook-modal')?.addEventListener('click', (e) => {
 // Floating chat bubble removed — use sidebar "שאל קרלוס" panel instead
 
 // ---------- Help Modal ----------
-const HELP_SECTIONS = [
-  { icon: '🗺️', title: 'מפת הדאשבורד — סקירה כללית', body: `
-<pre class="help-ascii">
-┌─────────────────────────────────────────────────────────┐
-│  🌅 בריפינג   📌 משימות   ⏱️ זמן   📊 מכסות   📅 יומן  │
-│─────────────────────────────────────────────────────────│
-│                          │  📖 פוקוס היום               │
-│   אזור התוכן הראשי       │  📅 יומן היום                │
-│   (המרכז של העמוד)       │  📖 פלייבוקים                │
-│                          │  💬 שאל קרלוס                │
-│─────────────────────────────────────────────────────────│
-│  👥 לקוחות   🌱 הרגלים   📲 תוכן   🏃 שבועי   📋 רגלים│
-└─────────────────────────────────────────────────────────┘
-                                      ⏱️ טיימר (פינה)
-</pre>
-הדאשבורד מחולק ל-<strong>3 שכבות</strong>:<br><br>
-🔝 <strong>קטעים עליונים</strong> — בריפינג, משימות היום, מחר, וסיכומי זמן<br>
-📍 <strong>סיידבר ימני</strong> — פוקוס, יומן, פלייבוקים, צ'אט<br>
-🔽 <strong>קטעים תחתונים</strong> — לקוחות, הרגלים, תוכן, מכסות<br><br>
-<strong>ניווט מהיר:</strong> כל קטע ניתן לכיווץ/הרחבה בלחיצה על הכותרת.` },
+const _hStep = (n, txt) => `<span class="hs-step"><span class="hs-step-n">${n}</span>${txt}</span>`;
+const _hTip  = txt => `<div class="hs-tip">💡 ${txt}</div>`;
+const _hWarn = txt => `<div class="hs-warn">⚠️ ${txt}</div>`;
+const _hInfo = txt => `<div class="hs-info">ℹ️ ${txt}</div>`;
+const _hFlow = steps => `<div class="hs-flow">${steps.map(s=>`<span class="hs-flow-step">${s}</span>`).join('<span class="hs-flow-arr">←</span>')}</div>`;
+const _hZone = (icon, label, color) => `<div class="hs-zone" style="border-color:${color}"><span>${icon}</span><strong>${label}</strong></div>`;
 
-  { icon: '🔐', title: 'פרטיות ואבטחה — חשוב לקרוא', body: `
-<div class="help-privacy-box">
-🛡️ <strong>הנתונים שלך שייכים לך בלבד</strong>
+const HELP_SECTIONS = [
+  { icon: '🗺️', title: 'מפת הדאשבורד — איפה כל דבר?', body: `
+<div class="hs-map">
+  <div class="hs-map-row">
+    <div class="hs-map-cell hs-map-top" style="flex:1">🌅 בריפינג בוקר</div>
+    <div class="hs-map-cell hs-map-top" style="flex:1">📌 משימות היום</div>
+    <div class="hs-map-cell hs-map-top" style="flex:1">⏳ פתוחים מהעבר</div>
+  </div>
+  <div class="hs-map-row" style="margin-top:6px">
+    <div style="flex:2;display:flex;flex-direction:column;gap:6px">
+      <div class="hs-map-cell hs-map-mid">📊 זמן שנרשם היום</div>
+      <div class="hs-map-cell hs-map-mid">📲 תוכן שבועי</div>
+      <div class="hs-map-cell hs-map-mid">👥 לקוחות ואירועים</div>
+      <div class="hs-map-cell hs-map-mid">🌱 הרגלים</div>
+    </div>
+    <div style="flex:1;margin-right:6px;display:flex;flex-direction:column;gap:6px">
+      <div class="hs-map-cell hs-map-side">🎯 פוקוס היום</div>
+      <div class="hs-map-cell hs-map-side">📅 יומן היום</div>
+      <div class="hs-map-cell hs-map-side">📖 פלייבוקים</div>
+      <div class="hs-map-cell hs-map-side">💬 שאל קרלוס</div>
+    </div>
+  </div>
+  <div class="hs-map-note">⏱️ טיימר — פינה שמאלית למטה &nbsp;|&nbsp; ⚙️ הגדרות — פינה ימנית למעלה</div>
 </div>
 <br>
-<strong>מה מאוחסן ואיפה?</strong><br>
-כל המידע — משימות, לקוחות, אירועים, הרגלים, יומן, ומיילים — נשמר <strong>בחשבון Supabase האישי שלך בלבד</strong>.<br><br>
+<div class="hs-cards-3">
+  ${_hZone('🔝','קטעים עליונים','#6c8cff')}
+  ${_hZone('◀️','סיידבר שמאלי','#44cc88')}
+  ${_hZone('🔽','קטעים תחתונים','#ff9944')}
+</div>
+${_hTip('כל כותרת של קטע ניתנת ללחיצה — לחץ עליה כדי לכווץ או להרחיב אותו')}` },
 
-<pre class="help-ascii">
-  המחשב שלך                  Supabase שלך
-  ─────────────    ──────►   ──────────────
-  הדאשבורד         מוצפן      הנתונים שלך
-  (הדפדפן)         HTTPS      (לא נגיש לאף
-                              אחד אחר)
-</pre>
-<br>
-✅ <strong>חיבור Gmail / Google Calendar</strong><br>
-כאשר אתה מחבר את המייל או היומן:<br>
-• החיבור הוא <strong>אישי לחלוטין</strong> — רק אתה מחובר לחשבון שלך<br>
-• <strong>לא מועבר שום מידע לצד שלישי</strong> כלשהו<br>
-• <strong>לא נשמרים תכני מיילים בשרתים חיצוניים</strong> — הסיכום מוצג רק בדאשבורד שלך<br>
-• Google OAuth מאובטח — אנחנו לא רואים את הסיסמה שלך<br><br>
-
-🔒 <strong>מה שאין לנו גישה אליו:</strong><br>
-• תכני המיילים שלך<br>
-• אירועי היומן שלך<br>
-• פרטי הלקוחות שלך<br>
-• כל מידע שמוזן לדאשבורד<br><br>
-
-<em>כל גישה לנתונים מחייבת את האימות שלך (כניסה לחשבון) — ללא חריגים.</em>` },
+  { icon: '🔐', title: 'פרטיות ואבטחה — חשוב!', body: `
+<div class="hs-privacy-hero">
+  <div class="hs-privacy-title">🛡️ המידע שלך שייך לך בלבד</div>
+  <div class="hs-privacy-sub">לא מועבר שום מידע לאף גורם שלישי, בשום שלב</div>
+</div>
+<div class="hs-privacy-grid">
+  <div class="hs-privacy-card">
+    <div class="hs-pc-icon">📧</div>
+    <div class="hs-pc-title">חיבור Gmail</div>
+    <div class="hs-pc-body">תכני המיילים נשארים אצל Google. הדאשבורד מציג <strong>סיכום בלבד</strong> — ללא שמירה בשרת</div>
+  </div>
+  <div class="hs-privacy-card">
+    <div class="hs-pc-icon">📅</div>
+    <div class="hs-pc-title">Google Calendar</div>
+    <div class="hs-pc-body">האירועים נשארים ביומן שלך. הדאשבורד קורא אותם לתצוגה בלבד</div>
+  </div>
+  <div class="hs-privacy-card">
+    <div class="hs-pc-icon">🗄️</div>
+    <div class="hs-pc-title">נתוני הדאשבורד</div>
+    <div class="hs-pc-body">משימות, לקוחות, הרגלים — נשמרים <strong>בחשבון Supabase האישי שלך</strong> בלבד</div>
+  </div>
+  <div class="hs-privacy-card">
+    <div class="hs-pc-icon">🔑</div>
+    <div class="hs-pc-title">סיסמאות</div>
+    <div class="hs-pc-body">אנחנו לא רואים ולא שומרים סיסמאות. הכניסה מאובטחת דרך OAuth של Google</div>
+  </div>
+</div>
+${_hInfo('כל גישה לנתונים מחייבת את הכניסה האישית שלך לחשבון — ללא יוצא מן הכלל')}` },
 
   { icon: '📌', title: 'משימות — ניהול היום שלך', body: `
-<pre class="help-ascii">
-  ┌─────────────────────────────────────┐
-  │ + הוסף משימה חדשה...    [🗓️] [הוסף] │
-  ├─────────────────────────────────────┤
-  │ ○  שלוח הצעת מחיר ללקוח      [✏️]  │  ← ממתינה
-  │ ○ ⚠️ שיחת טלפון — עבר תאריך  [✏️]  │  ← פג תוקף (אדום)
-  │ ✓  קניית ציוד                       │  ← הושלמה
-  └─────────────────────────────────────┘
-</pre>
-<strong>הוספת משימה:</strong> כתוב בשדה ← בחר תאריך (אופציונלי) ← לחץ "הוסף"<br><br>
-<strong>השלמת משימה:</strong> לחץ ○ ← הופכת ל-✓ ונעה לתחתית<br><br>
-<strong>עריכה:</strong> לחץ ✏️ ← שנה כותרת / תאריך / הערות / מחק<br><br>
-<strong>⚠️ אדום</strong> = תאריך עבר — טפל בה היום!<br><br>
-<strong>קטע "מחר"</strong> — משימות שתאריכן מחר. מנוהל בנפרד כדי שלא יבלבל את היום הנוכחי.<br><br>
-<strong>חיפוש 🔍</strong> — סינון בזמן אמת לפי שם המשימה` },
+<div class="hs-task-demo">
+  <div class="hs-task-row"><span class="hs-task-dot open">○</span><span>שליחת הצעת מחיר ללקוח</span><span class="hs-task-edit">✏️</span></div>
+  <div class="hs-task-row hs-task-overdue"><span class="hs-task-dot open">○</span><span>⚠️ שיחת טלפון — עבר תאריך</span><span class="hs-task-edit">✏️</span></div>
+  <div class="hs-task-row hs-task-done"><span class="hs-task-dot done">✓</span><span style="text-decoration:line-through;opacity:.5">קניית ציוד</span></div>
+</div>
+<br>
+${_hStep('1','כתוב את שם המשימה בשדה למעלה')}
+${_hStep('2','בחר תאריך יעד (אופציונלי)')}
+${_hStep('3','לחץ "הוסף" — המשימה מופיעה ברשימה')}
+<br>
+<div class="hs-legend">
+  <span><span class="hs-badge" style="background:#6c8cff22;color:#6c8cff">○ ממתינה</span></span>
+  <span><span class="hs-badge" style="background:#ff444422;color:#ff6666">⚠️ פג תאריך</span></span>
+  <span><span class="hs-badge" style="background:#44cc8822;color:#44cc88">✓ הושלמה</span></span>
+</div>
+${_hTip('לחץ ○ כדי להשלים משימה. לחץ ✏️ לעריכה, שינוי תאריך, הוספת הערות, או מחיקה')}
+${_hWarn('משימות עם תאריך שעבר מסומנות באדום — לטפל בהן בהקדם!')}` },
 
   { icon: '👥', title: 'לקוחות ואירועים', body: `
-<pre class="help-ascii">
-  [ 💆 לקוחות ]  [ 🎵 אירועים ]    🔍 חיפוש...
-  ──────────────────────────────────────────
-  ┌──────────┐  ┌──────────┐  ┌──────────┐
-  │ 👤 ישראל │  │ 👤 שרה   │  │ + הוסף  │
-  │ טל אביב  │  │ חיפה     │  │  ידנית  │
-  │ 050-xxx  │  │ 052-xxx  │  └──────────┘
-  └──────────┘  └──────────┘
-</pre>
-<strong>הוספת לקוח:</strong> "+ הוסף ידנית" ← שם, עיר, טלפון, מייל, מקור, סוג טיפול<br><br>
-<strong>תמונת פרופיל:</strong> לחץ "📷 העלה תמונה" בכרטיס הלקוח<br><br>
-<strong>🗣️ לכידת שיחה:</strong> כתוב בחופשיות מה דיברתם ← המערכת שואבת אוטומטית שם, טלפון, עיר<br><br>
-<strong>משימות לקוח:</strong> בכל כרטיס → "📋 משימות" ← רואים רק את המשימות של אותו לקוח<br><br>
-<strong>אירועים:</strong> תאריך, מיקום, מספר אנשים, תשלום, סגנון, סטטוס (מאושר/ממתין/בוטל)` },
+<div class="hs-tabs-demo">
+  <span class="hs-tab active">💆 לקוחות</span>
+  <span class="hs-tab">🎵 אירועים</span>
+</div>
+<div class="hs-client-cards">
+  <div class="hs-client-card"><div>👤</div><strong>ישראל י.</strong><div class="hs-cc-sub">תל אביב · 050-xxx</div></div>
+  <div class="hs-client-card"><div>👤</div><strong>שרה כ.</strong><div class="hs-cc-sub">חיפה · 052-xxx</div></div>
+  <div class="hs-client-card hs-client-add">＋<div style="font-size:.75rem;margin-top:4px">הוסף</div></div>
+</div>
+<br>
+${_hStep('1','לחץ "+ הוסף ידנית" ← מלא שם, עיר, טלפון, מייל')}
+${_hStep('2','לחץ 📷 בכרטיס הלקוח כדי להעלות תמונת פרופיל')}
+${_hStep('3','לחץ "🗣️ לכידת שיחה" ← כתוב בחופשיות מה דיברתם — הפרטים ייחלצו אוטומטית')}
+${_hStep('4','בכל כרטיס: "📋 משימות" ← רשימת משימות ספציפית ללקוח זה')}
+${_hTip('חיפוש 🔍 מסנן לפי שם, טלפון, או עיר בזמן אמת')}` },
 
   { icon: '🌱', title: 'הרגלים — מעקב יומי', body: `
-<pre class="help-ascii">
-  הרגל          היום   שבוע    חודש   🔥 רצף
-  ─────────────────────────────────────────
-  💊 תרופות      ✓     6/7     24/28    12
-  🏃 ספורט        ○     4/7     18/28     3
-  📚 קריאה        ✓     7/7     28/28    28  ← מושלם!
-</pre>
-<strong>סימון:</strong> לחץ ○ ← הופך ל-✓ (לחץ שוב לביטול)<br><br>
-<strong>📆 טבלת שבוע שעבר</strong> — מציגה ✓/○ לכל יום בנפרד<br><br>
-<strong>הוספת הרגל חדש:</strong> ⚙️ הגדרות ← קטע "הרגלים" ← בחר אמוג'י + שם + הוסף<br><br>
-<strong>מחיקת הרגל:</strong> ⚙️ הגדרות ← לחץ ✕ ליד ההרגל` },
+<div class="hs-habits-table">
+  <div class="hs-ht-head"><span>הרגל</span><span>היום</span><span>שבוע</span><span>🔥 רצף</span></div>
+  <div class="hs-ht-row"><span>💊 תרופות</span><span class="hs-ht-done">✓</span><span>6/7</span><span>12 ימים</span></div>
+  <div class="hs-ht-row"><span>🏃 ספורט</span><span class="hs-ht-open">○</span><span>4/7</span><span>3 ימים</span></div>
+  <div class="hs-ht-row"><span>📚 קריאה</span><span class="hs-ht-done">✓</span><span>7/7 🌟</span><span>28 ימים</span></div>
+</div>
+<br>
+<div class="hs-info-box">לחץ <strong>○</strong> כדי לסמן הרגל כהושלם היום · לחץ שוב לביטול</div>
+<br>
+<strong>הוספת הרגל חדש:</strong>
+${_hStep('1','פתח ⚙️ הגדרות')}
+${_hStep('2','גלול לקטע "הרגלים"')}
+${_hStep('3','בחר אמוג\'י ← כתוב שם ← לחץ "+ הוסף"')}
+${_hTip('🌟 = שבוע מושלם! 🔥 = מספר הימים ברצף ללא הפסקה')}` },
 
   { icon: '⏱️', title: 'טיימר — מדידת זמן עבודה', body: `
-<pre class="help-ascii">
-  ┌─────────────────────┐
-  │ ⏱️          [ ∨ ]   │  ← לחץ לכיווץ
-  │                     │
-  │      00:23:47       │
-  │                     │
-  │  [ ■ עצור ]         │
-  │  [+ ידני] [💾 שמור] │
-  │                     │
-  │  [סטופר ▼] [טיימר]  │
-  └─────────────────────┘
-         📍 פינה שמאלית
-</pre>
-<strong>סטופר:</strong> ▶ התחל ← עבוד ← ■ עצור ← בחר תחום ← 💾 שמור<br><br>
-<strong>טיימר (ספירה לאחור):</strong> בחר "טיימר" ← הגדר דקות ← ▶ ← צלצול בסיום<br><br>
-<strong>➕ הוספה ידנית:</strong> הכנס דקות שעבדת בלי שהטיימר רץ<br><br>
-<strong>כיווץ:</strong> לחץ ∨ כדי למזער את הווידג'ט` },
+<div class="hs-timer-demo">
+  <div class="hs-timer-display">00:23:47</div>
+  <div class="hs-timer-btns">
+    <span class="hs-tbtn red">■ עצור</span>
+    <span class="hs-tbtn">💾 שמור</span>
+    <span class="hs-tbtn">➕ ידני</span>
+  </div>
+  <div style="font-size:.75rem;color:var(--text-muted);margin-top:6px">📍 פינה שמאלית תחתונה · לחץ ∨ למיזעור</div>
+</div>
+<br>
+${_hFlow(['💾 שמור','בחר תחום','■ עצור','עבוד','▶ התחל'])}
+<br>
+<div class="hs-cards-2">
+  <div class="hs-card2"><div class="hs-c2-title">⏱ סטופר</div><div class="hs-c2-body">מודד זמן שהפעלת — מתחיל ועוצר לפי הצורך</div></div>
+  <div class="hs-card2"><div class="hs-c2-title">⏲ טיימר</div><div class="hs-c2-body">ספירה לאחור — צלצול כשנגמר הזמן</div></div>
+</div>
+${_hTip('➕ ידני — הכנס דקות שעבדת בלי שהטיימר רץ, והן יתווספו לסיכום היומי')}` },
 
-  { icon: '📲', title: 'תוכן שבועי — ניהול פוסטים ורילסים', body: `
-<pre class="help-ascii">
-  רעיון ──► טיוטה ──► מוכן ──► פורסם ✓
-     ↑         ↑        ↑
-  לחץ על הסטטוס כדי להתקדם שלב
-</pre>
-<strong>הוספת פריט תוכן:</strong> "+ הוסף תוכן" ← כותרת + סוג (רילס/פוסט/סטורי) + תחום<br><br>
-<strong>מעבר שלב:</strong> לחץ על הסטטוס הנוכחי ← עולה שלב אחד. "פורסם" ← מעדכן מכסה<br><br>
-<strong>✏️ עריכה:</strong> פתח פריט ← הוסף קישור Docs / קובץ מדיה / תאריך תזמון / הערות<br><br>
-<strong>תחומים:</strong> כל פריט משויך לתחום — הסטטיסטיקות מחושבות לפי תחום בנפרד` },
+  { icon: '📲', title: 'תוכן שבועי — פוסטים ורילסים', body: `
+${_hFlow(['✅ פורסם','🟢 מוכן','✏️ טיוטה','💡 רעיון'])}
+<div style="font-size:.8rem;color:var(--text-muted);margin:-6px 0 10px;text-align:center">לחץ על הסטטוס כדי להתקדם שלב</div>
+<br>
+${_hStep('1','לחץ "+ הוסף תוכן" ← תן כותרת + בחר סוג (רילס / פוסט / סטורי)')}
+${_hStep('2','שייך לתחום עסקי (טיפולים / מוזיקה / כלי / כללי)')}
+${_hStep('3','לחץ ✏️ לעריכה: תוכן, קישור Docs, קובץ מדיה, תאריך')}
+${_hStep('4','כשהפוסט עלה — לחץ עד שמגיע ל"פורסם" ← המכסה מתעדכנת אוטומטית')}
+${_hTip('הסטטיסטיקות בקטע המכסות מתעדכנות בזמן אמת לפי מה שסימנת כ"פורסם"')}` },
 
   { icon: '📊', title: 'מכסות — יעדים שבועיים ויומיים', body: `
-<pre class="help-ascii">
-  📈 שבועי              📊 יומי
-  ─────────────────    ─────────────────
-  רילסים   3/5  ████░  רילסים   1/1  ████
-  פוסטים   2/3  ██░░░  פוסטים   0/1  ░░░░
-  שעות    12/20 ███░░  שעות     2/4  ██░░
-         [✏️ ערוך יעד]
-</pre>
-<strong>עריכת יעד:</strong> לחץ ✏️ ליד כל שורה ← שנה את המספר<br><br>
-<strong>איפוס שבועי:</strong> מתאפס אוטומטית כל יום ראשון<br><br>
-<strong>עדכון אוטומטי:</strong> כשפריט תוכן עובר ל"פורסם" — המכסה מתעדכנת לבד` },
+<div class="hs-quota-demo">
+  <div class="hs-quota-row"><span>🎬 רילסים</span><div class="hs-qbar"><div class="hs-qfill" style="width:60%"></div></div><span class="hs-qlabel">3/5</span></div>
+  <div class="hs-quota-row"><span>📝 פוסטים</span><div class="hs-qbar"><div class="hs-qfill" style="width:100%;background:#44cc88"></div></div><span class="hs-qlabel">3/3 ✓</span></div>
+  <div class="hs-quota-row"><span>⏱️ שעות</span><div class="hs-qbar"><div class="hs-qfill" style="width:30%;background:#ff9944"></div></div><span class="hs-qlabel">6/20</span></div>
+</div>
+<br>
+<div class="hs-cards-2">
+  <div class="hs-card2"><div class="hs-c2-title">📈 שבועי</div><div class="hs-c2-body">יעדים לשבוע כולו · מתאפסים כל יום ראשון</div></div>
+  <div class="hs-card2"><div class="hs-c2-title">📊 יומי</div><div class="hs-c2-body">יעדים ליום הנוכחי · מתאפסים כל בוקר</div></div>
+</div>
+${_hTip('לחץ ✏️ ליד כל שורה כדי לשנות את מספר היעד')}` },
 
-  { icon: '📖', title: 'פלייבוקים — מדריכי תחום', body: `
-<pre class="help-ascii">
-  סיידבר                    מודל פלייבוק
-  ──────────────          ──────────────────────
-  📖 פלייבוקים            📖 טיפולים
-  ┌──────────────┐        ┌────────────────────┐
-  │ 💆 טיפולים  │──────► │ ## אסטרטגיית שיווק │
-  │ 🎵 מוזיקה   │        │ - פרסם עדות שבועית │
-  │ 🚀 כלי      │        │ ## צ'קליסט שבועי   │
-  │ 📌 כללי     │        │ - פוסט ברשתות      │
-  └──────────────┘        └────────────────────┘
-</pre>
-<strong>פתיחת מדריך:</strong> לחץ על כפתור תחום בסיידבר<br><br>
-<strong>עריכת מדריך:</strong> ⚙️ הגדרות ← "📖 פלייבוקים" ← ערוך textarea ← 💾 שמור מדריך<br><br>
-<strong>ניהול תחומים:</strong> ⚙️ הגדרות ← שנה שם/אמוג'י, הוסף תחום חדש, מחק תחום<br><br>
-<strong>כל משתמש</strong> רואה ועורך רק את הפלייבוקים שלו — אין שיתוף בין משתמשים` },
+  { icon: '📖', title: 'פלייבוקים — מדריכי תחום אישיים', body: `
+<div class="hs-cards-2">
+  <div class="hs-card2">
+    <div class="hs-c2-title">📋 מה זה?</div>
+    <div class="hs-c2-body">מדריך אסטרטגי שאתה כותב לעצמך לכל תחום עסקי — שיווק, צ'קליסטים, רעיונות</div>
+  </div>
+  <div class="hs-card2">
+    <div class="hs-c2-title">🔒 פרטי לך</div>
+    <div class="hs-c2-body">כל משתמש רואה ועורך רק את הפלייבוקים שלו — ללא שיתוף בין משתמשים</div>
+  </div>
+</div>
+<br>
+${_hStep('1','לחץ על כפתור תחום בסיידבר השמאלי (💆 / 🎵 / 🚀) לקריאת המדריך')}
+${_hStep('2','לעריכת תוכן: ⚙️ הגדרות ← "פלייבוקים" ← ערוך textarea ← 💾 שמור מדריך')}
+${_hStep('3','לשינוי שמות התחומים: ⚙️ הגדרות ← לחץ על האמוג\'י לבחירה ← ערוך שם ← 💾 שמור תחומים')}
+${_hTip('ניתן להוסיף תחומים חדשים לגמרי בהתאם לעסק שלך')}` },
 
   { icon: '🌅', title: 'בריפינג בוקר', body: `
-<pre class="help-ascii">
-  🌅 בריפינג בוקר — ראשון 21/06
-  ──────────────────────────────
-  📅 היומן היום
-  • 10:00 — פגישת לקוח
-  • 14:00 — שיחת מכירה
+<div class="hs-briefing-demo">
+  <div class="hs-bd-header">🌅 בריפינג — ראשון, 21 יוני</div>
+  <div class="hs-bd-section"><span class="hs-bd-label">📅 יומן</span><span>10:00 פגישת לקוח · 14:00 שיחת מכירה</span></div>
+  <div class="hs-bd-section hs-bd-urgent"><span class="hs-bd-label">⚠️ דחוף</span><span>שלח הצעת מחיר (14 ימים!)</span></div>
+  <div class="hs-bd-section"><span class="hs-bd-label">🎯 פוקוס</span><span>סגור עסקת האירוע של שבת</span></div>
+</div>
+<br>
+הבריפינג מסכם את כל מה שחשוב ליום שלך — מה יש ביומן, מה דחוף, ומה כדאי להתמקד בו.
+<br><br>
+${_hTip('לחץ "🔄 עדכן" בכותרת הקטע כדי לרענן את הבריפינג')}` },
 
-  ⚠️ דחוף לטיפול
-  • שלח הצעת מחיר (14 ימים!)
+  { icon: '📧', title: 'מייל ויומן Google', body: `
+<div class="hs-connect-flow">
+  <div class="hs-cf-box hs-cf-google">📧 Gmail שלך<br><small>נשאר אצל Google</small></div>
+  <div class="hs-cf-arrow">🔒 OAuth<br>מאובטח</div>
+  <div class="hs-cf-box hs-cf-dash">📋 סיכום בלבד<br><small>בדאשבורד שלך</small></div>
+</div>
+<br>
+<div class="hs-privacy-notice">
+  ✅ <strong>תכני המיילים לא נשמרים בשום שרת</strong><br>
+  ✅ <strong>אירועי היומן נשארים בחשבון Google שלך בלבד</strong><br>
+  ✅ <strong>לא מועבר מידע לאף גורם שלישי</strong>
+</div>
+<br>
+${_hStep('1','פתח ⚙️ הגדרות ← לחץ על "חיבורים"')}
+${_hStep('2','לחץ "חבר Gmail" או "חבר Google Calendar"')}
+${_hStep('3','היכנס לחשבון Google שלך — ואנחנו לא רואים את הסיסמה')}
+${_hTip('אפשר לנתק את החיבור בכל עת מאותו מסך הגדרות')}` },
 
-  🎯 פוקוס מוצע
-  • סגור עסקת האירוע של שבת
-  ──────────────────────────────
-</pre>
-הבריפינג מסכם את היום שלך: יומן + משימות דחופות + פוקוס מוצע.<br><br>
-<strong>עדכון אוטומטי:</strong> כאשר קרלוס מייצר בריפינג (דרך Claude Code) הוא נשמר ומוצג כאן<br><br>
-<strong>עדכון ידני:</strong> לחץ "🔄 עדכן" בכותרת הקטע` },
-
-  { icon: '📧', title: 'מייל ויומן Google — פרטיות מלאה', body: `
-<pre class="help-ascii">
-  Gmail שלך              הדאשבורד שלך
-  ──────────             ──────────────
-  📧 מיילים   ──────►   📋 סיכום בלבד
-  (נשארים     OAuth      (לא נשמרים
-   אצל Google) מאובטח    תכנים!)
-</pre>
-<strong>חיבור Gmail:</strong> ⚙️ הגדרות ← "חיבורים" ← חבר Gmail<br>
-• הדאשבורד קורא מיילים לא נקראים ← מציג <strong>סיכום בלבד</strong><br>
-• <strong>תכני המיילים לא נשמרים</strong> בשום שרת<br>
-• <strong>לא מועבר מידע לצד שלישי</strong><br><br>
-
-<strong>חיבור Google Calendar:</strong> ⚙️ הגדרות ← "חיבורים" ← חבר Calendar<br>
-• מציג אירועי היום בסיידבר<br>
-• <strong>הנתונים נשארים בחשבון Google שלך בלבד</strong><br><br>
-
-🔒 <strong>האימות הוא אישי לחלוטין</strong> — אנחנו לא רואים ולא שומרים סיסמאות` },
-
-  { icon: '📅', title: 'יומן — תצוגת אירועי היום', body: `
-<pre class="help-ascii">
-  📅 יומן היום
-  ─────────────────────
-  09:00 פגישת לקוח - ישראל ישראלי
-  11:30 שיחת ייעוץ
-  14:00 ─────────────── (עכשיו)
-  15:00 אירוע ── שישי בערב
-  ─────────────────────
-  🔄 עדכן מ-Google Calendar
-</pre>
-<strong>מקור הנתונים:</strong> Google Calendar (אם מחובר) או הזנה ידנית<br><br>
-<strong>עדכון ידני:</strong> לחץ 🔄 ← מושך אירועים עדכניים מהיומן<br><br>
-<strong>תצוגת "מחר":</strong> קטע נפרד מציג אירועי יום המחרת` },
+  { icon: '📅', title: 'יומן — אירועי היום', body: `
+<div class="hs-calendar-demo">
+  <div class="hs-cal-row hs-cal-past"><span class="hs-cal-time">09:00</span><span>פגישת לקוח — ישראל י.</span></div>
+  <div class="hs-cal-row hs-cal-now"><span class="hs-cal-time">עכשיו ▶</span><span></span></div>
+  <div class="hs-cal-row"><span class="hs-cal-time">15:00</span><span>שיחת ייעוץ</span></div>
+  <div class="hs-cal-row"><span class="hs-cal-time">19:00</span><span>אירוע DJ — תל אביב</span></div>
+</div>
+<br>
+${_hInfo('הסיידבר השמאלי מציג את אירועי היום — לחץ 🔄 לרענון מ-Google Calendar')}
+${_hTip('אם Google Calendar לא מחובר — אפשר להזין אירועים ידנית דרך קרלוס')}` },
 
   { icon: '📝', title: 'יומן אישי — מחשבות ורעיונות', body: `
-<pre class="help-ascii">
-  📝 יומן — ראשון, 21 יוני
-  ┌─────────────────────────────────┐
-  │ היום הייתה שיחה מעניינת עם...  │
-  │ למדתי ש...                      │
-  │ מחר אני רוצה להתמקד ב...       │
-  └─────────────────────────────────┘
-  [ 💾 שמור ליומן ]
-</pre>
-כתוב בחופשיות — מחשבות, תובנות, תכנון, סיכום יום<br><br>
-<strong>שמירה:</strong> לחץ "💾 שמור ליומן" ← נשמר אוטומטית תחת תאריך היום<br><br>
-<strong>היסטוריה:</strong> לחץ "📜 היסטוריה" בכותרת הדאשבורד לצפייה בכל הרשומות` },
+<div class="hs-journal-demo">
+  <div class="hs-jd-date">📝 ראשון, 21 יוני</div>
+  <div class="hs-jd-text">היום הייתה שיחה מעניינת עם לקוח חדש. למדתי שצריך לשפר את ההצגה הראשונית...</div>
+  <div class="hs-jd-btn">💾 שמור ליומן</div>
+</div>
+<br>
+כתוב בחופשיות — מחשבות, תובנות, תכנון, סיכום יום. אין פורמט מחייב.
+<br><br>
+${_hStep('1','כתוב בשדה הטקסט')}
+${_hStep('2','לחץ "💾 שמור ליומן" — נשמר אוטומטית תחת תאריך היום')}
+${_hStep('3','לחץ "📜 היסטוריה" בכותרת הדאשבורד לצפייה בכל הרשומות')}` },
 
-  { icon: '💬', title: 'שאל קרלוס — העוזר האישי שלך', body: `
-<pre class="help-ascii">
-  ┌─────────────────────────────┐
-  │ 💬 שאל קרלוס                │
-  │ ┌─────────────────────────┐ │
-  │ │ מה המשימות הדחופות שלי?│ │
-  │ └─────────────────────────┘ │
-  │           [ ▶ שלח ]        │
-  └─────────────────────────────┘
-</pre>
-שאל שאלות בשפה חופשית:<br><br>
-• <em>"מה יש לי היום?"</em> — סיכום יום<br>
-• <em>"מה הדחוף?"</em> — משימות דחופות<br>
-• <em>"כמה השלמתי השבוע?"</em> — סטטיסטיקות<br>
-• <em>"בדוק מיילים"</em> — סיכום תיבת דואר<br>
-• <em>"תן לי בריפינג בוקר"</em> — דוח מלא<br><br>
-<strong>הערה:</strong> הצ'אט פועל דרך Claude Code כשהוא מחובר` },
+  { icon: '💬', title: 'שאל קרלוס — העוזר האישי', body: `
+<div class="hs-chat-demo">
+  <div class="hs-chat-bubble hs-chat-user">מה הדחוף שלי היום?</div>
+  <div class="hs-chat-bubble hs-chat-bot">⚠️ יש 2 משימות שפג תאריכן:<br>• שליחת חשבונית ללקוח A<br>• חידוש רישיון עסק</div>
+</div>
+<br>
+<div class="hs-example-queries">
+  <span class="hs-eq">"מה יש לי היום?"</span>
+  <span class="hs-eq">"מה הדחוף?"</span>
+  <span class="hs-eq">"כמה השלמתי השבוע?"</span>
+  <span class="hs-eq">"בדוק מיילים"</span>
+  <span class="hs-eq">"תן לי בריפינג"</span>
+</div>
+${_hInfo('הצ\'אט פועל דרך Claude Code כשהוא מחובר — שאלות בשפה חופשית בעברית')}` },
 
-  { icon: '🔔', title: 'זימונים — דף הצ\'אט הציבורי שלך', body: `
-<pre class="help-ascii">
-  הדאשבורד שלך          לקוח שלך
-  ──────────────        ──────────────────
-  📋 הגדר זמנים  ──►   🌐 /book/שם-שלך
-  פנויים                • בוחר שעה
-                        • ממלא פרטים
-                        ↓
-  🔔 התראה חדשה  ◄──   ✅ תור נקבע!
-</pre>
-<strong>הפעלה:</strong> ⚙️ הגדרות ← "פרופיל זימון" ← הגדר שם, כותרת, שירותים<br><br>
-<strong>הוספת זמנים פנויים:</strong> קטע "📅 זימונים" ← "+ הוסף זמן"<br><br>
-<strong>הקישור הציבורי:</strong> מופיע בקטע הזימונים — שתף עם לקוחות<br><br>
-<strong>התראות:</strong> 🔔 בכותרת מופיע כשמגיע תור חדש` },
+  { icon: '🔔', title: 'זימונים — קבלת תורים אונליין', body: `
+<div class="hs-booking-flow">
+  <div class="hs-bf-step"><div class="hs-bf-icon">⚙️</div><div>הגדר זמנים פנויים</div></div>
+  <div class="hs-bf-arr">←</div>
+  <div class="hs-bf-step"><div class="hs-bf-icon">🔗</div><div>שתף קישור ציבורי</div></div>
+  <div class="hs-bf-arr">←</div>
+  <div class="hs-bf-step"><div class="hs-bf-icon">👤</div><div>הלקוח בוחר שעה</div></div>
+  <div class="hs-bf-arr">←</div>
+  <div class="hs-bf-step"><div class="hs-bf-icon">🔔</div><div>קבלת התראה</div></div>
+</div>
+<br>
+${_hStep('1','⚙️ הגדרות ← "פרופיל זימון" ← הגדר שם, כותרת, שירותים')}
+${_hStep('2','קטע "📅 זימונים" ← לחץ "+ הוסף זמן" לכל חלון פנוי')}
+${_hStep('3','העתק את הקישור הציבורי ושתף עם לקוחות')}
+${_hTip('כשמגיע תור חדש — מופיע 🔔 בכותרת הדאשבורד')}` },
 
   { icon: '⚙️', title: 'הגדרות — התאמה אישית', body: `
-<pre class="help-ascii">
-  ⚙️ הגדרות
-  ──────────────────────────────
-  👤 פרופיל       שם + שם עוזר
-  🤖 AI           מפתח Anthropic
-  🏃 הרגלים       הוסף / מחק / ערוך
-  🔌 חיבורים      Gmail + Calendar
-  📖 פלייבוקים    תחומים + מדריכים
-  ──────────────────────────────
-</pre>
-<strong>פרופיל:</strong> שנה את שמך ואת שם העוזר ("קרלוס")<br><br>
-<strong>הרגלים:</strong> הוסף הרגל חדש (אמוג'י + שם) / מחק קיים<br><br>
-<strong>חיבורים:</strong> חבר Gmail ו-Google Calendar לסנכרון אוטומטי<br><br>
-<strong>פלייבוקים:</strong> ערוך תחומי עבודה (שם + אמוג'י) ותוכן המדריכים<br><br>
-<strong>שמירה:</strong> 💾 שמור בתחתית ← חל מיד` },
+<div class="hs-settings-list">
+  <div class="hs-sl-row"><span class="hs-sl-icon">👤</span><div><strong>פרופיל</strong><div class="hs-sl-sub">שנה את שמך ואת שם העוזר</div></div></div>
+  <div class="hs-sl-row"><span class="hs-sl-icon">🏃</span><div><strong>הרגלים</strong><div class="hs-sl-sub">הוסף / מחק / שנה הרגלים יומיים</div></div></div>
+  <div class="hs-sl-row"><span class="hs-sl-icon">🔌</span><div><strong>חיבורים</strong><div class="hs-sl-sub">חבר Gmail ו-Google Calendar</div></div></div>
+  <div class="hs-sl-row"><span class="hs-sl-icon">📖</span><div><strong>פלייבוקים</strong><div class="hs-sl-sub">ערוך תחומי עבודה ותוכן המדריכים</div></div></div>
+  <div class="hs-sl-row"><span class="hs-sl-icon">✏️</span><div><strong>פרופיל זימון</strong><div class="hs-sl-sub">הגדר את דף הזימון הציבורי שלך</div></div></div>
+</div>
+${_hTip('לחץ ⚙️ בפינה הימנית העליונה כדי לפתוח את ההגדרות')}` },
 
-  { icon: '📄', title: 'ייצוא PDF — הדפסה ושמירה', body: `לחץ 📄 בכותרת הדאשבורד ← הדפדפן פותח חלון הדפסה<br><br>
-<strong>לפני ההדפסה:</strong> כל הקטעים מתרחבים אוטומטית<br><br>
-<strong>בחלון ההדפסה:</strong> בחר "שמור כ-PDF" ← מייצר קובץ מסודר<br><br>
-<strong>מוסתר בהדפסה:</strong> סיידבר, טיימר, כפתורי פעולה — לא מופיעים ב-PDF` }
+  { icon: '📄', title: 'ייצוא PDF', body: `
+${_hStep('1','לחץ 📄 בכותרת הדאשבורד')}
+${_hStep('2','הדפדפן פותח חלון הדפסה — כל הקטעים נפתחים אוטומטית')}
+${_hStep('3','בחר "שמור כ-PDF" ← מייצר קובץ מסודר')}
+<br>
+${_hInfo('סיידבר, טיימר, וכפתורי פעולה לא מופיעים ב-PDF — רק התוכן החשוב')}` }
 ];
 
 document.getElementById('help-btn')?.addEventListener('click', openHelp);
