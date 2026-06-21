@@ -46,8 +46,12 @@ const fmt = (s) => {
 
 // ---------- State & render ----------
 let lastState = null;
+let _loadingState = false;
 async function loadState() {
+  if (_loadingState) return;
+  _loadingState = true;
   const s = await api('/api/state');
+  _loadingState = false;
   lastState = s;
   // Update DOMAINS from config
   if (s.userConfig && s.userConfig.domains && s.userConfig.domains.length) {
@@ -354,8 +358,8 @@ function openEditForm(rowEl, kind, id) {
   if (next && next.classList && next.classList.contains('inline-edit-form')) { next.remove(); rowEl.classList.remove('editing'); return; }
   rowEl.classList.add('editing');
   const item = kind === 'task'
-    ? (lastState.tasks || []).find(x => x.id === id)
-    : ((lastState.content || {}).items || []).find(x => x.id === id);
+    ? ((lastState && lastState.tasks) || []).find(x => x.id === id)
+    : ((lastState && lastState.content && lastState.content.items) || []).find(x => x.id === id);
   if (!item) { rowEl.classList.remove('editing'); return; }
   const taskCategoryOpts = [
     ['general',   '📌 כללי'],
