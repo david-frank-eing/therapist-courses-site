@@ -1635,10 +1635,7 @@ function openSbFocusForm(items, idx) {
   const form = document.createElement('div');
   form.className = 'sbf-form';
   form.innerHTML = `
-    <div class="sbf-form-row">
-      <input type="text" id="sbf-emoji" value="${it.emoji || '🎯'}" maxlength="2" placeholder="🎯">
-      <input type="text" id="sbf-text"  value="${(it.text || '').replace(/"/g,'&quot;')}" placeholder="פוקוס להיום...">
-    </div>
+    <input type="text" id="sbf-text" value="${(it.text || '').replace(/"/g,'&quot;')}" placeholder="פוקוס להיום..." style="width:100%;box-sizing:border-box">
     <div class="sbf-form-btns">
       <button id="sbf-save">💾 שמור</button>
       <button id="sbf-cancel" class="sbf-cancel">ביטול</button>
@@ -1648,7 +1645,7 @@ function openSbFocusForm(items, idx) {
 
   form.querySelector('#sbf-cancel').addEventListener('click', () => loadState());
   const doSave = async () => {
-    const emoji = form.querySelector('#sbf-emoji').value.trim() || '•';
+    const emoji = (idx >= 0 && items[idx] ? items[idx].emoji : null) || '🎯';
     const text  = form.querySelector('#sbf-text').value.trim();
     if (!text) { toast('כתוב טקסט', false); return; }
     const updated = [...items];
