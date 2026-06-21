@@ -678,11 +678,8 @@ input[type=checkbox] { width: 18px; height: 18px; cursor: pointer; accent-color:
 .pb-line { padding: 2px 0; font-size: .9rem; color: var(--text2); line-height: 1.5; }
 .pb-gap  { height: 8px; }
 #pb-modal-body code { background: var(--input-bg); padding: 1px 6px; border-radius: 4px; font-size: .85rem; color: #a0d4a0; }
-#pb-edit-btn { transition: background .15s; }
-#pb-edit-btn:hover { opacity: .85; }
-#pb-save-btn { transition: background .15s; }
-#pb-save-btn:hover { opacity: .85; }
-#pb-edit-area { font-family: inherit; line-height: 1.6; }
+#pb-modal-body [data-save-domain] { transition: opacity .15s; }
+#pb-modal-body [data-save-domain]:hover { opacity: .85; }
 
 /* ── חיפוש ── */
 .search-collapsible { margin: 14px 0 6px; }

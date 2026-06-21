@@ -1905,46 +1905,16 @@ function openPlaybook(domainId, domains, playbooks) {
   const content = (saved && saved.content) ? saved.content : _pbDefault(domainId);
 
   titleEl.textContent = `${domain.emoji} ${domain.label}`;
-  modal.dataset.domain = domainId;
-  modal.dataset.content = content;
-  _renderPbView(bodyEl, content, domainId, domains, playbooks);
+  _renderPbView(bodyEl, content);
   modal.classList.remove('hidden');
 }
 
-function _renderPbView(bodyEl, content, domainId, domains, playbooks) {
+function _renderPbView(bodyEl, content) {
   bodyEl.innerHTML = `
     <div id="pb-view-content">${mdToHtml(content)}</div>
-    <div style="margin-top:16px;text-align:left">
-      <button id="pb-edit-btn" style="background:var(--accent);color:#fff;border:none;padding:6px 16px;border-radius:8px;cursor:pointer;font-size:.85rem">✏️ ערוך</button>
+    <div style="margin-top:14px;text-align:left">
+      <span class="muted-text" style="font-size:.78rem">לעריכה — פתח ⚙️ הגדרות ← פלייבוקים</span>
     </div>`;
-  document.getElementById('pb-edit-btn')?.addEventListener('click', () =>
-    _renderPbEdit(bodyEl, content, domainId, domains, playbooks)
-  );
-}
-
-function _renderPbEdit(bodyEl, content, domainId, domains, playbooks) {
-  bodyEl.innerHTML = `
-    <textarea id="pb-edit-area" style="width:100%;min-height:320px;background:var(--input-bg);color:var(--text);border:1.5px solid #6c8cff44;border-radius:8px;padding:12px;font-size:.88rem;direction:rtl;resize:vertical;box-sizing:border-box">${_esc(content)}</textarea>
-    <div style="margin-top:10px;display:flex;gap:8px;justify-content:flex-start">
-      <button id="pb-save-btn" style="background:var(--accent);color:#fff;border:none;padding:7px 18px;border-radius:8px;cursor:pointer">💾 שמור</button>
-      <button id="pb-cancel-btn" style="background:transparent;color:var(--text-muted);border:1px solid var(--border);padding:7px 14px;border-radius:8px;cursor:pointer">ביטול</button>
-    </div>`;
-  document.getElementById('pb-cancel-btn')?.addEventListener('click', () =>
-    _renderPbView(bodyEl, content, domainId, domains, playbooks)
-  );
-  document.getElementById('pb-save-btn')?.addEventListener('click', async () => {
-    const newContent = document.getElementById('pb-edit-area').value;
-    const r = await api('/api/playbook/save', { domain_id: domainId, content: newContent });
-    if (r && r.ok) {
-      const idx = (playbooks || []).findIndex(p => p.domain_id === domainId);
-      if (idx >= 0) playbooks[idx].content = newContent;
-      else (playbooks || []).push({ domain_id: domainId, content: newContent });
-      _renderPbView(bodyEl, newContent, domainId, domains, playbooks);
-      toast('פלייבוק נשמר ✓');
-    } else {
-      toast('שגיאה בשמירה', false);
-    }
-  });
 }
 
 function mdToHtml(md) {
@@ -2225,6 +2195,54 @@ document.getElementById('settings-modal')?.addEventListener('click', (e) => {
     document.getElementById('settings-modal').classList.add('hidden');
 });
 
+function _renderPlaybooksSettings(domains, playbooks) {
+  const listEl = document.getElementById('playbooks-settings-list');
+  if (!listEl) return;
+  const domList = domains && domains.length ? domains : [
+    { id: 'treatments', emoji: '💆', label: 'טיפולים' },
+    { id: 'music',      emoji: '🎵', label: 'מוזיקה' },
+    { id: 'product',    emoji: '🚀', label: 'כלי' },
+    { id: 'unassigned', emoji: '📌', label: 'כללי' }
+  ];
+  listEl.innerHTML = domList.map(d => {
+    const saved = (playbooks || []).find(p => p.domain_id === d.id);
+    const content = (saved && saved.content) ? saved.content : _pbDefault(d.id);
+    return `<div class="pb-settings-item" style="margin-bottom:18px">
+      <div style="font-size:.88rem;font-weight:600;color:var(--text2);margin-bottom:6px">${_esc(d.emoji)} ${_esc(d.label)}</div>
+      <textarea data-domain="${_esc(d.id)}" rows="6"
+        style="width:100%;background:var(--input-bg);color:var(--text);border:1.5px solid #6c8cff33;border-radius:8px;padding:10px;font-size:.85rem;direction:rtl;resize:vertical;box-sizing:border-box;font-family:inherit;line-height:1.6"
+      >${_esc(content)}</textarea>
+      <button data-save-domain="${_esc(d.id)}"
+        style="margin-top:5px;background:var(--accent);color:#fff;border:none;padding:5px 14px;border-radius:7px;cursor:pointer;font-size:.82rem">
+        💾 שמור ${_esc(d.label)}
+      </button>
+    </div>`;
+  }).join('');
+
+  listEl.querySelectorAll('[data-save-domain]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const domainId = btn.dataset.saveDomain;
+      const ta = listEl.querySelector(`textarea[data-domain="${domainId}"]`);
+      if (!ta) return;
+      btn.disabled = true; btn.textContent = '⏳';
+      const r = await api('/api/playbook/save', { domain_id: domainId, content: ta.value });
+      if (r && r.ok) {
+        if (lastState && lastState.playbooks) {
+          const idx = lastState.playbooks.findIndex(p => p.domain_id === domainId);
+          if (idx >= 0) lastState.playbooks[idx].content = ta.value;
+          else lastState.playbooks.push({ domain_id: domainId, content: ta.value });
+        }
+        toast('פלייבוק נשמר ✓');
+      } else {
+        toast('שגיאה בשמירה', false);
+      }
+      btn.disabled = false;
+      const d = domList.find(x => x.id === domainId);
+      btn.textContent = `💾 שמור ${d ? d.label : domainId}`;
+    });
+  });
+}
+
 function _renderHabitsSettings() {
   const listEl = document.getElementById('habits-settings-list');
   if (!listEl) return;
@@ -2331,6 +2349,8 @@ async function openSettings() {
   bodyEl.innerHTML = '<div class="muted-text">טוען...</div>';
   try {
     const s = await api('/api/settings');
+    s._playbooks = (lastState && lastState.playbooks) || [];
+    s._domains   = (lastState && lastState.userConfig && lastState.userConfig.domains) || [];
     renderSettings(s, bodyEl);
   } catch (e) {
     bodyEl.innerHTML = '<div class="muted-text">שגיאה: ' + e.message + '</div>';
@@ -2582,6 +2602,11 @@ function renderSettings(s, bodyEl) {
       <div id="connections-body" class="connections-body"></div>
     </div>
 
+    <div class="settings-section" id="playbooks-settings-section">
+      <div class="settings-section-title">📖 פלייבוקים — מדריכי תחום</div>
+      <div id="playbooks-settings-list"></div>
+    </div>
+
     <div class="settings-actions">
       <button id="settings-save">💾 שמור</button>
       <button id="settings-cancel-btn" class="settings-cancel-btn">ביטול</button>
@@ -2589,6 +2614,9 @@ function renderSettings(s, bodyEl) {
 
   // ── Habits section ────────────────────────────────────────
   _renderHabitsSettings();
+
+  // ── Playbooks section ─────────────────────────────────────
+  _renderPlaybooksSettings(s._domains, s._playbooks);
 
   // Load diagnose immediately after rendering
   loadConnectionsDiagnose();
