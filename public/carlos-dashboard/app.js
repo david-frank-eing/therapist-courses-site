@@ -2198,49 +2198,141 @@ document.getElementById('settings-modal')?.addEventListener('click', (e) => {
 function _renderPlaybooksSettings(domains, playbooks) {
   const listEl = document.getElementById('playbooks-settings-list');
   if (!listEl) return;
-  const domList = domains && domains.length ? domains : [
+  let domList = (domains && domains.length) ? JSON.parse(JSON.stringify(domains)) : [
     { id: 'treatments', emoji: '💆', label: 'טיפולים' },
     { id: 'music',      emoji: '🎵', label: 'מוזיקה' },
     { id: 'product',    emoji: '🚀', label: 'כלי' },
     { id: 'unassigned', emoji: '📌', label: 'כללי' }
   ];
-  listEl.innerHTML = domList.map(d => {
-    const saved = (playbooks || []).find(p => p.domain_id === d.id);
-    const content = (saved && saved.content) ? saved.content : _pbDefault(d.id);
-    return `<div class="pb-settings-item" style="margin-bottom:18px">
-      <div style="font-size:.88rem;font-weight:600;color:var(--text2);margin-bottom:6px">${_esc(d.emoji)} ${_esc(d.label)}</div>
-      <textarea data-domain="${_esc(d.id)}" rows="6"
-        style="width:100%;background:var(--input-bg);color:var(--text);border:1.5px solid #6c8cff33;border-radius:8px;padding:10px;font-size:.85rem;direction:rtl;resize:vertical;box-sizing:border-box;font-family:inherit;line-height:1.6"
-      >${_esc(content)}</textarea>
-      <button data-save-domain="${_esc(d.id)}"
-        style="margin-top:5px;background:var(--accent);color:#fff;border:none;padding:5px 14px;border-radius:7px;cursor:pointer;font-size:.82rem">
-        💾 שמור ${_esc(d.label)}
-      </button>
-    </div>`;
-  }).join('');
 
-  listEl.querySelectorAll('[data-save-domain]').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      const domainId = btn.dataset.saveDomain;
-      const ta = listEl.querySelector(`textarea[data-domain="${domainId}"]`);
-      if (!ta) return;
-      btn.disabled = true; btn.textContent = '⏳';
-      const r = await api('/api/playbook/save', { domain_id: domainId, content: ta.value });
-      if (r && r.ok) {
-        if (lastState && lastState.playbooks) {
-          const idx = lastState.playbooks.findIndex(p => p.domain_id === domainId);
-          if (idx >= 0) lastState.playbooks[idx].content = ta.value;
-          else lastState.playbooks.push({ domain_id: domainId, content: ta.value });
-        }
-        toast('פלייבוק נשמר ✓');
-      } else {
-        toast('שגיאה בשמירה', false);
-      }
-      btn.disabled = false;
-      const d = domList.find(x => x.id === domainId);
-      btn.textContent = `💾 שמור ${d ? d.label : domainId}`;
+  function _redraw() {
+    listEl.innerHTML = `
+      <div style="margin-bottom:14px">
+        <div style="font-size:.8rem;color:var(--text-muted);margin-bottom:8px">תחומי הפעילות שלך — כל תחום מקבל פלייבוק נפרד</div>
+        <div id="pb-domains-list" style="display:flex;flex-direction:column;gap:6px"></div>
+        <div style="margin-top:8px;display:flex;gap:6px;align-items:center">
+          <input id="pb-new-emoji" type="text" maxlength="2" value="📌"
+            style="width:40px;text-align:center;font-size:1.2rem;padding:4px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:inherit">
+          <input id="pb-new-label" type="text" placeholder="שם התחום..."
+            style="flex:1;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:inherit;direction:rtl">
+          <button id="pb-add-domain-btn"
+            style="padding:6px 12px;background:var(--primary);color:#fff;border:none;border-radius:6px;cursor:pointer;white-space:nowrap">+ הוסף</button>
+        </div>
+      </div>
+      <hr style="border:none;border-top:1px solid var(--sep2);margin:14px 0">
+      <div id="pb-contents-list" style="display:flex;flex-direction:column;gap:16px"></div>`;
+
+    // Render domain rows
+    const domRows = document.getElementById('pb-domains-list');
+    domList.forEach((d, i) => {
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;gap:6px;align-items:center';
+      row.innerHTML = `
+        <input type="text" value="${_esc(d.emoji)}" maxlength="2" data-di="${i}" data-field="emoji"
+          style="width:40px;text-align:center;font-size:1.1rem;padding:4px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:inherit">
+        <input type="text" value="${_esc(d.label)}" data-di="${i}" data-field="label"
+          style="flex:1;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:inherit;direction:rtl">
+        <button data-del="${i}" title="מחק תחום"
+          style="background:transparent;border:1px solid #ff606044;color:#ff6060;padding:4px 9px;border-radius:6px;cursor:pointer;font-size:.85rem">✕</button>`;
+      domRows.appendChild(row);
     });
-  });
+
+    // Render playbook textareas
+    const contList = document.getElementById('pb-contents-list');
+    domList.forEach(d => {
+      const saved = (playbooks || []).find(p => p.domain_id === d.id);
+      const content = (saved && saved.content) ? saved.content : _pbDefault(d.id);
+      const wrap = document.createElement('div');
+      wrap.innerHTML = `
+        <div style="font-size:.85rem;font-weight:600;color:var(--text2);margin-bottom:5px">${_esc(d.emoji)} ${_esc(d.label)}</div>
+        <textarea data-domain="${_esc(d.id)}" rows="6"
+          style="width:100%;background:var(--input-bg);color:var(--text);border:1.5px solid #6c8cff33;border-radius:8px;padding:10px;font-size:.84rem;direction:rtl;resize:vertical;box-sizing:border-box;font-family:inherit;line-height:1.6"
+        >${_esc(content)}</textarea>
+        <button data-save-domain="${_esc(d.id)}"
+          style="margin-top:5px;background:var(--accent);color:#fff;border:none;padding:5px 14px;border-radius:7px;cursor:pointer;font-size:.82rem">
+          💾 שמור מדריך
+        </button>`;
+      contList.appendChild(wrap);
+    });
+
+    // Events: live-edit domain emoji/label
+    domRows.querySelectorAll('input[data-di]').forEach(inp => {
+      inp.addEventListener('input', () => {
+        const i = parseInt(inp.dataset.di);
+        domList[i][inp.dataset.field] = inp.value;
+      });
+    });
+
+    // Delete domain
+    domRows.querySelectorAll('[data-del]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        domList.splice(parseInt(btn.dataset.del), 1);
+        _redraw();
+      });
+    });
+
+    // Add domain
+    document.getElementById('pb-add-domain-btn').addEventListener('click', () => {
+      const emoji = document.getElementById('pb-new-emoji').value.trim() || '📌';
+      const label = document.getElementById('pb-new-label').value.trim();
+      if (!label) { toast('הזן שם לתחום', false); return; }
+      const id = label.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '') + '-' + Date.now().toString(36);
+      domList.push({ id, emoji, label });
+      _redraw();
+    });
+
+    // Save domains list
+    document.getElementById('pb-save-domains-btn')?.addEventListener('click', _saveDomains);
+
+    // Save playbook content
+    listEl.querySelectorAll('[data-save-domain]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const domainId = btn.dataset.saveDomain;
+        const ta = listEl.querySelector(`textarea[data-domain="${domainId}"]`);
+        if (!ta) return;
+        btn.disabled = true; btn.textContent = '⏳';
+        const r = await api('/api/playbook/save', { domain_id: domainId, content: ta.value });
+        if (r && r.ok) {
+          if (lastState && lastState.playbooks) {
+            const idx = lastState.playbooks.findIndex(p => p.domain_id === domainId);
+            if (idx >= 0) lastState.playbooks[idx].content = ta.value;
+            else lastState.playbooks.push({ domain_id: domainId, content: ta.value });
+          }
+          toast('מדריך נשמר ✓');
+        } else {
+          toast('שגיאה בשמירה', false);
+        }
+        btn.disabled = false; btn.textContent = '💾 שמור מדריך';
+      });
+    });
+  }
+
+  async function _saveDomains() {
+    const btn = document.getElementById('pb-save-domains-btn');
+    if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
+    const r = await api('/api/settings/update', { domains: domList });
+    if (r && r.ok) {
+      if (lastState && lastState.userConfig) lastState.userConfig.domains = domList;
+      renderPlaybookSidebar(domList, lastState && lastState.playbooks);
+      toast('תחומים נשמרו ✓');
+    } else {
+      toast('שגיאה בשמירה', false);
+    }
+    if (btn) { btn.disabled = false; btn.textContent = '💾 שמור תחומים'; }
+  }
+
+  _redraw();
+
+  // Add save-domains button after the section renders
+  const section = document.getElementById('playbooks-settings-section');
+  if (section) {
+    const saveBtn = document.createElement('button');
+    saveBtn.id = 'pb-save-domains-btn';
+    saveBtn.textContent = '💾 שמור תחומים';
+    saveBtn.style.cssText = 'margin-top:4px;background:var(--primary);color:#fff;border:none;padding:7px 18px;border-radius:8px;cursor:pointer;font-size:.88rem';
+    saveBtn.addEventListener('click', _saveDomains);
+    section.appendChild(saveBtn);
+  }
 }
 
 function _renderHabitsSettings() {
