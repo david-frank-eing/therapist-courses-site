@@ -106,7 +106,7 @@ export default function BookingPage() {
   if (loading) return <div className="flex items-center justify-center min-h-screen text-lg">טוען...</div>;
   if (!profile) return <div className="flex items-center justify-center min-h-screen text-lg">הדף לא נמצא</div>;
 
-  const buildIcs = (slot: Slot, providerName: string, service: string) => {
+  const buildCalendarUrls = (slot: Slot, providerName: string, service: string) => {
     const [y, m, d] = slot.date.split("-").map(Number);
     const [sh, sm] = slot.time.split(":").map(Number);
     const endTime = slot.time_to || slot.time;
@@ -114,45 +114,64 @@ export default function BookingPage() {
     const pad = (n: number) => String(n).padStart(2, "0");
     const dtStart = `${y}${pad(m)}${pad(d)}T${pad(sh)}${pad(sm)}00`;
     const dtEnd   = `${y}${pad(m)}${pad(d)}T${pad(eh)}${pad(em)}00`;
-    const uid = `${slot.id}@carlos-booking`;
-    const summary = service ? `${service} עם ${providerName}` : `תור עם ${providerName}`;
+    const summary = encodeURIComponent(service ? `${service} עם ${providerName}` : `תור עם ${providerName}`);
+
+    // Google Calendar URL — opens app on Android, web on desktop
+    const gcalUrl = `https://calendar.google.com/calendar/r/eventedit?text=${summary}&dates=${dtStart}/${dtEnd}&ctz=Asia%2FJerusalem`;
+
+    // ICS for Apple Calendar / Outlook
     const ics = [
-      "BEGIN:VCALENDAR",
-      "VERSION:2.0",
-      "PRODID:-//CarlosBooking//HE",
+      "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//CarlosBooking//HE",
       "BEGIN:VEVENT",
-      `UID:${uid}`,
+      `UID:${slot.id}@carlos-booking`,
       `DTSTART;TZID=Asia/Jerusalem:${dtStart}`,
       `DTEND;TZID=Asia/Jerusalem:${dtEnd}`,
-      `SUMMARY:${summary}`,
-      `DESCRIPTION:תור שנקבע דרך מערכת הזימון`,
-      "END:VEVENT",
-      "END:VCALENDAR",
+      `SUMMARY:${decodeURIComponent(summary)}`,
+      "END:VEVENT", "END:VCALENDAR",
     ].join("\r\n");
+
+    return { gcalUrl, ics };
+  };
+
+  const downloadIcs = (slot: Slot, providerName: string, service: string) => {
+    const { ics } = buildCalendarUrls(slot, providerName, service);
     const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = url;
-    a.download = "appointment.ics";
-    a.click();
+    a.href = url; a.download = "appointment.ics"; a.click();
     URL.revokeObjectURL(url);
   };
 
-  if (done) return (
-    <div className="flex flex-col items-center justify-center min-h-screen gap-4 text-center px-4">
-      <div className="text-5xl">✅</div>
-      <h1 className="text-2xl font-bold">התור נקבע בהצלחה!</h1>
-      <p className="text-muted-foreground">{selectedSlot?.date} בשעה {selectedSlot?.time}</p>
-      <p className="text-muted-foreground">נשמח לראות אותך, {form.name}</p>
-      <button
-        onClick={() => buildIcs(selectedSlot!, profile?.name || "", form.service)}
-        className="mt-2 flex items-center gap-2 px-5 py-3 bg-primary text-primary-foreground rounded-xl font-medium hover:opacity-90 transition-opacity text-sm"
-      >
-        📅 הוסף ליומן שלי
-      </button>
-      <p className="text-xs text-muted-foreground">עובד עם Google Calendar, Apple Calendar, Outlook</p>
-    </div>
-  );
+  if (done) {
+    const { gcalUrl } = selectedSlot
+      ? buildCalendarUrls(selectedSlot, profile?.name || "", form.service)
+      : { gcalUrl: "" };
+
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen gap-4 text-center px-4">
+        <div className="text-5xl">✅</div>
+        <h1 className="text-2xl font-bold">התור נקבע בהצלחה!</h1>
+        <p className="text-muted-foreground">{selectedSlot?.date} בשעה {selectedSlot?.time}</p>
+        <p className="text-muted-foreground">נשמח לראות אותך, {form.name}</p>
+        <div className="flex flex-col gap-2 mt-2 w-full max-w-xs">
+          <a
+            href={gcalUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-2 px-5 py-3 bg-primary text-primary-foreground rounded-xl font-medium hover:opacity-90 transition-opacity text-sm"
+          >
+            📅 הוסף ל-Google Calendar
+          </a>
+          <button
+            onClick={() => downloadIcs(selectedSlot!, profile?.name || "", form.service)}
+            className="flex items-center justify-center gap-2 px-5 py-3 border border-border rounded-xl text-sm text-muted-foreground hover:bg-accent transition-colors"
+          >
+            🍎 Apple Calendar / Outlook (‎.ics)
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const grouped = groupByDate(slots);
 

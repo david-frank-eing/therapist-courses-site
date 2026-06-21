@@ -72,6 +72,7 @@ async function loadState() {
   renderEmail(s.emailSummary);
   renderTomorrow(s.tasks, s.calendarUpcoming);
   renderContentSelects(s.userConfig && s.userConfig.contentTypes, s.userConfig && s.userConfig.domains);
+  renderContactsHeader(s.userConfig && s.userConfig.contactsLabels);
   renderContent(s.content, s.weekly);
   renderTasks(s.tasks, s.date, s.completedToday || []);
   renderContacts(s);
@@ -1220,8 +1221,22 @@ $('#tw-manual').addEventListener('click', (e) => {
 
 // ---------- Contacts (clients + events) ----------
 let activeTab = 'clients';
-
 let showArchive = false;
+
+const DEFAULT_CONTACTS_LABELS = { sectionTitle: 'אנשי קשר ואירועים', tab1Emoji: '👤', tab1Label: 'אנשי קשר', tab2Emoji: '📅', tab2Label: 'אירועים' };
+
+function renderContactsHeader(labels) {
+  const L = Object.assign({}, DEFAULT_CONTACTS_LABELS, labels || {});
+  const titleEl = document.querySelector('#contacts h2 span');
+  if (titleEl) {
+    const calLink = titleEl.querySelector('#cal-link');
+    titleEl.textContent = `👥 ${L.sectionTitle} `;
+    if (calLink) titleEl.appendChild(calLink);
+  }
+  const tabs = document.querySelectorAll('.ct-tab');
+  if (tabs[0]) tabs[0].textContent = `${L.tab1Emoji} ${L.tab1Label}`;
+  if (tabs[1]) tabs[1].textContent = `${L.tab2Emoji} ${L.tab2Label}`;
+}
 
 function renderContacts(state) {
   let allItems = activeTab === 'clients' ? (state.clients || []) : (state.events || []);
@@ -2147,7 +2162,12 @@ ${_hStep('1','לחץ "+ הוסף ידנית" ← מלא שם, עיר, טלפון
 ${_hStep('2','לחץ 📷 בכרטיס הלקוח כדי להעלות תמונת פרופיל')}
 ${_hStep('3','לחץ "🗣️ לכידת שיחה" ← כתוב בחופשיות מה דיברתם — הפרטים ייחלצו אוטומטית')}
 ${_hStep('4','בכל כרטיס: "📋 משימות" ← רשימת משימות ספציפית ללקוח זה')}
-${_hTip('חיפוש 🔍 מסנן לפי שם, טלפון, או עיר בזמן אמת')}` },
+${_hTip('חיפוש 🔍 מסנן לפי שם, טלפון, או עיר בזמן אמת')}
+<div class="hs-editable-note">
+  <span class="hs-editable-badge">✏️ ניתן לעריכה</span>
+  שם הסקשן ושמות הטאבים ניתנים לשינוי מלא לפי המקצוע שלך<br>
+  <span style="font-size:.78rem">⚙️ הגדרות ← "👥 כותרות אנשי קשר"</span>
+</div>` },
 
   { icon: '🌱', title: 'הרגלים — מעקב יומי', body: `
 <div class="hs-habits-table">
@@ -2312,14 +2332,16 @@ ${_hInfo('הצ\'אט פועל דרך Claude Code כשהוא מחובר — שא�
 ${_hStep('1','⚙️ הגדרות ← "פרופיל זימון" ← הגדר שם, כותרת, שירותים')}
 ${_hStep('2','קטע "📅 זימונים" ← לחץ "+ הוסף זמן" לכל חלון פנוי')}
 ${_hStep('3','העתק את הקישור הציבורי ושתף עם לקוחות')}
-${_hTip('כשמגיע תור חדש — מופיע 🔔 בכותרת הדאשבורד')}` },
+${_hTip('כשמגיע תור חדש — מופיע 🔔 בכותרת הדאשבורד')}
+${_hInfo('אחרי הקביעה, הלקוח רואה שני כפתורים: <strong>📅 הוסף ל-Google Calendar</strong> (פותח ישר את האפליקציה) ו-<strong>🍎 Apple / Outlook (.ics)</strong>')}` },
 
   { icon: '⚙️', title: 'הגדרות — התאמה אישית', body: `
 <div class="hs-settings-list">
   <div class="hs-sl-row"><span class="hs-sl-icon">👤</span><div><strong>פרופיל</strong><div class="hs-sl-sub">שנה את שמך ואת שם העוזר</div></div></div>
   <div class="hs-sl-row"><span class="hs-sl-icon">🏃</span><div><strong>הרגלים</strong><div class="hs-sl-sub">הוסף / מחק / שנה הרגלים יומיים</div></div></div>
-  <div class="hs-sl-row"><span class="hs-sl-icon">📂</span><div><strong>תחומי עבודה</strong><div class="hs-sl-sub">שנה שם, אמוג'י, הוסף או מחק תחומים (טיפולים / מוזיקה / כלי / כללי...) — מופיעים בתפריט התוכן ובפלייבוקים</div></div></div>
-  <div class="hs-sl-row"><span class="hs-sl-icon">📲</span><div><strong>סוגי תוכן</strong><div class="hs-sl-sub">הוסף / מחק / שנה שם של סוגי תוכן (רילס, פוסט, סטורי...) — מופיעים בתפריט הוספת תוכן</div></div></div>
+  <div class="hs-sl-row"><span class="hs-sl-icon">👥</span><div><strong>כותרות אנשי קשר</strong><div class="hs-sl-sub">שנה את שם הסקשן ושמות הטאבים לפי המקצוע שלך — מטפל, מאמן, מוזיקאי, יועץ</div></div></div>
+  <div class="hs-sl-row"><span class="hs-sl-icon">📂</span><div><strong>תחומי עבודה</strong><div class="hs-sl-sub">שנה שם, אמוג'י, הוסף או מחק תחומים — מופיעים בתפריט התוכן ובפלייבוקים</div></div></div>
+  <div class="hs-sl-row"><span class="hs-sl-icon">📲</span><div><strong>סוגי תוכן</strong><div class="hs-sl-sub">הוסף / מחק / שנה שם של סוגי תוכן (רילס, פוסט, סטורי...)</div></div></div>
   <div class="hs-sl-row"><span class="hs-sl-icon">🔌</span><div><strong>חיבורים</strong><div class="hs-sl-sub">חבר Gmail ו-Google Calendar</div></div></div>
   <div class="hs-sl-row"><span class="hs-sl-icon">📖</span><div><strong>פלייבוקים</strong><div class="hs-sl-sub">מדריך תוכן לכל תחום עבודה — מה לפרסם, איך לתקשר, רעיונות</div></div></div>
   <div class="hs-sl-row"><span class="hs-sl-icon">✏️</span><div><strong>פרופיל זימון</strong><div class="hs-sl-sub">הגדר את דף הזימון הציבורי שלך</div></div></div>
@@ -2388,6 +2410,8 @@ function openHelp() {
             : s.title.toLowerCase().includes(q) || s.body.toLowerCase().includes(q)
         )
       : HELP_SECTIONS;
+    // When filter is active — auto-expand all results
+    if (q) sections.forEach((_, i) => collapsed.delete('hs-' + i));
 
     const wrap = bodyEl.querySelector('#help-sections-wrap');
     wrap.innerHTML = sections.length
@@ -2650,6 +2674,56 @@ function _openEmojiPicker(anchorEl, onSelect) {
   setTimeout(() => document.addEventListener('click', close), 0);
 }
 
+function _renderContactsLabelSettings(labels) {
+  const el = document.getElementById('contacts-labels-settings');
+  if (!el) return;
+  const L = Object.assign({}, DEFAULT_CONTACTS_LABELS, labels || {});
+
+  el.innerHTML = `
+    <div class="domains-edit-hint">שנה את כותרות הסקשן לפי המקצוע שלך — מטפל, מאמן, מוזיקאי, יועץ...</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div style="display:flex;gap:6px;align-items:center">
+        <span style="font-size:.78rem;color:var(--text-muted);min-width:72px;text-align:right">כותרת סקשן</span>
+        <input id="cl-section-title" type="text" value="${_esc(L.sectionTitle)}"
+          style="flex:1;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:inherit;direction:rtl;min-width:0">
+      </div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <span style="font-size:.78rem;color:var(--text-muted);min-width:72px;text-align:right">טאב 1 אמוג'י</span>
+        <input id="cl-tab1-emoji" type="text" value="${_esc(L.tab1Emoji)}" maxlength="2"
+          style="width:44px;text-align:center;font-size:1.2rem;padding:4px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:inherit">
+        <input id="cl-tab1-label" type="text" value="${_esc(L.tab1Label)}"
+          style="flex:1;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:inherit;direction:rtl;min-width:0">
+      </div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <span style="font-size:.78rem;color:var(--text-muted);min-width:72px;text-align:right">טאב 2 אמוג'י</span>
+        <input id="cl-tab2-emoji" type="text" value="${_esc(L.tab2Emoji)}" maxlength="2"
+          style="width:44px;text-align:center;font-size:1.2rem;padding:4px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:inherit">
+        <input id="cl-tab2-label" type="text" value="${_esc(L.tab2Label)}"
+          style="flex:1;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:inherit;direction:rtl;min-width:0">
+      </div>
+    </div>
+    <button id="cl-save-btn" class="domains-save-btn" style="margin-top:10px">💾 שמור כותרות</button>`;
+
+  el.querySelector('#cl-save-btn').addEventListener('click', async () => {
+    const btn = el.querySelector('#cl-save-btn');
+    btn.disabled = true; btn.textContent = '⏳';
+    const newLabels = {
+      sectionTitle: el.querySelector('#cl-section-title').value.trim() || L.sectionTitle,
+      tab1Emoji:    el.querySelector('#cl-tab1-emoji').value.trim() || L.tab1Emoji,
+      tab1Label:    el.querySelector('#cl-tab1-label').value.trim() || L.tab1Label,
+      tab2Emoji:    el.querySelector('#cl-tab2-emoji').value.trim() || L.tab2Emoji,
+      tab2Label:    el.querySelector('#cl-tab2-label').value.trim() || L.tab2Label,
+    };
+    const r = await api('/api/settings/update', { contacts_labels: newLabels });
+    if (r && r.ok) {
+      if (lastState && lastState.userConfig) lastState.userConfig.contactsLabels = newLabels;
+      renderContactsHeader(newLabels);
+      toast('כותרות נשמרו ✓');
+    } else { toast('שגיאה בשמירה', false); }
+    btn.disabled = false; btn.textContent = '💾 שמור כותרות';
+  });
+}
+
 function _renderDomainsSettings(domains, playbooks) {
   const listEl = document.getElementById('domains-settings-list');
   if (!listEl) return;
@@ -2887,9 +2961,10 @@ async function openSettings(scrollTo) {
   bodyEl.innerHTML = '<div class="muted-text">טוען...</div>';
   try {
     const s = await api('/api/settings');
-    s._playbooks      = (lastState && lastState.playbooks) || [];
-    s._domains        = (lastState && lastState.userConfig && lastState.userConfig.domains) || [];
-    s._contentTypes   = (lastState && lastState.userConfig && lastState.userConfig.contentTypes) || [];
+    s._playbooks        = (lastState && lastState.playbooks) || [];
+    s._domains          = (lastState && lastState.userConfig && lastState.userConfig.domains) || [];
+    s._contentTypes     = (lastState && lastState.userConfig && lastState.userConfig.contentTypes) || [];
+    s._contactsLabels   = (lastState && lastState.userConfig && lastState.userConfig.contactsLabels) || {};
     renderSettings(s, bodyEl);
   } catch (e) {
     bodyEl.innerHTML = '<div class="muted-text">שגיאה: ' + e.message + '</div>';
@@ -3137,6 +3212,11 @@ function renderSettings(s, bodyEl) {
     </div>
 
     <div class="settings-section">
+      <div class="settings-section-title">👥 כותרות אנשי קשר</div>
+      <div id="contacts-labels-settings"></div>
+    </div>
+
+    <div class="settings-section">
       <div class="settings-section-title">📂 תחומי עבודה</div>
       <div id="domains-settings-list"></div>
     </div>
@@ -3163,6 +3243,9 @@ function renderSettings(s, bodyEl) {
 
   // ── Habits section ────────────────────────────────────────
   _renderHabitsSettings();
+
+  // ── Contacts labels section ───────────────────────────────
+  _renderContactsLabelSettings(s._contactsLabels);
 
   // ── Domains section ───────────────────────────────────────
   _renderDomainsSettings(s._domains, s._playbooks);

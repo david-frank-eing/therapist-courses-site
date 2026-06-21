@@ -97,6 +97,9 @@ async function _sbGetState(sb, uid) {
         { id: 'reel', emoji: '🎬', label: 'רילס' },
         { id: 'post', emoji: '📝', label: 'פוסט' }
       ];
+  const contactsLabels = configRow && configRow.contacts_labels
+    ? (typeof configRow.contacts_labels === 'string' ? JSON.parse(configRow.contacts_labels) : configRow.contacts_labels)
+    : { sectionTitle: 'אנשי קשר ואירועים', tab1Emoji: '👤', tab1Label: 'אנשי קשר', tab2Emoji: '📅', tab2Label: 'אירועים' };
 
   // Calendar
   const calRow = calRes.data && calRes.data[0];
@@ -147,7 +150,8 @@ async function _sbGetState(sb, uid) {
       edition: 'full',
       aiBriefing: false,
       domains,
-      contentTypes
+      contentTypes,
+      contactsLabels
     },
     bookingData: {
       slots: slotsRes.data || [],
@@ -549,6 +553,7 @@ window._sbApi = async function(url, body) {
     if (body.assistantName !== undefined) update.assistant_name = body.assistantName;
     if (body.domains !== undefined) update.domains = body.domains;
     if (body.content_types !== undefined) update.content_types = body.content_types;
+    if (body.contacts_labels !== undefined) update.contacts_labels = body.contacts_labels;
     if (body.categories !== undefined) update.categories = body.categories;
     const { error } = await sb.from('dashboard_config').upsert(
       { user_id: uid, ...update }, { onConflict: 'user_id' }
