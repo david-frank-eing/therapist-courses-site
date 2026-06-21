@@ -2195,6 +2195,41 @@ document.getElementById('settings-modal')?.addEventListener('click', (e) => {
     document.getElementById('settings-modal').classList.add('hidden');
 });
 
+const PB_EMOJI_LIST = [
+  '💆','🧘','🏃','💊','🩺','🫀','🧠','🌿',
+  '🎵','🎧','🎹','🎸','🎤','🎼','🎷','🥁',
+  '🚀','💡','🛠','⚙️','📱','💻','🔧','🧰',
+  '📚','✍️','📝','🎯','📊','📈','💼','🗂',
+  '🌟','❤️','🤝','🌱','🏆','🎓','💬','🔑',
+  '📌','🏠','🌍','⭐','🎨','🧩','📸','🎬'
+];
+
+function _openEmojiPicker(anchorEl, onSelect) {
+  document.getElementById('pb-emoji-picker')?.remove();
+  const picker = document.createElement('div');
+  picker.id = 'pb-emoji-picker';
+  picker.style.cssText = `
+    position:absolute;z-index:9999;background:var(--card2);border:1px solid var(--border);
+    border-radius:12px;padding:10px;display:grid;grid-template-columns:repeat(8,1fr);
+    gap:4px;box-shadow:0 8px 32px #00000060;max-width:260px;`;
+  PB_EMOJI_LIST.forEach(em => {
+    const btn = document.createElement('button');
+    btn.textContent = em;
+    btn.title = em;
+    btn.style.cssText = 'font-size:1.25rem;padding:5px;border:none;background:transparent;border-radius:7px;cursor:pointer;transition:background .1s';
+    btn.onmouseenter = () => btn.style.background = 'var(--hover)';
+    btn.onmouseleave = () => btn.style.background = 'transparent';
+    btn.addEventListener('click', e => { e.stopPropagation(); onSelect(em); picker.remove(); });
+    picker.appendChild(btn);
+  });
+  const rect = anchorEl.getBoundingClientRect();
+  picker.style.top  = (rect.bottom + window.scrollY + 4) + 'px';
+  picker.style.left = Math.max(4, rect.left + window.scrollX - 100) + 'px';
+  document.body.appendChild(picker);
+  const close = e => { if (!picker.contains(e.target)) { picker.remove(); document.removeEventListener('click', close); } };
+  setTimeout(() => document.addEventListener('click', close), 0);
+}
+
 function _renderPlaybooksSettings(domains, playbooks) {
   const listEl = document.getElementById('playbooks-settings-list');
   if (!listEl) return;
@@ -2211,8 +2246,8 @@ function _renderPlaybooksSettings(domains, playbooks) {
         <div style="font-size:.8rem;color:var(--text-muted);margin-bottom:8px">תחומי הפעילות שלך — כל תחום מקבל פלייבוק נפרד</div>
         <div id="pb-domains-list" style="display:flex;flex-direction:column;gap:6px"></div>
         <div style="margin-top:8px;display:flex;gap:6px;align-items:center">
-          <input id="pb-new-emoji" type="text" maxlength="2" value="📌"
-            style="width:40px;text-align:center;font-size:1.2rem;padding:4px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:inherit">
+          <button id="pb-new-emoji-btn" title="בחר אמוג'י"
+            style="font-size:1.3rem;min-width:40px;padding:4px 6px;border:1px solid var(--border);border-radius:8px;background:var(--card);cursor:pointer">📌</button>
           <input id="pb-new-label" type="text" placeholder="שם התחום..."
             style="flex:1;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:inherit;direction:rtl">
           <button id="pb-add-domain-btn"
@@ -2228,8 +2263,8 @@ function _renderPlaybooksSettings(domains, playbooks) {
       const row = document.createElement('div');
       row.style.cssText = 'display:flex;gap:6px;align-items:center';
       row.innerHTML = `
-        <input type="text" value="${_esc(d.emoji)}" maxlength="2" data-di="${i}" data-field="emoji"
-          style="width:40px;text-align:center;font-size:1.1rem;padding:4px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:inherit">
+        <button class="pb-emoji-btn" data-di="${i}" title="בחר אמוג'י"
+          style="font-size:1.3rem;min-width:40px;padding:4px 6px;border:1px solid var(--border);border-radius:8px;background:var(--card);cursor:pointer">${_esc(d.emoji)}</button>
         <input type="text" value="${_esc(d.label)}" data-di="${i}" data-field="label"
           style="flex:1;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:inherit;direction:rtl">
         <button data-del="${i}" title="מחק תחום"
@@ -2255,12 +2290,34 @@ function _renderPlaybooksSettings(domains, playbooks) {
       contList.appendChild(wrap);
     });
 
-    // Events: live-edit domain emoji/label
+    // Events: emoji picker buttons
+    domRows.querySelectorAll('.pb-emoji-btn').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const i = parseInt(btn.dataset.di);
+        _openEmojiPicker(btn, em => {
+          domList[i].emoji = em;
+          btn.textContent = em;
+          // Also update the content list header live
+          const headers = contList.querySelectorAll('div[style*="font-weight"]');
+          if (headers[i]) headers[i].textContent = em + ' ' + domList[i].label;
+        });
+      });
+    });
+
+    // Events: live-edit domain label
     domRows.querySelectorAll('input[data-di]').forEach(inp => {
       inp.addEventListener('input', () => {
         const i = parseInt(inp.dataset.di);
         domList[i][inp.dataset.field] = inp.value;
       });
+    });
+
+    // New domain emoji picker
+    document.getElementById('pb-new-emoji-btn')?.addEventListener('click', e => {
+      e.stopPropagation();
+      const btn = document.getElementById('pb-new-emoji-btn');
+      _openEmojiPicker(btn, em => { btn.textContent = em; });
     });
 
     // Delete domain
@@ -2273,7 +2330,7 @@ function _renderPlaybooksSettings(domains, playbooks) {
 
     // Add domain
     document.getElementById('pb-add-domain-btn').addEventListener('click', () => {
-      const emoji = document.getElementById('pb-new-emoji').value.trim() || '📌';
+      const emoji = (document.getElementById('pb-new-emoji-btn')?.textContent || '📌').trim();
       const label = document.getElementById('pb-new-label').value.trim();
       if (!label) { toast('הזן שם לתחום', false); return; }
       const id = label.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '') + '-' + Date.now().toString(36);
