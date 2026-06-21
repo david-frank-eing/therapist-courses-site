@@ -14,6 +14,7 @@ import ListingPage from "./pages/ListingPage";
 import CRM from "./pages/CRM";
 import ClientDetail from "./pages/ClientDetail";
 import Admin from "./pages/Admin";
+import BookingPage from "./pages/BookingPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +37,7 @@ const App = () => (
             <Route path="/crm" element={<CRM />} />
             <Route path="/crm/:id" element={<ClientDetail />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/book/:slug" element={<BookingPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
