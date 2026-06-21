@@ -119,13 +119,13 @@ export default function BookingPage() {
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
-      <div className="max-w-2xl mx-auto px-4 py-10">
+      <div className="max-w-2xl mx-auto px-4 py-6 md:py-10">
         {/* Profile header */}
         <div className="text-center mb-8">
           {profile.photo_url && (
             <img src={profile.photo_url} alt={profile.name} className="w-24 h-24 rounded-full mx-auto mb-4 object-cover" />
           )}
-          <h1 className="text-3xl font-bold">{profile.name}</h1>
+          <h1 className="text-2xl md:text-3xl font-bold">{profile.name}</h1>
           {profile.title && <p className="text-muted-foreground mt-1">{profile.title}</p>}
           {profile.location && <p className="text-sm text-muted-foreground mt-1">📍 {profile.location}</p>}
           {profile.bio && <p className="mt-4 text-foreground">{profile.bio}</p>}
@@ -163,7 +163,7 @@ export default function BookingPage() {
             </button>
             <div className="bg-accent rounded-xl p-4 mb-6 text-center">
               <div className="font-semibold">{formatDate(selectedSlot.date)}</div>
-              <div className="text-lg font-bold text-primary">{selectedSlot.time.slice(0, 5)}</div>
+              <div className="text-base md:text-lg font-bold text-primary">{selectedSlot.time.slice(0, 5)}</div>
             </div>
 
             <div className="flex flex-col gap-4">

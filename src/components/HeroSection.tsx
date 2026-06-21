@@ -9,8 +9,8 @@ export const HeroSection = () => {
     <section className="relative py-20 md:py-32 overflow-hidden" id="home">
       {/* Background Elements */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-20 right-10 w-64 h-64 bg-primary/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-20 left-10 w-96 h-96 bg-accent/30 rounded-full blur-3xl" />
+        <div className="absolute top-20 right-10 w-32 h-32 md:w-64 md:h-64 bg-primary/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-20 left-10 w-48 h-48 md:w-96 md:h-96 bg-accent/30 rounded-full blur-3xl" />
       </div>
 
       <div className="container relative">

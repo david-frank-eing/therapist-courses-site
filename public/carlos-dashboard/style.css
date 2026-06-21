@@ -1097,6 +1097,17 @@ input[type=checkbox] { width: 18px; height: 18px; cursor: pointer; accent-color:
   .settings-inner  { padding: 18px 16px; max-width: 100%; }
 }
 
+@media (max-width: 480px) {
+  body { padding: 8px 8px 90px; }
+  .dash-header h1 { font-size: 1.15rem; }
+  #timer-widget { left: auto; right: 8px; bottom: 12px; min-width: 130px; }
+  .modal-box { width: 98vw; padding: 14px; }
+  .card { padding: 12px; }
+  #task-stats { font-size: .78rem; }
+  .section-title { font-size: .85rem; }
+  .task-item { font-size: .88rem; }
+}
+
 /* ── Print / PDF Export ── */
 @media print {
   .sidebar, #timer-widget,
