@@ -86,6 +86,7 @@ async function loadState() {
   renderSbCalendar(s.calendar, s.date);
   renderBooking(s.bookingData);
   renderBookingAlerts(s.bookingData && s.bookingData.notifications, s.bookingData && s.bookingData.appointments);
+  renderPlaybookSidebar(s.userConfig && s.userConfig.domains, s.playbooks);
   renderRefreshStatus(s.lastRefresh, s.date);
 }
 
@@ -1804,29 +1805,146 @@ document.getElementById('booking-cal-link')?.addEventListener('click', (e) => {
 })();
 
 // ---------- Playbook viewer ----------
-const PB_LABELS = {
-  'treatments': '💆 טיפולים',
-  'dj-events':  '🎵 DJ אירועים',
-  'product':    '🚀 כלי למטפלים',
-  'learning':   '📚 לימוד מוזיקה'
+const PB_DEFAULTS = {
+  'treatments': `# 💆 מדריך תחום הטיפולים
+
+## אסטרטגיית שיווק
+- פרסם עדות של מטופל (עם אישורו) פעם בשבוע
+- צור תוכן חינוכי: "5 סימנים שכדאי לפנות לעזרה"
+- הצע שיחת היכרות חינם של 20 דקות
+
+## צ'קליסט שבועי
+- פוסט אחד ברשתות חברתיות
+- מענה לכל הפניות תוך 24 שעות
+- עדכון לוח זמנים לשבוע הבא
+
+## רעיונות לתוכן
+- "מה קורה בפגישה הראשונה?"
+- "איך בוחרים מטפל מתאים?"
+- שאלות נפוצות שמטופלים שואלים`,
+
+  'music': `# 🎵 מדריך תחום המוזיקה
+
+## אסטרטגיית שיווק
+- שתף קטעי מוזיקה מאירועים (Reels / Stories)
+- בנה נוכחות ב-SoundCloud / Mixcloud
+- קשר עם מארגני אירועים ואולמות
+
+## צ'קליסט שבועי
+- הוסף לפחות Mix אחד חדש לפרופיל
+- תגיב על פוסטים של DJים אחרים
+- בדוק הזדמנויות אירועים
+
+## רעיונות לתוכן
+- Behind the scenes מהכנות לאירוע
+- "הטכניקה שאני משתמש בה ל..."
+- Playlist המלצות לסגנונות שונים`,
+
+  'product': `# 🚀 מדריך תחום הכלים / המוצר
+
+## אסטרטגיית שיווק
+- הצג Use Cases אמיתיים מלקוחות
+- בנה רשימת המתנה לפני השקה
+- הצע גרסת ניסיון / Demo
+
+## צ'קליסט שבועי
+- עדכון Feature אחד קטן
+- מענה לפידבקים מלקוחות
+- פוסט עם Tip שימוש במוצר
+
+## רעיונות לתוכן
+- "מה פתרנו ב-Version זה"
+- השוואה לפני/אחרי השימוש
+- שאלות נפוצות על המוצר`,
+
+  'default': `# 📖 מדריך לתחום זה
+
+## אסטרטגיה
+- הגדר את קהל היעד שלך
+- בנה נוכחות עקבית ברשת
+- שים דגש על ערך אמיתי ללקוח
+
+## צ'קליסט שבועי
+- פוסט אחד לפחות ברשתות
+- מעקב אחרי הזדמנויות חדשות
+- עדכון מטרות ויעדים
+
+## הערות אישיות
+ערוך מדריך זה לפי הצרכים שלך.`
 };
 
-async function openPlaybook(domain) {
+function _pbDefault(domainId) {
+  return PB_DEFAULTS[domainId] || PB_DEFAULTS['default'];
+}
+
+function renderPlaybookSidebar(domains, playbooks) {
+  const container = document.getElementById('sb-pb-btns');
+  if (!container) return;
+  const domList = domains && domains.length ? domains : [
+    { id: 'treatments', emoji: '💆', label: 'טיפולים' },
+    { id: 'music',      emoji: '🎵', label: 'מוזיקה' },
+    { id: 'product',    emoji: '🚀', label: 'כלי' },
+    { id: 'unassigned', emoji: '📌', label: 'כללי' }
+  ];
+  container.innerHTML = domList.map(d =>
+    `<button class="pb-btn" data-domain="${_esc(d.id)}">${_esc(d.emoji)} ${_esc(d.label)}</button>`
+  ).join('');
+  container.querySelectorAll('.pb-btn').forEach(btn =>
+    btn.addEventListener('click', () => openPlaybook(btn.dataset.domain, domList, playbooks))
+  );
+}
+
+function openPlaybook(domainId, domains, playbooks) {
   const modal = document.getElementById('playbook-modal');
   const titleEl = document.getElementById('pb-modal-title');
   const bodyEl = document.getElementById('pb-modal-body');
   if (!modal) return;
-  titleEl.textContent = '📖 ' + (PB_LABELS[domain] || domain);
-  bodyEl.innerHTML = '<div class="muted-text">טוען...</div>';
+
+  const domain = (domains || []).find(d => d.id === domainId) || { id: domainId, emoji: '📖', label: domainId };
+  const saved = (playbooks || []).find(p => p.domain_id === domainId);
+  const content = (saved && saved.content) ? saved.content : _pbDefault(domainId);
+
+  titleEl.textContent = `${domain.emoji} ${domain.label}`;
+  modal.dataset.domain = domainId;
+  modal.dataset.content = content;
+  _renderPbView(bodyEl, content, domainId, domains, playbooks);
   modal.classList.remove('hidden');
-  try {
-    const r = await fetch('/api/playbook/' + domain);
-    if (!r.ok) throw new Error('HTTP ' + r.status);
-    const md = await r.text();
-    bodyEl.innerHTML = mdToHtml(md);
-  } catch (e) {
-    bodyEl.innerHTML = `<div class="muted-text">שגיאה בטעינת הפלייבוק: ${e.message}</div>`;
-  }
+}
+
+function _renderPbView(bodyEl, content, domainId, domains, playbooks) {
+  bodyEl.innerHTML = `
+    <div id="pb-view-content">${mdToHtml(content)}</div>
+    <div style="margin-top:16px;text-align:left">
+      <button id="pb-edit-btn" style="background:var(--accent);color:#fff;border:none;padding:6px 16px;border-radius:8px;cursor:pointer;font-size:.85rem">✏️ ערוך</button>
+    </div>`;
+  document.getElementById('pb-edit-btn')?.addEventListener('click', () =>
+    _renderPbEdit(bodyEl, content, domainId, domains, playbooks)
+  );
+}
+
+function _renderPbEdit(bodyEl, content, domainId, domains, playbooks) {
+  bodyEl.innerHTML = `
+    <textarea id="pb-edit-area" style="width:100%;min-height:320px;background:var(--input-bg);color:var(--text);border:1.5px solid #6c8cff44;border-radius:8px;padding:12px;font-size:.88rem;direction:rtl;resize:vertical;box-sizing:border-box">${_esc(content)}</textarea>
+    <div style="margin-top:10px;display:flex;gap:8px;justify-content:flex-start">
+      <button id="pb-save-btn" style="background:var(--accent);color:#fff;border:none;padding:7px 18px;border-radius:8px;cursor:pointer">💾 שמור</button>
+      <button id="pb-cancel-btn" style="background:transparent;color:var(--text-muted);border:1px solid var(--border);padding:7px 14px;border-radius:8px;cursor:pointer">ביטול</button>
+    </div>`;
+  document.getElementById('pb-cancel-btn')?.addEventListener('click', () =>
+    _renderPbView(bodyEl, content, domainId, domains, playbooks)
+  );
+  document.getElementById('pb-save-btn')?.addEventListener('click', async () => {
+    const newContent = document.getElementById('pb-edit-area').value;
+    const r = await api('/api/playbook/save', { domain_id: domainId, content: newContent });
+    if (r && r.ok) {
+      const idx = (playbooks || []).findIndex(p => p.domain_id === domainId);
+      if (idx >= 0) playbooks[idx].content = newContent;
+      else (playbooks || []).push({ domain_id: domainId, content: newContent });
+      _renderPbView(bodyEl, newContent, domainId, domains, playbooks);
+      toast('פלייבוק נשמר ✓');
+    } else {
+      toast('שגיאה בשמירה', false);
+    }
+  });
 }
 
 function mdToHtml(md) {
@@ -1849,9 +1967,6 @@ function mdToHtml(md) {
   if (inList) html += '</ul>';
   return html;
 }
-
-document.querySelectorAll('.pb-btn').forEach(btn =>
-  btn.addEventListener('click', () => openPlaybook(btn.dataset.domain)));
 
 document.getElementById('pb-modal-close')?.addEventListener('click', () =>
   document.getElementById('playbook-modal').classList.add('hidden'));

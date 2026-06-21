@@ -26,7 +26,7 @@ async function _sbGetState(sb, uid) {
     tasksRes, completedRes, completedWeekRes, habitDefsRes, habitLogRes,
     weeklyRes, dailyRes, timeLogRes, contentRes, clientsRes, eventsRes,
     journalRes, emailRes, briefingRes, calRes, calUpRes, refreshRes,
-    configRes, slotsRes, apptsRes, notifsRes, pubLogRes, bookingProfileRes
+    configRes, slotsRes, apptsRes, notifsRes, pubLogRes, bookingProfileRes, playbooksRes
   ] = await Promise.all([
     sb.from('tasks').select('*').eq('user_id', uid).eq('status', 'pending').order('created_at'),
     sb.from('tasks').select('id').eq('user_id', uid).eq('status', 'completed').gte('completed_at', today + 'T00:00:00+00:00'),
@@ -50,7 +50,8 @@ async function _sbGetState(sb, uid) {
     sb.from('appointments').select('*').eq('user_id', uid).order('date').order('time'),
     sb.from('booking_notifs').select('*').eq('user_id', uid).order('created_at', { ascending: false }).limit(20),
     sb.from('publishing_log').select('*').eq('user_id', uid).gte('published_at', ninetyAgo),
-    sb.from('booking_profiles').select('slug').eq('user_id', uid).maybeSingle()
+    sb.from('booking_profiles').select('slug').eq('user_id', uid).maybeSingle(),
+    sb.from('playbooks').select('*').eq('user_id', uid)
   ]);
 
   // Build habits in expected format: { habits: [{id, emoji, label}], completions: {'YYYY-MM-DD': [id,...]} }
@@ -147,7 +148,8 @@ async function _sbGetState(sb, uid) {
       notifications: notifsRes.data || [],
       cloudflared_available: false,
       publicSlug: (bookingProfileRes && bookingProfileRes.data && bookingProfileRes.data.slug) || null
-    }
+    },
+    playbooks: playbooksRes.data || []
   };
 }
 
@@ -594,6 +596,16 @@ window._sbApi = async function(url, body) {
       .select('id').eq('user_id', uid).eq('read', false);
     if (error) return { hasNew: false, count: 0 };
     return { hasNew: (data && data.length > 0), count: data ? data.length : 0 };
+  }
+
+  // ── Playbooks ─────────────────────────────────────────────────────────────
+  if (url === '/api/playbook/save') {
+    const { domain_id, content } = body;
+    const { error } = await sb.from('playbooks').upsert(
+      { user_id: uid, domain_id, content, updated_at: new Date().toISOString() },
+      { onConflict: 'user_id,domain_id' }
+    );
+    return { ok: !error };
   }
 
   // ── No-op / not-available in cloud ───────────────────────────────────────
