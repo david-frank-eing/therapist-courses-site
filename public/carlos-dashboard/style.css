@@ -56,7 +56,7 @@ header { text-align: center; margin-bottom: 18px; }
 /* Two-column layout: main | sidebar (RTL: main=right, sidebar=left) */
 .layout {
   display: grid;
-  grid-template-columns: 1fr 230px;
+  grid-template-columns: 1fr 270px;
   gap: 18px;
   align-items: start;
 }
