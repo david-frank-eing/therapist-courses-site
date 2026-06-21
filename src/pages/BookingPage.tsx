@@ -106,12 +106,51 @@ export default function BookingPage() {
   if (loading) return <div className="flex items-center justify-center min-h-screen text-lg">טוען...</div>;
   if (!profile) return <div className="flex items-center justify-center min-h-screen text-lg">הדף לא נמצא</div>;
 
+  const buildIcs = (slot: Slot, providerName: string, service: string) => {
+    const [y, m, d] = slot.date.split("-").map(Number);
+    const [sh, sm] = slot.time.split(":").map(Number);
+    const endTime = slot.time_to || slot.time;
+    const [eh, em] = endTime.split(":").map(Number);
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const dtStart = `${y}${pad(m)}${pad(d)}T${pad(sh)}${pad(sm)}00`;
+    const dtEnd   = `${y}${pad(m)}${pad(d)}T${pad(eh)}${pad(em)}00`;
+    const uid = `${slot.id}@carlos-booking`;
+    const summary = service ? `${service} עם ${providerName}` : `תור עם ${providerName}`;
+    const ics = [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "PRODID:-//CarlosBooking//HE",
+      "BEGIN:VEVENT",
+      `UID:${uid}`,
+      `DTSTART;TZID=Asia/Jerusalem:${dtStart}`,
+      `DTEND;TZID=Asia/Jerusalem:${dtEnd}`,
+      `SUMMARY:${summary}`,
+      `DESCRIPTION:תור שנקבע דרך מערכת הזימון`,
+      "END:VEVENT",
+      "END:VCALENDAR",
+    ].join("\r\n");
+    const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "appointment.ics";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   if (done) return (
     <div className="flex flex-col items-center justify-center min-h-screen gap-4 text-center px-4">
       <div className="text-5xl">✅</div>
       <h1 className="text-2xl font-bold">התור נקבע בהצלחה!</h1>
       <p className="text-muted-foreground">{selectedSlot?.date} בשעה {selectedSlot?.time}</p>
       <p className="text-muted-foreground">נשמח לראות אותך, {form.name}</p>
+      <button
+        onClick={() => buildIcs(selectedSlot!, profile?.name || "", form.service)}
+        className="mt-2 flex items-center gap-2 px-5 py-3 bg-primary text-primary-foreground rounded-xl font-medium hover:opacity-90 transition-opacity text-sm"
+      >
+        📅 הוסף ליומן שלי
+      </button>
+      <p className="text-xs text-muted-foreground">עובד עם Google Calendar, Apple Calendar, Outlook</p>
     </div>
   );
 
