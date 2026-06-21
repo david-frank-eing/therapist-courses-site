@@ -151,8 +151,9 @@ header { text-align: center; margin-bottom: 18px; }
 .sbf-form-row { display: flex; gap: 7px; }
 #sbf-emoji { width: 46px; text-align: center; font-size: 1.1rem; padding: 7px 4px;
   background: var(--input-bg); border: 1px solid var(--input-border); }
-#sbf-text  { flex: 1; font-size: .93rem; min-width: 0;
-  background: var(--input-bg); border: 1.5px solid #6c8cff66; color: var(--text); }
+#sbf-text  { width: 100%; box-sizing: border-box; font-size: .93rem;
+  background: var(--input-bg); border: 1.5px solid #6c8cff66; color: var(--text);
+  direction: rtl; text-align: right; padding: 10px 12px; }
 #sbf-text:focus { border-color: #6c8cffaa; outline: none; }
 .sbf-form-btns { display: flex; gap: 7px; }
 .sbf-form-btns button { flex: 1; padding: 7px; font-size: .88rem; }
