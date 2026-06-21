@@ -1950,82 +1950,284 @@ document.getElementById('playbook-modal')?.addEventListener('click', (e) => {
 
 // ---------- Help Modal ----------
 const HELP_SECTIONS = [
-  { icon: '🎯', title: 'מה זה הדאשבורד?', body: `כלי ניהול יומי אישי — משימות, לקוחות, הרגלים, תוכן, וזמן, הכל במקום אחד.<br>
-    הכל רץ <strong>מקומית על המחשב שלך</strong> — לא בענן, הנתונים שמורים אצלך בלבד.<br>
-    הפעלה: לחיצה כפולה על <strong>start-dashboard.bat</strong> ← הדפדפן נפתח אוטומטית.` },
+  { icon: '🗺️', title: 'מפת הדאשבורד — סקירה כללית', body: `
+<pre class="help-ascii">
+┌─────────────────────────────────────────────────────────┐
+│  🌅 בריפינג   📌 משימות   ⏱️ זמן   📊 מכסות   📅 יומן  │
+│─────────────────────────────────────────────────────────│
+│                          │  📖 פוקוס היום               │
+│   אזור התוכן הראשי       │  📅 יומן היום                │
+│   (המרכז של העמוד)       │  📖 פלייבוקים                │
+│                          │  💬 שאל קרלוס                │
+│─────────────────────────────────────────────────────────│
+│  👥 לקוחות   🌱 הרגלים   📲 תוכן   🏃 שבועי   📋 רגלים│
+└─────────────────────────────────────────────────────────┘
+                                      ⏱️ טיימר (פינה)
+</pre>
+הדאשבורד מחולק ל-<strong>3 שכבות</strong>:<br><br>
+🔝 <strong>קטעים עליונים</strong> — בריפינג, משימות היום, מחר, וסיכומי זמן<br>
+📍 <strong>סיידבר ימני</strong> — פוקוס, יומן, פלייבוקים, צ'אט<br>
+🔽 <strong>קטעים תחתונים</strong> — לקוחות, הרגלים, תוכן, מכסות<br><br>
+<strong>ניווט מהיר:</strong> כל קטע ניתן לכיווץ/הרחבה בלחיצה על הכותרת.` },
 
-  { icon: '📌', title: 'משימות', body: `<strong>הוספה:</strong> כתוב בשדה "משימה חדשה" + לחץ "הוסף". אפשר לצרף תאריך ושעה.<br>
-    <strong>השלמה:</strong> לחץ על ✓ — המשימה עוברת לסטריקאות בתחתית (עם אפשרות ביטול).<br>
-    <strong>עריכה:</strong> לחץ ✏️ ליד משימה — ניתן לשנות כותרת, תאריך, הערות, או למחוק.<br>
-    <strong>מחר:</strong> קטע נפרד לתכנון משימות של מחר. משימה עם תאריך מחר לא תופיע בקטע הנוכחי.<br>
-    <strong>חיפוש:</strong> שדה 🔍 מסנן בזמן אמת לפי שם המשימה.<br>
-    <strong>⚠️ אדום</strong> = משימה שעבר תאריכה — יש לטפל בה.` },
+  { icon: '🔐', title: 'פרטיות ואבטחה — חשוב לקרוא', body: `
+<div class="help-privacy-box">
+🛡️ <strong>הנתונים שלך שייכים לך בלבד</strong>
+</div>
+<br>
+<strong>מה מאוחסן ואיפה?</strong><br>
+כל המידע — משימות, לקוחות, אירועים, הרגלים, יומן, ומיילים — נשמר <strong>בחשבון Supabase האישי שלך בלבד</strong>.<br><br>
 
-  { icon: '👥', title: 'לקוחות ואירועים', body: `<strong>לשוניות:</strong> 💆 לקוחות | 🎵 אירועים — מועברים בלחיצה.<br>
-    <strong>הוספה ידנית:</strong> "+ הוסף ידנית" פותח טופס מפורט. לקוח: שם, עיר, טלפון, מייל, מקור, סוג טיפול. אירוע: תאריך, מיקום, אנשים, תשלום, סגנון מוזיקלי, סטטוס.<br>
-    <strong>תמונת פרופיל:</strong> בטופס הלקוח — לחץ "📷 העלה תמונה" (עד 20MB).<br>
-    <strong>לכידת שיחה:</strong> לחץ "🗣️ לכידת שיחה" ← כתוב בחופשיות מה דיברתם — המערכת שואבת אוטומטית שם, טלפון, עיר.<br>
-    <strong>משימות צמודות:</strong> בכל כרטיס — "📋 משימות" לניהול משימות ספציפיות ללקוח/אירוע.<br>
-    <strong>חיפוש:</strong> שדה 🔍 מחפש לפי שם, טלפון, עיר.` },
+<pre class="help-ascii">
+  המחשב שלך                  Supabase שלך
+  ─────────────    ──────►   ──────────────
+  הדאשבורד         מוצפן      הנתונים שלך
+  (הדפדפן)         HTTPS      (לא נגיש לאף
+                              אחד אחר)
+</pre>
+<br>
+✅ <strong>חיבור Gmail / Google Calendar</strong><br>
+כאשר אתה מחבר את המייל או היומן:<br>
+• החיבור הוא <strong>אישי לחלוטין</strong> — רק אתה מחובר לחשבון שלך<br>
+• <strong>לא מועבר שום מידע לצד שלישי</strong> כלשהו<br>
+• <strong>לא נשמרים תכני מיילים בשרתים חיצוניים</strong> — הסיכום מוצג רק בדאשבורד שלך<br>
+• Google OAuth מאובטח — אנחנו לא רואים את הסיסמה שלך<br><br>
 
-  { icon: '🌱', title: 'הרגלים', body: `לחץ ✓ על הרגל שביצעת היום — הוא יסומן כ"הושלם".<br>
-    לחץ שוב לביטול הסימון.<br>
-    כל הרגל מציג: <strong>X/7 שבוע</strong> · <strong>X/28 חודש</strong> · <strong>🔥 רצף ימים</strong>.<br>
-    קטע "📆 הרגלים — שבוע שעבר" מציג טבלת שבוע מלאה לכל הרגל.` },
+🔒 <strong>מה שאין לנו גישה אליו:</strong><br>
+• תכני המיילים שלך<br>
+• אירועי היומן שלך<br>
+• פרטי הלקוחות שלך<br>
+• כל מידע שמוזן לדאשבורד<br><br>
 
-  { icon: '⏱️', title: 'טיימר', body: `הווידג'ט הקטן בפינה השמאלית למטה.<br>
-    <strong>סטופר:</strong> ▶ התחל → ■ עצור → בחר תחום → 💾 שמור זמן.<br>
-    <strong>טיימר:</strong> הגדר דקות/שניות → ▶ התחל → צלצול בסיום → שמור זמן.<br>
-    <strong>➕ ידני:</strong> הוסף זמן שעבדת בלי שהטיימר רץ.<br>
-    כל הזמן שנרשם מופיע בקטע "⏱️ זמן שנרשם היום".` },
+<em>כל גישה לנתונים מחייבת את האימות שלך (כניסה לחשבון) — ללא חריגים.</em>` },
 
-  { icon: '📲', title: 'תוכן השבוע', body: `נהל רילסים ופוסטים בשלבים: <strong>רעיון → טיוטה → מוכן → פורסם</strong>.<br>
-    לחץ על הסטטוס כדי להתקדם שלב. "פורסם" מעדכן אוטומטית את מכסת השבוע.<br>
-    ✏️ לעריכת תוכן הפוסט, קישור Docs, תאריך תזמון, קובץ מדיה מצורף.<br>
-    שיוך לתחום: 💆 טיפולים / 🎵 אירועים / 🚀 כלי / ⚪ כללי.` },
+  { icon: '📌', title: 'משימות — ניהול היום שלך', body: `
+<pre class="help-ascii">
+  ┌─────────────────────────────────────┐
+  │ + הוסף משימה חדשה...    [🗓️] [הוסף] │
+  ├─────────────────────────────────────┤
+  │ ○  שלוח הצעת מחיר ללקוח      [✏️]  │  ← ממתינה
+  │ ○ ⚠️ שיחת טלפון — עבר תאריך  [✏️]  │  ← פג תוקף (אדום)
+  │ ✓  קניית ציוד                       │  ← הושלמה
+  └─────────────────────────────────────┘
+</pre>
+<strong>הוספת משימה:</strong> כתוב בשדה ← בחר תאריך (אופציונלי) ← לחץ "הוסף"<br><br>
+<strong>השלמת משימה:</strong> לחץ ○ ← הופכת ל-✓ ונעה לתחתית<br><br>
+<strong>עריכה:</strong> לחץ ✏️ ← שנה כותרת / תאריך / הערות / מחק<br><br>
+<strong>⚠️ אדום</strong> = תאריך עבר — טפל בה היום!<br><br>
+<strong>קטע "מחר"</strong> — משימות שתאריכן מחר. מנוהל בנפרד כדי שלא יבלבל את היום הנוכחי.<br><br>
+<strong>חיפוש 🔍</strong> — סינון בזמן אמת לפי שם המשימה` },
 
-  { icon: '📊', title: 'מכסות שבועיות ויומיות', body: `<strong>שבועי (📈):</strong> יעדים לשבוע — רילסים, פוסטים, שעות, שיווק, וכו\'.<br>
-    <strong>יומי (📊):</strong> אותם יעדים אבל ליום הנוכחי — מתאפסים כל בוקר.<br>
-    ✏️ לשינוי יעד בכל שורה.<br>
-    <strong>איפוס שבועי:</strong> כל ראשון בשבוע כל המכסות מתאפסות אוטומטית.` },
+  { icon: '👥', title: 'לקוחות ואירועים', body: `
+<pre class="help-ascii">
+  [ 💆 לקוחות ]  [ 🎵 אירועים ]    🔍 חיפוש...
+  ──────────────────────────────────────────
+  ┌──────────┐  ┌──────────┐  ┌──────────┐
+  │ 👤 ישראל │  │ 👤 שרה   │  │ + הוסף  │
+  │ טל אביב  │  │ חיפה     │  │  ידנית  │
+  │ 050-xxx  │  │ 052-xxx  │  └──────────┘
+  └──────────┘  └──────────┘
+</pre>
+<strong>הוספת לקוח:</strong> "+ הוסף ידנית" ← שם, עיר, טלפון, מייל, מקור, סוג טיפול<br><br>
+<strong>תמונת פרופיל:</strong> לחץ "📷 העלה תמונה" בכרטיס הלקוח<br><br>
+<strong>🗣️ לכידת שיחה:</strong> כתוב בחופשיות מה דיברתם ← המערכת שואבת אוטומטית שם, טלפון, עיר<br><br>
+<strong>משימות לקוח:</strong> בכל כרטיס → "📋 משימות" ← רואים רק את המשימות של אותו לקוח<br><br>
+<strong>אירועים:</strong> תאריך, מיקום, מספר אנשים, תשלום, סגנון, סטטוס (מאושר/ממתין/בוטל)` },
 
-  { icon: '🌅', title: 'בריפינג בוקר', body: `מציג סיכום שנשמר בקובץ <code>sync/morning-briefing.md</code>.<br>
-    כותב לשם בצורה אוטומטית כשקרלוס מייצר בריפינג (מחייב חיבור).<br>
-    ניתן גם לערוך את הקובץ ישירות בנוטפד.` },
+  { icon: '🌱', title: 'הרגלים — מעקב יומי', body: `
+<pre class="help-ascii">
+  הרגל          היום   שבוע    חודש   🔥 רצף
+  ─────────────────────────────────────────
+  💊 תרופות      ✓     6/7     24/28    12
+  🏃 ספורט        ○     4/7     18/28     3
+  📚 קריאה        ✓     7/7     28/28    28  ← מושלם!
+</pre>
+<strong>סימון:</strong> לחץ ○ ← הופך ל-✓ (לחץ שוב לביטול)<br><br>
+<strong>📆 טבלת שבוע שעבר</strong> — מציגה ✓/○ לכל יום בנפרד<br><br>
+<strong>הוספת הרגל חדש:</strong> ⚙️ הגדרות ← קטע "הרגלים" ← בחר אמוג'י + שם + הוסף<br><br>
+<strong>מחיקת הרגל:</strong> ⚙️ הגדרות ← לחץ ✕ ליד ההרגל` },
 
-  { icon: '📧', title: 'סיכום מיילים', body: `מציג סיכום שנשמר בקובץ <code>sync/email-summary.md</code>.<br>
-    מתעדכן אוטומטית כשמתחברים ל-Gmail דרך Composio.<br>
-    ניתן לכתוב בקובץ ידנית כל סיכום שתרצה.` },
+  { icon: '⏱️', title: 'טיימר — מדידת זמן עבודה', body: `
+<pre class="help-ascii">
+  ┌─────────────────────┐
+  │ ⏱️          [ ∨ ]   │  ← לחץ לכיווץ
+  │                     │
+  │      00:23:47       │
+  │                     │
+  │  [ ■ עצור ]         │
+  │  [+ ידני] [💾 שמור] │
+  │                     │
+  │  [סטופר ▼] [טיימר]  │
+  └─────────────────────┘
+         📍 פינה שמאלית
+</pre>
+<strong>סטופר:</strong> ▶ התחל ← עבוד ← ■ עצור ← בחר תחום ← 💾 שמור<br><br>
+<strong>טיימר (ספירה לאחור):</strong> בחר "טיימר" ← הגדר דקות ← ▶ ← צלצול בסיום<br><br>
+<strong>➕ הוספה ידנית:</strong> הכנס דקות שעבדת בלי שהטיימר רץ<br><br>
+<strong>כיווץ:</strong> לחץ ∨ כדי למזער את הווידג'ט` },
 
-  { icon: '📅', title: 'יומן Google Calendar', body: `<strong>סיידבר — יומן היום:</strong> מציג אירועים מ-<code>sync/calendar-today.json</code>.<br>
-    לחץ 🔄 לרענון ידני (מחייב חיבור ל-Google Calendar).<br>
-    ניתן לכתוב לקובץ ידנית: <code>{"date":"YYYY-MM-DD","events":[{"time":"09:00","title":"פגישה"}]}</code>` },
+  { icon: '📲', title: 'תוכן שבועי — ניהול פוסטים ורילסים', body: `
+<pre class="help-ascii">
+  רעיון ──► טיוטה ──► מוכן ──► פורסם ✓
+     ↑         ↑        ↑
+  לחץ על הסטטוס כדי להתקדם שלב
+</pre>
+<strong>הוספת פריט תוכן:</strong> "+ הוסף תוכן" ← כותרת + סוג (רילס/פוסט/סטורי) + תחום<br><br>
+<strong>מעבר שלב:</strong> לחץ על הסטטוס הנוכחי ← עולה שלב אחד. "פורסם" ← מעדכן מכסה<br><br>
+<strong>✏️ עריכה:</strong> פתח פריט ← הוסף קישור Docs / קובץ מדיה / תאריך תזמון / הערות<br><br>
+<strong>תחומים:</strong> כל פריט משויך לתחום — הסטטיסטיקות מחושבות לפי תחום בנפרד` },
 
-  { icon: '📝', title: 'יומן יומי', body: `כתוב מחשבות, הרהורים, רעיונות, או סיכום יום.<br>
-    לחץ "שמור ליומן" — הטקסט מצטרף לקובץ <code>journal/YYYY-MM-DD.md</code>.<br>
-    קובץ חדש לכל יום. ניתן לפתוח ולקרוא בנוטפד.` },
+  { icon: '📊', title: 'מכסות — יעדים שבועיים ויומיים', body: `
+<pre class="help-ascii">
+  📈 שבועי              📊 יומי
+  ─────────────────    ─────────────────
+  רילסים   3/5  ████░  רילסים   1/1  ████
+  פוסטים   2/3  ██░░░  פוסטים   0/1  ░░░░
+  שעות    12/20 ███░░  שעות     2/4  ██░░
+         [✏️ ערוך יעד]
+</pre>
+<strong>עריכת יעד:</strong> לחץ ✏️ ליד כל שורה ← שנה את המספר<br><br>
+<strong>איפוס שבועי:</strong> מתאפס אוטומטית כל יום ראשון<br><br>
+<strong>עדכון אוטומטי:</strong> כשפריט תוכן עובר ל"פורסם" — המכסה מתעדכנת לבד` },
 
-  { icon: '📖', title: 'פלייבוקים', body: `מדריכי פעולה לפי תחום עסקי.<br>
-    לחץ על כפתור תחום בסיידבר (💆 / 🎵 / 🚀 / 📚) לפתיחת המדריך.<br>
-    קבצי המדריך נמצאים ב: <code>domains/[תחום]/playbook.md</code><br>
-    ניתן לערוך אותם בנוטפד — הם ייטענו עדכניים בכל פתיחה.` },
+  { icon: '📖', title: 'פלייבוקים — מדריכי תחום', body: `
+<pre class="help-ascii">
+  סיידבר                    מודל פלייבוק
+  ──────────────          ──────────────────────
+  📖 פלייבוקים            📖 טיפולים
+  ┌──────────────┐        ┌────────────────────┐
+  │ 💆 טיפולים  │──────► │ ## אסטרטגיית שיווק │
+  │ 🎵 מוזיקה   │        │ - פרסם עדות שבועית │
+  │ 🚀 כלי      │        │ ## צ'קליסט שבועי   │
+  │ 📌 כללי     │        │ - פוסט ברשתות      │
+  └──────────────┘        └────────────────────┘
+</pre>
+<strong>פתיחת מדריך:</strong> לחץ על כפתור תחום בסיידבר<br><br>
+<strong>עריכת מדריך:</strong> ⚙️ הגדרות ← "📖 פלייבוקים" ← ערוך textarea ← 💾 שמור מדריך<br><br>
+<strong>ניהול תחומים:</strong> ⚙️ הגדרות ← שנה שם/אמוג'י, הוסף תחום חדש, מחק תחום<br><br>
+<strong>כל משתמש</strong> רואה ועורך רק את הפלייבוקים שלו — אין שיתוף בין משתמשים` },
 
-  { icon: '📄', title: 'ייצוא PDF', body: `לחץ 📄 בכותרת — הדפדפן פותח חלון הדפסה.<br>
-    <strong>כל הסקשנים נפתחים אוטומטית</strong> לפני ההדפסה.<br>
-    בחלון ההדפסה: "שמור כ-PDF" ← מייצר קובץ PDF מסודר.<br>
-    הסיידבר, הטיימר, וכפתורי הפעולה מוסתרים בהדפסה.` },
+  { icon: '🌅', title: 'בריפינג בוקר', body: `
+<pre class="help-ascii">
+  🌅 בריפינג בוקר — ראשון 21/06
+  ──────────────────────────────
+  📅 היומן היום
+  • 10:00 — פגישת לקוח
+  • 14:00 — שיחת מכירה
 
-  { icon: '⚙️', title: 'הגדרות', body: `לחץ ⚙️ בכותרת לפתיחת ההגדרות.<br>
-    <strong>שם:</strong> השם שמוצג בברכה ("בוקר טוב דוד").<br>
-    <strong>שם העוזר:</strong> מוצג בכותרת הטאב ובפוטר ("קרלוס דאשבורד").<br>
-    לחץ 💾 שמור — השינויים יופיעו בטעינה הבאה.<br>
-    <em>הגדרות מתקדמות (תחומים, יעדים) — ערוך את <code>config.json</code> ו-<code>weekly_plan.json</code> ישירות.</em>` },
+  ⚠️ דחוף לטיפול
+  • שלח הצעת מחיר (14 ימים!)
 
-  { icon: '🔧', title: 'הגדרה ראשונית / קבצי מערכת', body: `<strong>config.json</strong> — שם, נתיבים, תחומים עסקיים.<br>
-    <strong>weekly_plan.json</strong> — יעדים שבועיים לכל מכסה.<br>
-    <strong>habits.json</strong> — הוסף/הסר הרגלים: <code>{"id":"h1","emoji":"🏃","label":"ספורט"}</code><br>
-    <strong>תיקיות:</strong> <code>clients/</code> לקוחות · <code>events/</code> אירועים · <code>journal/</code> יומן<br>
-    <strong>לשינויים בקובצי JSON</strong> — פתח בנוטפד, שמור, ורענן את הדפדפן.` }
+  🎯 פוקוס מוצע
+  • סגור עסקת האירוע של שבת
+  ──────────────────────────────
+</pre>
+הבריפינג מסכם את היום שלך: יומן + משימות דחופות + פוקוס מוצע.<br><br>
+<strong>עדכון אוטומטי:</strong> כאשר קרלוס מייצר בריפינג (דרך Claude Code) הוא נשמר ומוצג כאן<br><br>
+<strong>עדכון ידני:</strong> לחץ "🔄 עדכן" בכותרת הקטע` },
+
+  { icon: '📧', title: 'מייל ויומן Google — פרטיות מלאה', body: `
+<pre class="help-ascii">
+  Gmail שלך              הדאשבורד שלך
+  ──────────             ──────────────
+  📧 מיילים   ──────►   📋 סיכום בלבד
+  (נשארים     OAuth      (לא נשמרים
+   אצל Google) מאובטח    תכנים!)
+</pre>
+<strong>חיבור Gmail:</strong> ⚙️ הגדרות ← "חיבורים" ← חבר Gmail<br>
+• הדאשבורד קורא מיילים לא נקראים ← מציג <strong>סיכום בלבד</strong><br>
+• <strong>תכני המיילים לא נשמרים</strong> בשום שרת<br>
+• <strong>לא מועבר מידע לצד שלישי</strong><br><br>
+
+<strong>חיבור Google Calendar:</strong> ⚙️ הגדרות ← "חיבורים" ← חבר Calendar<br>
+• מציג אירועי היום בסיידבר<br>
+• <strong>הנתונים נשארים בחשבון Google שלך בלבד</strong><br><br>
+
+🔒 <strong>האימות הוא אישי לחלוטין</strong> — אנחנו לא רואים ולא שומרים סיסמאות` },
+
+  { icon: '📅', title: 'יומן — תצוגת אירועי היום', body: `
+<pre class="help-ascii">
+  📅 יומן היום
+  ─────────────────────
+  09:00 פגישת לקוח - ישראל ישראלי
+  11:30 שיחת ייעוץ
+  14:00 ─────────────── (עכשיו)
+  15:00 אירוע ── שישי בערב
+  ─────────────────────
+  🔄 עדכן מ-Google Calendar
+</pre>
+<strong>מקור הנתונים:</strong> Google Calendar (אם מחובר) או הזנה ידנית<br><br>
+<strong>עדכון ידני:</strong> לחץ 🔄 ← מושך אירועים עדכניים מהיומן<br><br>
+<strong>תצוגת "מחר":</strong> קטע נפרד מציג אירועי יום המחרת` },
+
+  { icon: '📝', title: 'יומן אישי — מחשבות ורעיונות', body: `
+<pre class="help-ascii">
+  📝 יומן — ראשון, 21 יוני
+  ┌─────────────────────────────────┐
+  │ היום הייתה שיחה מעניינת עם...  │
+  │ למדתי ש...                      │
+  │ מחר אני רוצה להתמקד ב...       │
+  └─────────────────────────────────┘
+  [ 💾 שמור ליומן ]
+</pre>
+כתוב בחופשיות — מחשבות, תובנות, תכנון, סיכום יום<br><br>
+<strong>שמירה:</strong> לחץ "💾 שמור ליומן" ← נשמר אוטומטית תחת תאריך היום<br><br>
+<strong>היסטוריה:</strong> לחץ "📜 היסטוריה" בכותרת הדאשבורד לצפייה בכל הרשומות` },
+
+  { icon: '💬', title: 'שאל קרלוס — העוזר האישי שלך', body: `
+<pre class="help-ascii">
+  ┌─────────────────────────────┐
+  │ 💬 שאל קרלוס                │
+  │ ┌─────────────────────────┐ │
+  │ │ מה המשימות הדחופות שלי?│ │
+  │ └─────────────────────────┘ │
+  │           [ ▶ שלח ]        │
+  └─────────────────────────────┘
+</pre>
+שאל שאלות בשפה חופשית:<br><br>
+• <em>"מה יש לי היום?"</em> — סיכום יום<br>
+• <em>"מה הדחוף?"</em> — משימות דחופות<br>
+• <em>"כמה השלמתי השבוע?"</em> — סטטיסטיקות<br>
+• <em>"בדוק מיילים"</em> — סיכום תיבת דואר<br>
+• <em>"תן לי בריפינג בוקר"</em> — דוח מלא<br><br>
+<strong>הערה:</strong> הצ'אט פועל דרך Claude Code כשהוא מחובר` },
+
+  { icon: '🔔', title: 'זימונים — דף הצ\'אט הציבורי שלך', body: `
+<pre class="help-ascii">
+  הדאשבורד שלך          לקוח שלך
+  ──────────────        ──────────────────
+  📋 הגדר זמנים  ──►   🌐 /book/שם-שלך
+  פנויים                • בוחר שעה
+                        • ממלא פרטים
+                        ↓
+  🔔 התראה חדשה  ◄──   ✅ תור נקבע!
+</pre>
+<strong>הפעלה:</strong> ⚙️ הגדרות ← "פרופיל זימון" ← הגדר שם, כותרת, שירותים<br><br>
+<strong>הוספת זמנים פנויים:</strong> קטע "📅 זימונים" ← "+ הוסף זמן"<br><br>
+<strong>הקישור הציבורי:</strong> מופיע בקטע הזימונים — שתף עם לקוחות<br><br>
+<strong>התראות:</strong> 🔔 בכותרת מופיע כשמגיע תור חדש` },
+
+  { icon: '⚙️', title: 'הגדרות — התאמה אישית', body: `
+<pre class="help-ascii">
+  ⚙️ הגדרות
+  ──────────────────────────────
+  👤 פרופיל       שם + שם עוזר
+  🤖 AI           מפתח Anthropic
+  🏃 הרגלים       הוסף / מחק / ערוך
+  🔌 חיבורים      Gmail + Calendar
+  📖 פלייבוקים    תחומים + מדריכים
+  ──────────────────────────────
+</pre>
+<strong>פרופיל:</strong> שנה את שמך ואת שם העוזר ("קרלוס")<br><br>
+<strong>הרגלים:</strong> הוסף הרגל חדש (אמוג'י + שם) / מחק קיים<br><br>
+<strong>חיבורים:</strong> חבר Gmail ו-Google Calendar לסנכרון אוטומטי<br><br>
+<strong>פלייבוקים:</strong> ערוך תחומי עבודה (שם + אמוג'י) ותוכן המדריכים<br><br>
+<strong>שמירה:</strong> 💾 שמור בתחתית ← חל מיד` },
+
+  { icon: '📄', title: 'ייצוא PDF — הדפסה ושמירה', body: `לחץ 📄 בכותרת הדאשבורד ← הדפדפן פותח חלון הדפסה<br><br>
+<strong>לפני ההדפסה:</strong> כל הקטעים מתרחבים אוטומטית<br><br>
+<strong>בחלון ההדפסה:</strong> בחר "שמור כ-PDF" ← מייצר קובץ מסודר<br><br>
+<strong>מוסתר בהדפסה:</strong> סיידבר, טיימר, כפתורי פעולה — לא מופיעים ב-PDF` }
 ];
 
 document.getElementById('help-btn')?.addEventListener('click', openHelp);
@@ -2040,11 +2242,81 @@ function openHelp() {
   const modal = document.getElementById('help-modal');
   const bodyEl = document.getElementById('help-body');
   if (!modal || !bodyEl) return;
-  bodyEl.innerHTML = HELP_SECTIONS.map(s => `
-    <div class="help-section">
-      <div class="help-section-title">${s.icon} ${s.title}</div>
-      <div class="help-section-body">${s.body}</div>
-    </div>`).join('');
+
+  const collapsed = new Set();
+
+  function _renderHelp(filter) {
+    const q = (filter || '').trim().toLowerCase();
+    const sections = q
+      ? HELP_SECTIONS.filter(s => s.title.toLowerCase().includes(q) || s.body.toLowerCase().includes(q))
+      : HELP_SECTIONS;
+
+    bodyEl.querySelector('#help-sections-wrap').innerHTML = sections.length
+      ? sections.map((s, i) => {
+          const id = 'hs-' + i;
+          const isOpen = !collapsed.has(id);
+          const highlight = q
+            ? t => t.replace(new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi'), '<mark>$1</mark>')
+            : t => t;
+          return `<div class="help-section" id="${id}">
+            <button class="help-section-title" data-hid="${id}">
+              <span>${s.icon} ${highlight(s.title)}</span>
+              <span class="help-toggle">${isOpen ? '▲' : '▼'}</span>
+            </button>
+            <div class="help-section-body" style="display:${isOpen ? 'block' : 'none'}">${s.body}</div>
+          </div>`;
+        }).join('')
+      : '<div class="muted-text" style="padding:20px;text-align:center">לא נמצאו תוצאות לחיפוש זה</div>';
+
+    bodyEl.querySelectorAll('.help-section-title[data-hid]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const hid = btn.dataset.hid;
+        const bodyDiv = btn.nextElementSibling;
+        const toggle = btn.querySelector('.help-toggle');
+        if (bodyDiv.style.display === 'none') {
+          bodyDiv.style.display = 'block';
+          toggle.textContent = '▲';
+          collapsed.delete(hid);
+        } else {
+          bodyDiv.style.display = 'none';
+          toggle.textContent = '▼';
+          collapsed.add(hid);
+        }
+      });
+    });
+  }
+
+  bodyEl.innerHTML = `
+    <div style="padding:0 2px 12px">
+      <div style="position:relative">
+        <input id="help-search" type="text" placeholder="🔍  חפש במדריך..." autocomplete="off"
+          style="width:100%;padding:9px 14px 9px 36px;border:1.5px solid #6c8cff55;border-radius:10px;
+                 background:var(--input-bg);color:var(--text);font-size:.92rem;box-sizing:border-box;direction:rtl">
+        <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-muted);pointer-events:none">✕</span>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+        <button class="help-quick-btn" data-q="">הכל</button>
+        <button class="help-quick-btn" data-q="משימות">📌 משימות</button>
+        <button class="help-quick-btn" data-q="לקוחות">👥 לקוחות</button>
+        <button class="help-quick-btn" data-q="הרגלים">🌱 הרגלים</button>
+        <button class="help-quick-btn" data-q="פרטיות">🔐 פרטיות</button>
+        <button class="help-quick-btn" data-q="זימונים">🔔 זימונים</button>
+      </div>
+    </div>
+    <div id="help-sections-wrap"></div>`;
+
+  const searchEl = bodyEl.querySelector('#help-search');
+  const clearBtn = bodyEl.querySelector('span[style*="left:10px"]');
+  searchEl.addEventListener('input', () => _renderHelp(searchEl.value));
+  clearBtn.addEventListener('click', () => { searchEl.value = ''; _renderHelp(''); });
+  bodyEl.querySelectorAll('.help-quick-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      searchEl.value = btn.dataset.q;
+      _renderHelp(btn.dataset.q);
+    });
+  });
+
+  _renderHelp('');
   modal.classList.remove('hidden');
 }
 
