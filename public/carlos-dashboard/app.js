@@ -1635,7 +1635,7 @@ function openSbFocusForm(items, idx) {
   const form = document.createElement('div');
   form.className = 'sbf-form';
   form.innerHTML = `
-    <input type="text" id="sbf-text" value="${(it.text || '').replace(/"/g,'&quot;')}" placeholder="פוקוס להיום..." style="width:100%;box-sizing:border-box">
+    <input type="text" id="sbf-text" value="${(it.text || '').replace(/"/g,'&quot;')}" placeholder="פוקוס להיום..." style="width:100%;box-sizing:border-box;direction:rtl;text-align:right">
     <div class="sbf-form-btns">
       <button id="sbf-save">💾 שמור</button>
       <button id="sbf-cancel" class="sbf-cancel">ביטול</button>
