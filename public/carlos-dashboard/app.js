@@ -2318,9 +2318,10 @@ ${_hTip('כשמגיע תור חדש — מופיע 🔔 בכותרת הדאשב�
 <div class="hs-settings-list">
   <div class="hs-sl-row"><span class="hs-sl-icon">👤</span><div><strong>פרופיל</strong><div class="hs-sl-sub">שנה את שמך ואת שם העוזר</div></div></div>
   <div class="hs-sl-row"><span class="hs-sl-icon">🏃</span><div><strong>הרגלים</strong><div class="hs-sl-sub">הוסף / מחק / שנה הרגלים יומיים</div></div></div>
+  <div class="hs-sl-row hs-sl-highlight"><span class="hs-sl-icon">📂</span><div><strong>תחומי עבודה</strong><span class="hs-sl-badge">✏️ ניתן לעריכה</span><div class="hs-sl-sub">שנה שם, אמוג'י, הוסף או מחק תחומים (טיפולים / מוזיקה / כלי / כללי...)<br>הם מופיעים בתפריט התוכן ובפלייבוקים</div></div></div>
+  <div class="hs-sl-row hs-sl-highlight"><span class="hs-sl-icon">📲</span><div><strong>סוגי תוכן</strong><span class="hs-sl-badge">✏️ ניתן לעריכה</span><div class="hs-sl-sub">הוסף / מחק / שנה שם של סוגי תוכן (רילס, פוסט, סטורי...) — מופיעים בתפריט הוספת תוכן</div></div></div>
   <div class="hs-sl-row"><span class="hs-sl-icon">🔌</span><div><strong>חיבורים</strong><div class="hs-sl-sub">חבר Gmail ו-Google Calendar</div></div></div>
-  <div class="hs-sl-row"><span class="hs-sl-icon">📲</span><div><strong>סוגי תוכן</strong><div class="hs-sl-sub">הוסף / מחק / שנה שם של סוגי תוכן (רילס, פוסט, סטורי...)</div></div></div>
-  <div class="hs-sl-row"><span class="hs-sl-icon">📖</span><div><strong>פלייבוקים</strong><div class="hs-sl-sub">ערוך תחומי עבודה ותוכן המדריכים</div></div></div>
+  <div class="hs-sl-row"><span class="hs-sl-icon">📖</span><div><strong>פלייבוקים</strong><div class="hs-sl-sub">מדריך תוכן לכל תחום עבודה — מה לפרסם, איך לתקשר, רעיונות</div></div></div>
   <div class="hs-sl-row"><span class="hs-sl-icon">✏️</span><div><strong>פרופיל זימון</strong><div class="hs-sl-sub">הגדר את דף הזימון הציבורי שלך</div></div></div>
 </div>
 ${_hTip('לחץ ⚙️ בפינה הימנית העליונה כדי לפתוח את ההגדרות')}` },
@@ -2649,8 +2650,8 @@ function _openEmojiPicker(anchorEl, onSelect) {
   setTimeout(() => document.addEventListener('click', close), 0);
 }
 
-function _renderPlaybooksSettings(domains, playbooks) {
-  const listEl = document.getElementById('playbooks-settings-list');
+function _renderDomainsSettings(domains, playbooks) {
+  const listEl = document.getElementById('domains-settings-list');
   if (!listEl) return;
   let domList = (domains && domains.length) ? JSON.parse(JSON.stringify(domains)) : [
     { id: 'treatments', emoji: '💆', label: 'טיפולים' },
@@ -2659,156 +2660,125 @@ function _renderPlaybooksSettings(domains, playbooks) {
     { id: 'unassigned', emoji: '📌', label: 'כללי' }
   ];
 
-  function _redraw() {
-    listEl.innerHTML = `
-      <div style="margin-bottom:14px">
-        <div style="font-size:.8rem;color:var(--text-muted);margin-bottom:8px">תחומי הפעילות שלך — כל תחום מקבל פלייבוק נפרד</div>
-        <div id="pb-domains-list" style="display:flex;flex-direction:column;gap:6px"></div>
-        <div style="margin-top:8px;display:flex;gap:6px;align-items:center">
-          <button id="pb-new-emoji-btn" title="בחר אמוג'י"
-            style="font-size:1.3rem;min-width:40px;padding:4px 6px;border:1px solid var(--border);border-radius:8px;background:var(--card);cursor:pointer">📌</button>
-          <input id="pb-new-label" type="text" placeholder="שם התחום..."
-            style="flex:1;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:inherit;direction:rtl">
-          <button id="pb-add-domain-btn"
-            style="padding:6px 12px;background:var(--primary);color:#fff;border:none;border-radius:6px;cursor:pointer;white-space:nowrap">+ הוסף</button>
-        </div>
-      </div>
-      <hr style="border:none;border-top:1px solid var(--sep2);margin:14px 0">
-      <div id="pb-contents-list" style="display:flex;flex-direction:column;gap:16px"></div>`;
-
-    // Render domain rows
-    const domRows = document.getElementById('pb-domains-list');
-    domList.forEach((d, i) => {
-      const row = document.createElement('div');
-      row.style.cssText = 'display:flex;gap:6px;align-items:center';
-      row.innerHTML = `
-        <button class="pb-emoji-btn" data-di="${i}" title="בחר אמוג'י"
-          style="font-size:1.3rem;min-width:40px;padding:4px 6px;border:1px solid var(--border);border-radius:8px;background:var(--card);cursor:pointer">${_esc(d.emoji)}</button>
-        <input type="text" value="${_esc(d.label)}" data-di="${i}" data-field="label"
-          style="flex:1;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:inherit;direction:rtl">
-        <button data-del="${i}" title="מחק תחום"
-          style="background:transparent;border:1px solid #ff606044;color:#ff6060;padding:4px 9px;border-radius:6px;cursor:pointer;font-size:.85rem">✕</button>`;
-      domRows.appendChild(row);
-    });
-
-    // Render playbook textareas
-    const contList = document.getElementById('pb-contents-list');
-    domList.forEach(d => {
-      const saved = (playbooks || []).find(p => p.domain_id === d.id);
-      const content = (saved && saved.content) ? saved.content : _pbDefault(d.id);
-      const wrap = document.createElement('div');
-      wrap.innerHTML = `
-        <div style="font-size:.85rem;font-weight:600;color:var(--text2);margin-bottom:5px">${_esc(d.emoji)} ${_esc(d.label)}</div>
-        <textarea data-domain="${_esc(d.id)}" rows="6"
-          style="width:100%;background:var(--input-bg);color:var(--text);border:1.5px solid #6c8cff33;border-radius:8px;padding:10px;font-size:.84rem;direction:rtl;resize:vertical;box-sizing:border-box;font-family:inherit;line-height:1.6"
-        >${_esc(content)}</textarea>
-        <button data-save-domain="${_esc(d.id)}"
-          style="margin-top:5px;background:var(--accent);color:#fff;border:none;padding:5px 14px;border-radius:7px;cursor:pointer;font-size:.82rem">
-          💾 שמור מדריך
-        </button>`;
-      contList.appendChild(wrap);
-    });
-
-    // Events: emoji picker buttons
-    domRows.querySelectorAll('.pb-emoji-btn').forEach(btn => {
-      btn.addEventListener('click', e => {
-        e.stopPropagation();
-        const i = parseInt(btn.dataset.di);
-        _openEmojiPicker(btn, em => {
-          domList[i].emoji = em;
-          btn.textContent = em;
-          // Also update the content list header live
-          const headers = contList.querySelectorAll('div[style*="font-weight"]');
-          if (headers[i]) headers[i].textContent = em + ' ' + domList[i].label;
-        });
-      });
-    });
-
-    // Events: live-edit domain label
-    domRows.querySelectorAll('input[data-di]').forEach(inp => {
-      inp.addEventListener('input', () => {
-        const i = parseInt(inp.dataset.di);
-        domList[i][inp.dataset.field] = inp.value;
-      });
-    });
-
-    // New domain emoji picker
-    document.getElementById('pb-new-emoji-btn')?.addEventListener('click', e => {
-      e.stopPropagation();
-      const btn = document.getElementById('pb-new-emoji-btn');
-      _openEmojiPicker(btn, em => { btn.textContent = em; });
-    });
-
-    // Delete domain
-    domRows.querySelectorAll('[data-del]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        domList.splice(parseInt(btn.dataset.del), 1);
-        _redraw();
-      });
-    });
-
-    // Add domain
-    document.getElementById('pb-add-domain-btn').addEventListener('click', () => {
-      const emoji = (document.getElementById('pb-new-emoji-btn')?.textContent || '📌').trim();
-      const label = document.getElementById('pb-new-label').value.trim();
-      if (!label) { toast('הזן שם לתחום', false); return; }
-      const id = label.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '') + '-' + Date.now().toString(36);
-      domList.push({ id, emoji, label });
-      _redraw();
-    });
-
-    // Save domains list
-    document.getElementById('pb-save-domains-btn')?.addEventListener('click', _saveDomains);
-
-    // Save playbook content
-    listEl.querySelectorAll('[data-save-domain]').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        const domainId = btn.dataset.saveDomain;
-        const ta = listEl.querySelector(`textarea[data-domain="${domainId}"]`);
-        if (!ta) return;
-        btn.disabled = true; btn.textContent = '⏳';
-        const r = await api('/api/playbook/save', { domain_id: domainId, content: ta.value });
-        if (r && r.ok) {
-          if (lastState && lastState.playbooks) {
-            const idx = lastState.playbooks.findIndex(p => p.domain_id === domainId);
-            if (idx >= 0) lastState.playbooks[idx].content = ta.value;
-            else lastState.playbooks.push({ domain_id: domainId, content: ta.value });
-          }
-          toast('מדריך נשמר ✓');
-        } else {
-          toast('שגיאה בשמירה', false);
-        }
-        btn.disabled = false; btn.textContent = '💾 שמור מדריך';
-      });
-    });
-  }
-
   async function _saveDomains() {
-    const btn = document.getElementById('pb-save-domains-btn');
+    const btn = document.getElementById('domains-save-btn');
     if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
     const r = await api('/api/settings/update', { domains: domList });
     if (r && r.ok) {
       if (lastState && lastState.userConfig) lastState.userConfig.domains = domList;
       renderPlaybookSidebar(domList, lastState && lastState.playbooks);
+      renderContentSelects(lastState && lastState.userConfig && lastState.userConfig.contentTypes, domList);
+      _renderPlaybooksSettings(domList, playbooks);
       toast('תחומים נשמרו ✓');
-    } else {
-      toast('שגיאה בשמירה', false);
-    }
+    } else { toast('שגיאה בשמירה', false); }
     if (btn) { btn.disabled = false; btn.textContent = '💾 שמור תחומים'; }
   }
 
-  _redraw();
+  function _redraw() {
+    listEl.innerHTML = `
+      <div class="domains-edit-hint">✏️ ניתן לשנות שם, אמוג'י, להוסיף ולמחוק תחומים — הם יופיעו בכל הרשימות והפלייבוקים</div>
+      <div id="dm-rows" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px"></div>
+      <div class="domains-add-row">
+        <button id="dm-new-emoji-btn" class="dm-emoji-btn" title="בחר אמוג'י">📌</button>
+        <input id="dm-new-label" type="text" placeholder="שם תחום חדש..."
+          style="flex:1;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:inherit;direction:rtl;min-width:0">
+        <button id="dm-add-btn" class="dm-add-btn">+ הוסף</button>
+      </div>
+      <button id="domains-save-btn" class="domains-save-btn">💾 שמור תחומים</button>`;
 
-  // Add save-domains button after the section renders
-  const section = document.getElementById('playbooks-settings-section');
-  if (section) {
-    const saveBtn = document.createElement('button');
-    saveBtn.id = 'pb-save-domains-btn';
-    saveBtn.textContent = '💾 שמור תחומים';
-    saveBtn.style.cssText = 'margin-top:4px;background:var(--primary);color:#fff;border:none;padding:7px 18px;border-radius:8px;cursor:pointer;font-size:.88rem';
-    saveBtn.addEventListener('click', _saveDomains);
-    section.appendChild(saveBtn);
+    const rows = listEl.querySelector('#dm-rows');
+    domList.forEach((d, i) => {
+      const row = document.createElement('div');
+      row.className = 'dm-row';
+      row.innerHTML = `
+        <button class="dm-emoji-btn dm-row-emoji" data-di="${i}" title="בחר אמוג'י">${_esc(d.emoji)}</button>
+        <input class="dm-row-input" type="text" value="${_esc(d.label)}" data-di="${i}"
+          style="flex:1;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:inherit;direction:rtl;min-width:0">
+        <button class="dm-del-btn" data-del="${i}" title="מחק תחום">✕</button>`;
+      rows.appendChild(row);
+    });
+
+    rows.querySelectorAll('.dm-row-emoji').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        _openEmojiPicker(btn, em => { domList[parseInt(btn.dataset.di)].emoji = em; btn.textContent = em; });
+      });
+    });
+    rows.querySelectorAll('.dm-row-input').forEach(inp => {
+      inp.addEventListener('input', () => { domList[parseInt(inp.dataset.di)].label = inp.value; });
+    });
+    rows.querySelectorAll('.dm-del-btn').forEach(btn => {
+      btn.addEventListener('click', () => { domList.splice(parseInt(btn.dataset.del), 1); _redraw(); });
+    });
+
+    listEl.querySelector('#dm-new-emoji-btn').addEventListener('click', e => {
+      e.stopPropagation();
+      _openEmojiPicker(listEl.querySelector('#dm-new-emoji-btn'), em => {
+        listEl.querySelector('#dm-new-emoji-btn').textContent = em;
+      });
+    });
+    listEl.querySelector('#dm-add-btn').addEventListener('click', () => {
+      const emoji = listEl.querySelector('#dm-new-emoji-btn').textContent.trim() || '📌';
+      const label = listEl.querySelector('#dm-new-label').value.trim();
+      if (!label) { toast('הזן שם לתחום', false); return; }
+      const id = label.toLowerCase().replace(/\s+/g,'-').replace(/[^\w-]/g,'') + '-' + Date.now().toString(36);
+      domList.push({ id, emoji, label });
+      _redraw();
+    });
+    listEl.querySelector('#domains-save-btn').addEventListener('click', _saveDomains);
   }
+  _redraw();
+}
+
+function _renderPlaybooksSettings(domains, playbooks) {
+  const listEl = document.getElementById('playbooks-settings-list');
+  if (!listEl) return;
+  const domList = (domains && domains.length) ? domains : [
+    { id: 'treatments', emoji: '💆', label: 'טיפולים' },
+    { id: 'music',      emoji: '🎵', label: 'מוזיקה' },
+    { id: 'product',    emoji: '🚀', label: 'כלי' },
+    { id: 'unassigned', emoji: '📌', label: 'כללי' }
+  ];
+
+  listEl.innerHTML = `
+    <div style="font-size:.8rem;color:var(--text-muted);margin-bottom:12px">מדריך תוכן לכל תחום — מה לפרסם, איך לתקשר, רעיונות</div>
+    <div id="pb-contents-list" style="display:flex;flex-direction:column;gap:16px"></div>`;
+
+  const contList = document.getElementById('pb-contents-list');
+  domList.forEach(d => {
+    const saved = (playbooks || []).find(p => p.domain_id === d.id);
+    const content = (saved && saved.content) ? saved.content : _pbDefault(d.id);
+    const wrap = document.createElement('div');
+    wrap.innerHTML = `
+      <div style="font-size:.85rem;font-weight:600;color:var(--text2);margin-bottom:5px">${_esc(d.emoji)} ${_esc(d.label)}</div>
+      <textarea data-domain="${_esc(d.id)}" rows="6"
+        style="width:100%;background:var(--input-bg);color:var(--text);border:1.5px solid #6c8cff33;border-radius:8px;padding:10px;font-size:.84rem;direction:rtl;resize:vertical;box-sizing:border-box;font-family:inherit;line-height:1.6"
+      >${_esc(content)}</textarea>
+      <button data-save-domain="${_esc(d.id)}"
+        style="margin-top:5px;background:var(--accent);color:#fff;border:none;padding:5px 14px;border-radius:7px;cursor:pointer;font-size:.82rem">
+        💾 שמור מדריך
+      </button>`;
+    contList.appendChild(wrap);
+  });
+
+  listEl.querySelectorAll('[data-save-domain]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const domainId = btn.dataset.saveDomain;
+      const ta = listEl.querySelector(`textarea[data-domain="${domainId}"]`);
+      if (!ta) return;
+      btn.disabled = true; btn.textContent = '⏳';
+      const r = await api('/api/playbook/save', { domain_id: domainId, content: ta.value });
+      if (r && r.ok) {
+        if (lastState && lastState.playbooks) {
+          const idx = lastState.playbooks.findIndex(p => p.domain_id === domainId);
+          if (idx >= 0) lastState.playbooks[idx].content = ta.value;
+          else lastState.playbooks.push({ domain_id: domainId, content: ta.value });
+        }
+        toast('מדריך נשמר ✓');
+      } else { toast('שגיאה בשמירה', false); }
+      btn.disabled = false; btn.textContent = '💾 שמור מדריך';
+    });
+  });
 }
 
 function _renderHabitsSettings() {
@@ -2909,7 +2879,7 @@ function _renderHabitsSettings() {
   });
 }
 
-async function openSettings() {
+async function openSettings(scrollTo) {
   const modal  = document.getElementById('settings-modal');
   const bodyEl = document.getElementById('settings-body');
   if (!modal || !bodyEl) return;
@@ -3167,6 +3137,11 @@ function renderSettings(s, bodyEl) {
     </div>
 
     <div class="settings-section">
+      <div class="settings-section-title">📂 תחומי עבודה</div>
+      <div id="domains-settings-list"></div>
+    </div>
+
+    <div class="settings-section">
       <div class="settings-section-title">📲 סוגי תוכן</div>
       <div id="content-types-settings-list"></div>
     </div>
@@ -3189,6 +3164,9 @@ function renderSettings(s, bodyEl) {
   // ── Habits section ────────────────────────────────────────
   _renderHabitsSettings();
 
+  // ── Domains section ───────────────────────────────────────
+  _renderDomainsSettings(s._domains, s._playbooks);
+
   // ── Content types section ─────────────────────────────────
   _renderContentTypesSettings(s._contentTypes);
 
@@ -3197,6 +3175,20 @@ function renderSettings(s, bodyEl) {
 
   // Load diagnose immediately after rendering
   loadConnectionsDiagnose();
+
+  // Scroll to requested section
+  if (scrollTo) {
+    const sectionMap = {
+      domains:       'domains-settings-list',
+      'content-types': 'content-types-settings-list',
+      playbooks:     'playbooks-settings-section'
+    };
+    const targetId = sectionMap[scrollTo] || scrollTo;
+    setTimeout(() => {
+      const el = document.getElementById(targetId);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 80);
+  }
 
   document.getElementById('settings-cancel-btn').addEventListener('click', () =>
     document.getElementById('settings-modal').classList.add('hidden'));

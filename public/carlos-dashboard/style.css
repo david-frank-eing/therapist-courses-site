@@ -1152,8 +1152,24 @@ input[type=checkbox] { width: 18px; height: 18px; cursor: pointer; accent-color:
 .hs-sl-row:first-child { border-top:none; }
 .hs-sl-icon { font-size:1.1rem;flex-shrink:0; }
 .hs-sl-sub { font-size:.76rem;color:var(--text-muted);margin-top:2px; }
+.hs-sl-highlight { background:#6c8cff0a; }
+.hs-sl-badge { display:inline-block;background:#ffcc44;color:#1a1a00;border-radius:5px;padding:1px 7px;font-size:.68rem;font-weight:700;margin-right:6px;vertical-align:middle; }
 .hs-editable-note { background:#ffcc4418;border:1.5px solid #ffcc4444;border-radius:10px;padding:10px 14px;margin:10px 0;font-size:.83rem;color:var(--text2);line-height:1.7; }
 .hs-editable-badge { display:inline-block;background:#ffcc44;color:#1a1a00;border-radius:6px;padding:1px 8px;font-size:.75rem;font-weight:700;margin-bottom:5px; }
+
+/* ── Domains settings ── */
+.domains-edit-hint { font-size:.8rem;color:var(--text-muted);background:var(--hover);border-radius:8px;padding:8px 12px;margin-bottom:10px; }
+.dm-row { display:flex;gap:6px;align-items:center; }
+.dm-emoji-btn { font-size:1.2rem;min-width:38px;padding:4px 6px;border:1px solid var(--border);border-radius:8px;background:var(--card);cursor:pointer;flex-shrink:0; }
+.dm-del-btn { background:transparent;border:1px solid #ff606044;color:#ff6060;padding:4px 9px;border-radius:6px;cursor:pointer;font-size:.85rem;white-space:nowrap;flex-shrink:0; }
+.dm-add-btn { padding:6px 12px;background:var(--primary);color:#fff;border:none;border-radius:6px;cursor:pointer;white-space:nowrap;flex-shrink:0; }
+.domains-add-row { display:flex;gap:6px;align-items:center;margin-top:8px; }
+.domains-save-btn { margin-top:10px;background:var(--primary);color:#fff;border:none;padding:7px 18px;border-radius:8px;cursor:pointer;font-size:.88rem;width:100%; }
+
+/* ── Content-add edit hint ── */
+.content-edit-hint { display:flex;align-items:center;gap:8px;padding:5px 0 2px;font-size:.75rem;color:var(--text-muted); }
+.content-edit-hint-btn { background:transparent;border:1px solid var(--border);border-radius:6px;padding:2px 10px;font-size:.75rem;color:var(--text-muted);cursor:pointer;transition:all .15s; }
+.content-edit-hint-btn:hover { background:var(--hover);color:var(--text); }
 
 /* ── Section divider ── */
 .section-divider { border: none; border-top: 1px solid var(--sep2); margin: 14px 0; }
@@ -1232,6 +1248,20 @@ input[type=checkbox] { width: 18px; height: 18px; cursor: pointer; accent-color:
 
   .pb-modal-inner { width: 95vw; max-height: 85vh; }
   .settings-inner  { padding: 18px 16px; max-width: 100%; }
+
+  /* Content add row — wrap on mobile */
+  .content-add { flex-wrap: wrap; gap: 6px; }
+  .content-add select { flex: 1 1 calc(50% - 6px); min-width: 0; }
+  .content-add input[type="text"] { flex: 1 1 100%; }
+  .content-add button { flex-shrink: 0; }
+
+  /* Domain/content-type rows */
+  .dm-row { flex-wrap: nowrap; }
+  .domains-add-row { flex-wrap: wrap; }
+  .domains-add-row input { flex: 1 1 100%; }
+
+  /* Settings list highlights */
+  .hs-sl-row { padding: 10px 10px; }
 }
 
 @media (max-width: 480px) {
@@ -1243,6 +1273,17 @@ input[type=checkbox] { width: 18px; height: 18px; cursor: pointer; accent-color:
   #task-stats { font-size: .78rem; }
   .section-title { font-size: .85rem; }
   .task-item { font-size: .88rem; }
+
+  /* Full-width dropdowns in content section */
+  .content-add { flex-direction: column; }
+  .content-add select, .content-add input, .content-add button { width: 100%; box-sizing: border-box; }
+
+  /* Domains settings compact */
+  .dm-add-btn { padding: 6px 8px; font-size: .82rem; }
+  .domains-save-btn { font-size: .85rem; padding: 7px 12px; }
+
+  /* Settings section titles */
+  .settings-section-title { font-size: .88rem; }
 }
 
 /* ── Print / PDF Export ── */
