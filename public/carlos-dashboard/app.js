@@ -1656,8 +1656,7 @@ $('#add-contact').addEventListener('click', () => {
 // ---------- Calendar quick-access ----------
 $('#cal-link').addEventListener('click', (e) => {
   e.preventDefault();
-  window.open('https://calendar.google.com/calendar/u/0/r/week', 'gcal',
-    'width=960,height=720,left=120,top=80');
+  window.open('https://calendar.google.com/calendar/r/agenda', '_blank');
 });
 
 // ---------- Habits history — last 7 days grid ----------
@@ -1872,8 +1871,7 @@ function initSectionToggles() {
 // ---------- Booking section: open Google Calendar ----------
 document.getElementById('booking-cal-link')?.addEventListener('click', (e) => {
   e.preventDefault();
-  window.open('https://calendar.google.com/calendar/u/0/r/week', 'gcal',
-    'width=960,height=720,left=120,top=80');
+  window.open('https://calendar.google.com/calendar/r/agenda', '_blank');
 });
 
 // ---------- Ask Carlos (sidebar chat) ----------
