@@ -1303,6 +1303,87 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
   outline-offset: 2px;
 }
 
+/* ── Journal ── */
+.jnl-preview {
+  background: #1a2535;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  max-height: 200px;
+  overflow-y: auto;
+  font-size: .88rem;
+  line-height: 1.6;
+}
+.jnl-line { color: #c8d8e8; }
+.jnl-line.jnl-ts { color: #6c8cff; font-size: .8rem; margin-top: 6px; }
+.jnl-actions { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
+.jnl-hist-btn {
+  background: transparent;
+  border: 1px solid #334;
+  color: #8899aa;
+  border-radius: 7px;
+  padding: 6px 12px;
+  font-size: .85rem;
+  cursor: pointer;
+  transition: background .15s, color .15s;
+}
+.jnl-hist-btn:hover { background: #1e2d3d; color: #c8d8e8; }
+
+/* Journal archive modal */
+.jnl-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: #0009;
+  z-index: 1200;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.jnl-modal-inner {
+  background: #131c27;
+  border: 1px solid #2a3a4a;
+  border-radius: 14px;
+  width: 100%;
+  max-width: 560px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.jnl-modal-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px;
+  border-bottom: 1px solid #1e2d3d;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #c8d8e8;
+}
+.jnl-modal-close {
+  background: none;
+  border: none;
+  color: #6688aa;
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.jnl-modal-close:hover { background: #1e2d3d; color: #fff; }
+.jnl-modal-body {
+  overflow-y: auto;
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.jnl-arch-entry { border-bottom: 1px solid #1e2d3d; padding-bottom: 14px; }
+.jnl-arch-entry:last-child { border-bottom: none; padding-bottom: 0; }
+.jnl-arch-date { font-size: .82rem; color: #6c8cff; font-weight: 600; margin-bottom: 6px; }
+.jnl-arch-body { font-size: .88rem; line-height: 1.7; }
+.jnl-loading, .jnl-empty { color: #6688aa; font-size: .9rem; text-align: center; padding: 20px 0; }
+
 /* ── Print / PDF Export ── */
 @media print {
   .sidebar, #timer-widget,

@@ -94,6 +94,7 @@ async function loadState() {
   renderBookingAlerts(s.bookingData && s.bookingData.notifications, s.bookingData && s.bookingData.appointments);
   renderPlaybookSidebar(s.userConfig && s.userConfig.domains, s.playbooks);
   renderRefreshStatus(s.lastRefresh, s.date);
+  renderJournal(s.journalToday);
 }
 
 function renderRefreshStatus(lastRefresh, todayDate) {
@@ -998,6 +999,23 @@ $('#add-task').addEventListener('click', async () => {
 $('#new-task').addEventListener('keydown', e => { if (e.key === 'Enter') $('#add-task').click(); });
 
 // ---------- Journal ----------
+function renderJournal(todayText) {
+  const preview = document.getElementById('journal-today-preview');
+  if (!preview) return;
+  if (todayText) {
+    preview.innerHTML = todayText.split('\n').map(line =>
+      line.startsWith('[') ? `<div class="jnl-line jnl-ts">${_esc(line)}</div>` : `<div class="jnl-line">${_esc(line)}</div>`
+    ).join('');
+    preview.style.display = '';
+  } else {
+    preview.style.display = 'none';
+  }
+}
+
+function _esc(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
 $('#journal-save').addEventListener('click', async () => {
   const v = $('#journal-text').value.trim();
   if (!v) { toast('כתוב משהו קודם', false); return; }
@@ -1005,6 +1023,36 @@ $('#journal-save').addEventListener('click', async () => {
   $('#journal-text').value = '';
   toast('✓ נשמר ליומן האישי של היום');
   loadState();
+});
+
+$('#journal-history-btn').addEventListener('click', async () => {
+  const modal = document.getElementById('journal-modal');
+  const body = document.getElementById('journal-modal-body');
+  if (!modal || !body) return;
+  body.innerHTML = '<div class="jnl-loading">טוען...</div>';
+  modal.style.display = 'flex';
+  const res = await api('/api/journal/history');
+  const entries = (res && res.entries) || [];
+  if (!entries.length) {
+    body.innerHTML = '<div class="jnl-empty">אין רשומות קודמות</div>';
+    return;
+  }
+  const heDate = d => new Date(d + 'T12:00:00Z').toLocaleDateString('he-IL',
+    { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  body.innerHTML = entries.map(e => `
+    <div class="jnl-arch-entry">
+      <div class="jnl-arch-date">${heDate(e.date)}</div>
+      <div class="jnl-arch-body">${e.body.split('\n').map(l =>
+        l.startsWith('[') ? `<div class="jnl-line jnl-ts">${_esc(l)}</div>` : `<div class="jnl-line">${_esc(l)}</div>`
+      ).join('')}</div>
+    </div>`).join('');
+});
+
+document.getElementById('journal-modal-close').addEventListener('click', () => {
+  document.getElementById('journal-modal').style.display = 'none';
+});
+document.getElementById('journal-modal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) e.currentTarget.style.display = 'none';
 });
 
 // ---------- Sound (real audio files + unlock on first gesture) ----------

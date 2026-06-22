@@ -319,12 +319,28 @@ window._sbApi = async function(url, body) {
   // ── Journal ───────────────────────────────────────────────────────────────
   if (url === '/api/journal') {
     const today = _ilDate();
+    const { data: existing } = await sb.from('journal_entries')
+      .select('id, body').eq('user_id', uid).eq('date', today).maybeSingle();
+    const timeStr = new Date().toLocaleTimeString('he-IL',
+      { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jerusalem' });
+    const newEntry = `[${timeStr}] ${body.text}`;
+    const newBody = existing ? (existing.body + '\n\n' + newEntry) : newEntry;
     const { error } = await sb.from('journal_entries').upsert(
-      { user_id: uid, date: today, body: body.text, updated_at: new Date().toISOString() },
+      { user_id: uid, date: today, body: newBody, updated_at: new Date().toISOString() },
       { onConflict: 'user_id,date' }
     );
     if (error) throw error;
     return { ok: true };
+  }
+
+  if (url === '/api/journal/history') {
+    const { data, error } = await sb.from('journal_entries')
+      .select('date, body, updated_at')
+      .eq('user_id', uid)
+      .order('date', { ascending: false })
+      .limit(30);
+    if (error) throw error;
+    return { entries: data || [] };
   }
 
   // ── Content ───────────────────────────────────────────────────────────────
