@@ -147,7 +147,7 @@ async function _sbGetState(sb, uid) {
     userConfig: {
       userName: window._userName || '',
       assistantName: (configRow && configRow.assistant_name) || 'קרלוס',
-      edition: 'full',
+      edition: (configRow && configRow.edition) || 'full',
       aiBriefing: false,
       domains,
       contentTypes,
@@ -555,7 +555,7 @@ window._sbApi = async function(url, body) {
     return {
       userName: window._userName || '',
       assistantName: (data && data.assistant_name) || 'קרלוס',
-      edition: 'full',
+      edition: (data && data.edition) || 'full',
       apiKeySet: false,
       weeklyTargets: Object.entries(quotas).map(([k, q]) => ({
         key: k, label: q.label || k, target: q.target || 0, unit: q.unit || ''
@@ -570,6 +570,7 @@ window._sbApi = async function(url, body) {
     if (body.content_types !== undefined) update.content_types = body.content_types;
     if (body.contacts_labels !== undefined) update.contacts_labels = body.contacts_labels;
     if (body.categories !== undefined) update.categories = body.categories;
+    if (body.edition !== undefined) update.edition = body.edition;
     const { error } = await sb.from('dashboard_config').upsert(
       { user_id: uid, ...update }, { onConflict: 'user_id' }
     );
