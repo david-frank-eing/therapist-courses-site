@@ -94,7 +94,6 @@ async function loadState() {
   renderBookingAlerts(s.bookingData && s.bookingData.notifications, s.bookingData && s.bookingData.appointments);
   renderPlaybookSidebar(s.userConfig && s.userConfig.domains, s.playbooks);
   renderRefreshStatus(s.lastRefresh, s.date);
-  renderJournal(s.journalToday);
 }
 
 function renderRefreshStatus(lastRefresh, todayDate) {
@@ -999,19 +998,6 @@ $('#add-task').addEventListener('click', async () => {
 $('#new-task').addEventListener('keydown', e => { if (e.key === 'Enter') $('#add-task').click(); });
 
 // ---------- Journal ----------
-function renderJournal(todayText) {
-  const preview = document.getElementById('journal-today-preview');
-  if (!preview) return;
-  if (todayText) {
-    preview.innerHTML = todayText.split('\n').map(line =>
-      line.startsWith('[') ? `<div class="jnl-line jnl-ts">${_esc(line)}</div>` : `<div class="jnl-line">${_esc(line)}</div>`
-    ).join('');
-    preview.style.display = '';
-  } else {
-    preview.style.display = 'none';
-  }
-}
-
 function _esc(s) {
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }

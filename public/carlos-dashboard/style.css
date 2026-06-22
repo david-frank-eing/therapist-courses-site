@@ -1304,16 +1304,6 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 }
 
 /* ── Journal ── */
-.jnl-preview {
-  background: #1a2535;
-  border-radius: 8px;
-  padding: 10px 12px;
-  margin-bottom: 10px;
-  max-height: 200px;
-  overflow-y: auto;
-  font-size: .88rem;
-  line-height: 1.6;
-}
 .jnl-line { color: #c8d8e8; }
 .jnl-line.jnl-ts { color: #6c8cff; font-size: .8rem; margin-top: 6px; }
 .jnl-actions { display: flex; gap: 8px; align-items: center; margin-top: 8px; }

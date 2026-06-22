@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title id="page-title">קרלוס · דאשבורד</title>
-  <link rel="stylesheet" href="style.css?v=73">
+  <link rel="stylesheet" href="style.css?v=74">
 </head>
 <body>
   <div id="toast-area"></div>
@@ -180,11 +180,10 @@
         <section id="journal" class="card collapsible">
           <h2><span>📝 יומן אישי</span><button class="section-toggle" type="button">▾</button></h2>
           <div class="section-body">
-            <div id="journal-today-preview" class="jnl-preview" style="display:none"></div>
             <textarea id="journal-text" placeholder="הוסף רשומה..."></textarea>
             <div class="jnl-actions">
               <button id="journal-save">שמור ליומן</button>
-              <button id="journal-history-btn" class="jnl-hist-btn">📚 ארכיון</button>
+              <button id="journal-history-btn" class="jnl-hist-btn">📖 ראה יומן</button>
             </div>
           </div>
         </section>
@@ -193,7 +192,7 @@
         <div id="journal-modal" class="jnl-modal" style="display:none" role="dialog" aria-modal="true">
           <div class="jnl-modal-inner">
             <div class="jnl-modal-head">
-              <span>📚 ארכיון יומן</span>
+              <span>📖 יומן אישי</span>
               <button id="journal-modal-close" class="jnl-modal-close">✕</button>
             </div>
             <div id="journal-modal-body" class="jnl-modal-body"></div>
@@ -465,6 +464,6 @@
     })();
   </script>
   <script src="supabase-api.js?v=1"></script>
-  <script src="app.js?v=73"></script>
+  <script src="app.js?v=74"></script>
 </body>
 </html>
