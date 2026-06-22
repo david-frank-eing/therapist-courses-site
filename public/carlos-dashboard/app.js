@@ -2532,18 +2532,28 @@ function openHelp() {
                  background:var(--input-bg);color:var(--text);font-size:.92rem;box-sizing:border-box;direction:rtl">
         <button id="help-search-clear" style="position:absolute;left:8px;top:50%;transform:translateY(-50%);background:transparent;border:none;color:var(--text-muted);cursor:pointer;font-size:1rem;padding:4px">✕</button>
       </div>
-      <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;align-items:center">
-        <button class="help-quick-btn help-qb-active" data-q="" data-title-only="0">הכל</button>
+      <div class="help-qb-row">
+        <button class="help-quick-btn help-qb-active" data-q="" data-title-only="0">✦ הכל</button>
+        <button class="help-quick-btn" data-q="מפת" data-title-only="1">🗺️ מפת הדאשבורד</button>
+        <button class="help-quick-btn" data-q="בריפינג" data-title-only="1">🌅 בריפינג</button>
         <button class="help-quick-btn" data-q="משימות" data-title-only="1">📌 משימות</button>
         <button class="help-quick-btn" data-q="לקוחות" data-title-only="1">👥 לקוחות</button>
         <button class="help-quick-btn" data-q="הרגלים" data-title-only="1">🌱 הרגלים</button>
-        <button class="help-quick-btn" data-q="פרטיות" data-title-only="1">🔐 פרטיות</button>
+        <button class="help-quick-btn" data-q="טיימר" data-title-only="1">⏱️ טיימר</button>
+        <button class="help-quick-btn" data-q="תוכן שבועי" data-title-only="1">📲 תוכן</button>
+        <button class="help-quick-btn" data-q="מכסות" data-title-only="1">📊 מכסות</button>
+        <button class="help-quick-btn" data-q="פלייבוקים" data-title-only="1">📖 פלייבוקים</button>
+        <button class="help-quick-btn" data-q="מייל" data-title-only="1">📧 מייל ויומן</button>
+        <button class="help-quick-btn" data-q="אירועי" data-title-only="1">📅 יומן יומי</button>
+        <button class="help-quick-btn" data-q="יומן אישי" data-title-only="1">📝 יומן אישי</button>
+        <button class="help-quick-btn" data-q="שאל" data-title-only="1">💬 שאל קרלוס</button>
         <button class="help-quick-btn" data-q="זימונים" data-title-only="1">🔔 זימונים</button>
-        <button class="help-quick-btn" data-q="יומן אישי" data-title-only="1">📝 יומן</button>
-        <div style="margin-right:auto;display:flex;gap:4px">
-          <button id="help-expand-all" class="help-ctrl-btn">פתח הכל ▼</button>
-          <button id="help-collapse-all" class="help-ctrl-btn">כווץ הכל ▲</button>
-        </div>
+        <button class="help-quick-btn" data-q="פרטיות" data-title-only="1">🔐 פרטיות</button>
+        <button class="help-quick-btn" data-q="הגדרות" data-title-only="1">⚙️ הגדרות</button>
+      </div>
+      <div class="help-ctrl-row">
+        <button id="help-expand-all" class="help-ctrl-btn">פתח הכל ▼</button>
+        <button id="help-collapse-all" class="help-ctrl-btn">כווץ הכל ▲</button>
       </div>
     </div>
     <div id="help-sections-wrap"></div>`;
