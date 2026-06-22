@@ -77,6 +77,17 @@ export default function BookingPage() {
     setSubmitting(true);
     setError("");
 
+    // Re-check slot availability to prevent race conditions
+    const { data: slotCheck } = await supabase
+      .from("availability_slots").select("booked").eq("id", selectedSlot.id).single();
+    if (slotCheck?.booked) {
+      setError("מצטערים, חלון זה כבר נתפס. אנא בחר חלון אחר.");
+      setSubmitting(false);
+      setSelectedSlot(null);
+      setSlots(prev => prev.filter(s => s.id !== selectedSlot.id));
+      return;
+    }
+
     const { error: apptErr } = await supabase.from("appointments").insert({
       user_id: profile.user_id,
       slot_id: selectedSlot.id,

@@ -255,7 +255,7 @@ window._sbApi = async function(url, body) {
     const habitId = body.id;
     const today = _ilDate();
     const { data: existing } = await sb.from('habits_log')
-      .select('id, done').eq('habit_id', habitId).eq('date', today).maybeSingle();
+      .select('id, done').eq('user_id', uid).eq('habit_id', habitId).eq('date', today).maybeSingle();
     if (existing) {
       const { error } = await sb.from('habits_log').update({ done: !existing.done }).eq('id', existing.id);
       if (error) throw error;

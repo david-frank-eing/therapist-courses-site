@@ -1284,6 +1284,13 @@ input[type=checkbox] { width: 18px; height: 18px; cursor: pointer; accent-color:
   .dash-header h1 { font-size: 1.15rem; }
   #timer-widget { left: auto; right: 8px; bottom: 12px; min-width: 130px; max-width: calc(100vw - 32px); transform: scale(0.8); transform-origin: bottom right; }
   .modal-box { width: 98vw; padding: 14px; }
+  /* Mobile tap targets — WCAG 2.5 min 44px */
+  .section-toggle { min-height: 44px; min-width: 44px; }
+  .ct-tab { min-height: 44px; padding: 10px 16px; }
+  .row-edit-btn { min-height: 36px; min-width: 36px; padding: 6px 10px; }
+  .time-del { min-height: 36px; min-width: 36px; padding: 6px 8px; }
+  .jnl-month-toggle { min-height: 44px; }
+  .modal-close-btn, #journal-modal-close, #pb-modal-close { min-height: 44px; min-width: 44px; font-size: 1.1rem; }
   .card { padding: 12px; }
   #task-stats { font-size: .78rem; }
   .section-title { font-size: .85rem; }

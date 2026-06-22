@@ -16,6 +16,10 @@ function toast(msg, ok = true) {
   setTimeout(() => t.remove(), 3400);
 }
 
+function _esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
 async function api(url, body) {
   try {
     // In cloud (SaaS) mode: route through Supabase adapter
@@ -50,7 +54,13 @@ let _loadingState = false;
 async function loadState() {
   if (_loadingState) return;
   _loadingState = true;
-  const s = await api('/api/state');
+  let s;
+  try {
+    s = await api('/api/state');
+  } catch (e) {
+    _loadingState = false;
+    return;
+  }
   _loadingState = false;
   lastState = s;
   // Update DOMAINS from config
@@ -224,7 +234,8 @@ function renderBriefing(text) {
         if (raw.trim() === '' || SECTION_RE.test(raw.trim())) skipFocus = false;
         if (skipFocus) return '';
       }
-      const line = raw.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      const safe = _esc(raw);
+      const line = safe.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
       if (/^#{1,3}\s/.test(raw)) return `<div class="br-heading">${line.replace(/^#+\s+/, '')}</div>`;
       if (/^[-*•]\s/.test(raw)) return `<div class="br-item">${line.replace(/^[-*•]\s+/, '')}</div>`;
       if (raw.trim() === '') return '<div class="br-gap"></div>';
@@ -265,7 +276,7 @@ async function _generateByokBriefing() {
 
 function renderEmail(summary) {
   $('#email-body').innerHTML = (summary && summary.trim())
-    ? summary.split('\n').filter(l => l.trim()).map(l => `<div>${l}</div>`).join('')
+    ? summary.split('\n').filter(l => l.trim()).map(l => `<div>${_esc(l)}</div>`).join('')
     : '<span class="muted-text">סיכום מיילים יופיע כאן אחרי הרענון הבוקר (07:00)<br><span class="br-hint">💡 לרענון מיידי — לחץ 🔄 בפינה</span></span>';
 }
 
@@ -301,7 +312,7 @@ function renderTasks(tasks, date, completedToday) {
         const overdueMark = isOverdue(t) ? '⚠️ ' : '';
         const notesChip = (t.notes && t.notes.trim()) ? `<span class="notes-chip" title="${(t.notes||'').replace(/"/g,'&quot;').slice(0,200)}">📝 בתהליך</span>` : '';
         return `<li class="${overdueCls}" data-id="${t.id}"><input type="checkbox" data-id="${t.id}">
-          <span class="${t.priority === 'urgent' ? 'urgent' : ''}">${overdueMark}${t.priority === 'urgent' ? '⚠️ ' : ''}${t.title}</span>
+          <span class="${t.priority === 'urgent' ? 'urgent' : ''}">${overdueMark}${t.priority === 'urgent' ? '⚠️ ' : ''}${_esc(t.title)}</span>
           ${notesChip}
           ${cc}
           ${dl ? `<span class="due-chip">${dl}</span>` : ''}
@@ -314,7 +325,7 @@ function renderTasks(tasks, date, completedToday) {
     ? (completedToday || []).map(t =>
         `<li class="task-done-today" data-id="${t.id}">
           <input type="checkbox" checked data-id="${t.id}" class="task-undo-cb">
-          <span>${t.title}</span>
+          <span>${_esc(t.title)}</span>
           <span class="done-chip">✓ בוצע</span>
         </li>`
       ).join('')
@@ -771,7 +782,7 @@ function _renderContentTypesSettings(contentTypes) {
       const emoji = listEl.querySelector('#ct-new-emoji').textContent.trim() || '📋';
       const label = listEl.querySelector('#ct-new-label').value.trim();
       if (!label) { toast('הזן שם לסוג תוכן', false); return; }
-      const id = label.toLowerCase().replace(/\s+/g,'-').replace(/[^\w-]/g,'') + '-' + Date.now().toString(36);
+      const id = label.toLowerCase().replace(/\s+/g,'-').replace(/[^\w-]/g,'') + '-' + (crypto.randomUUID ? crypto.randomUUID().slice(0,8) : Date.now().toString(36));
       types.push({ id, emoji, label });
       _redraw();
     });
@@ -978,8 +989,11 @@ function editQuota(btn) {
 
 // ---------- Tasks ----------
 $('#add-task').addEventListener('click', async () => {
+  const btn = $('#add-task');
+  if (btn.disabled) return;
   const v = $('#new-task').value.trim();
   if (!v) { toast('כתוב משימה קודם', false); return; }
+  btn.disabled = true;
   const date = $('#new-task-date').value;
   const time = $('#new-task-time').value;
   const category = $('#new-task-category').value || 'general';
@@ -989,19 +1003,19 @@ $('#add-task').addEventListener('click', async () => {
     payload.due_date = date;
     if (time) payload.reminder_at = date + 'T' + time;
   }
-  await api('/api/task', payload);
-  $('#new-task').value = ''; $('#new-task-date').value = todayStr(); $('#new-task-time').value = '';
-  $('#new-task-category').value = 'general'; $('#new-task-priority').value = 'normal';
-  toast('✓ ' + (date ? 'משימה נקבעה ל-' + (date === todayStr() ? 'היום' : date) + (time ? ' ' + time : '') : 'המשימה נוספה'));
-  loadState();
+  try {
+    await api('/api/task', payload);
+    $('#new-task').value = ''; $('#new-task-date').value = todayStr(); $('#new-task-time').value = '';
+    $('#new-task-category').value = 'general'; $('#new-task-priority').value = 'normal';
+    toast('✓ ' + (date ? 'משימה נקבעה ל-' + (date === todayStr() ? 'היום' : date) + (time ? ' ' + time : '') : 'המשימה נוספה'));
+    loadState();
+  } finally {
+    btn.disabled = false;
+  }
 });
 $('#new-task').addEventListener('keydown', e => { if (e.key === 'Enter') $('#add-task').click(); });
 
 // ---------- Journal ----------
-function _esc(s) {
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
 $('#journal-save').addEventListener('click', async () => {
   const v = $('#journal-text').value.trim();
   if (!v) { toast('כתוב משהו קודם', false); return; }
@@ -1073,6 +1087,16 @@ document.getElementById('journal-modal-close').addEventListener('click', () => {
 });
 document.getElementById('journal-modal').addEventListener('click', e => {
   if (e.target === e.currentTarget) e.currentTarget.style.display = 'none';
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  ['journal-modal', 'pb-modal'].forEach(id => {
+    const m = document.getElementById(id);
+    if (m && m.style.display === 'flex') m.style.display = 'none';
+  });
+  document.getElementById('help-modal')?.classList.add('hidden');
+  document.getElementById('settings-modal')?.classList.add('hidden');
 });
 
 // ---------- Sound — Web Audio API (works on all platforms, no WAV dependency) ----------
@@ -1176,6 +1200,7 @@ function resetTimer() {
   clearInterval(interval); interval = null;
   clearTimeout(endTimeout); endTimeout = null;
   startTs = 0; endTs = 0; plannedTotal = 0;
+  localStorage.removeItem('carlos-timer');
   $('#tw-display').textContent = fmt(timerMode === 'timer' ? configuredSeconds() : 0);
   $('#tw-start').classList.remove('hidden');
   $('#tw-stop').classList.add('hidden');
@@ -1218,6 +1243,7 @@ $('#tw-start').addEventListener('click', () => {
   startTs = Date.now();
   endTs = (timerMode === 'timer') ? startTs + plannedTotal * 1000 : 0;
   startedAt = new Date(startTs).toISOString();
+  localStorage.setItem('carlos-timer', JSON.stringify({ mode: timerMode, startTs, endTs, plannedTotal }));
   $('#tw-start').classList.add('hidden');
   $('#tw-stop').classList.remove('hidden');
   interval = setInterval(tick, 1000);
@@ -2139,7 +2165,8 @@ function mdToHtml(md) {
   let html = '';
   let inList = false;
   for (const raw of lines) {
-    const line = raw
+    const safe = _esc(raw);
+    const line = safe
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
       .replace(/`([^`]+)`/g, '<code>$1</code>');
     if (/^# /.test(raw))       { if (inList) { html += '</ul>'; inList = false; } html += `<h3 class="pb-h1">${line.slice(2)}</h3>`; }
@@ -2923,7 +2950,7 @@ function _renderDomainsSettings(domains, playbooks) {
       const emoji = listEl.querySelector('#dm-new-emoji-btn').textContent.trim() || '📌';
       const label = listEl.querySelector('#dm-new-label').value.trim();
       if (!label) { toast('הזן שם לתחום', false); return; }
-      const id = label.toLowerCase().replace(/\s+/g,'-').replace(/[^\w-]/g,'') + '-' + Date.now().toString(36);
+      const id = label.toLowerCase().replace(/\s+/g,'-').replace(/[^\w-]/g,'') + '-' + (crypto.randomUUID ? crypto.randomUUID().slice(0,8) : Date.now().toString(36));
       domList.push({ id, emoji, label });
       _redraw();
     });
@@ -3482,10 +3509,6 @@ document.getElementById('theme-btn')?.addEventListener('click', () => {
 });
 
 // ---------- Booking ----------
-function _esc(s) {
-  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
-
 // Parse "14" → "14:00", "930" → "09:30", "14:00" → "14:00"
 function _parseTime(raw) {
   const s = String(raw || '').trim().replace(/[^\d:]/g, '');
@@ -3953,11 +3976,42 @@ function initWelcome() {
 }
 
 // ---------- Init ----------
+function _restoreTimer() {
+  try {
+    const saved = localStorage.getItem('carlos-timer');
+    if (!saved) return;
+    const st = JSON.parse(saved);
+    if (!st.startTs) return;
+    const now = Date.now();
+    if (st.mode === 'timer' && st.endTs && now >= st.endTs) {
+      localStorage.removeItem('carlos-timer');
+      return;
+    }
+    timerMode = st.mode;
+    startTs = st.startTs;
+    endTs = st.endTs || 0;
+    plannedTotal = st.plannedTotal || 0;
+    $('#tw-mode').value = timerMode;
+    $('#tw-minutes-row').classList.toggle('hidden', timerMode !== 'timer');
+    $('#tw-start').classList.add('hidden');
+    $('#tw-stop').classList.remove('hidden');
+    interval = setInterval(tick, 1000);
+    if (timerMode === 'timer') {
+      const remaining = Math.max(0, endTs - now);
+      endTimeout = setTimeout(triggerFinish, remaining);
+    }
+    tick();
+  } catch (e) {
+    localStorage.removeItem('carlos-timer');
+  }
+}
+
 function _initApp() {
   applyTheme();
   applyMode();
   refreshSoundLabel();
   initSectionToggles();
+  _restoreTimer();
   const nd = $('#new-task-date');
   if (nd) nd.value = todayStr();
   initWelcome();
