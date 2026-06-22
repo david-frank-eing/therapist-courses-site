@@ -1384,6 +1384,38 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .jnl-arch-body { font-size: .88rem; line-height: 1.7; }
 .jnl-loading, .jnl-empty { color: #6688aa; font-size: .9rem; text-align: center; padding: 20px 0; }
 
+/* Month groups in archive */
+.jnl-month-group { border-bottom: 1px solid #1e2d3d; }
+.jnl-month-group:last-child { border-bottom: none; }
+.jnl-month-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  background: none;
+  border: none;
+  color: #c8d8e8;
+  font-size: .93rem;
+  font-weight: 600;
+  padding: 12px 0;
+  cursor: pointer;
+  text-align: right;
+}
+.jnl-month-toggle:hover { color: #fff; }
+.jnl-month-count { font-size: .75rem; color: #6688aa; font-weight: 400; }
+.jnl-month-arr { margin-right: auto; font-size: .8rem; color: #6688aa; }
+.jnl-month-body { padding-bottom: 8px; }
+
+/* Help guide journal demo */
+.hs-journal-demo { background: #131c27; border-radius: 10px; padding: 12px 14px; font-size: .84rem; }
+.hs-jd-prev { margin-bottom: 8px; }
+.hs-jd-prev-line { color: #c8d8e8; line-height: 1.6; }
+.hs-jd-prev-line.hs-jd-ts { color: #6c8cff; font-size: .78rem; }
+.hs-jd-textarea { width: 100%; background: #0e1720; border: 1px solid #2a3a4a; border-radius: 6px; color: #7a8a9a; padding: 7px 9px; font-size: .82rem; resize: none; height: 42px; box-sizing: border-box; }
+.hs-jd-actions { display: flex; gap: 8px; margin-top: 8px; }
+.hs-jd-btn { background: #6c8cff33; color: #6c8cff; border-radius: 6px; padding: 5px 10px; font-size: .8rem; }
+.hs-jd-hist { background: #1e2d3d; color: #8899aa; border-radius: 6px; padding: 5px 10px; font-size: .8rem; }
+
 /* ── Print / PDF Export ── */
 @media print {
   .sidebar, #timer-widget,

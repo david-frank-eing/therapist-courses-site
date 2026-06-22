@@ -337,8 +337,7 @@ window._sbApi = async function(url, body) {
     const { data, error } = await sb.from('journal_entries')
       .select('date, body, updated_at')
       .eq('user_id', uid)
-      .order('date', { ascending: false })
-      .limit(30);
+      .order('date', { ascending: false });
     if (error) throw error;
     return { entries: data || [] };
   }

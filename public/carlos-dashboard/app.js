@@ -1027,25 +1027,59 @@ $('#journal-save').addEventListener('click', async () => {
 
 $('#journal-history-btn').addEventListener('click', async () => {
   const modal = document.getElementById('journal-modal');
-  const body = document.getElementById('journal-modal-body');
-  if (!modal || !body) return;
-  body.innerHTML = '<div class="jnl-loading">טוען...</div>';
+  const bodyEl = document.getElementById('journal-modal-body');
+  if (!modal || !bodyEl) return;
+  bodyEl.innerHTML = '<div class="jnl-loading">טוען...</div>';
   modal.style.display = 'flex';
   const res = await api('/api/journal/history');
   const entries = (res && res.entries) || [];
   if (!entries.length) {
-    body.innerHTML = '<div class="jnl-empty">אין רשומות קודמות</div>';
+    bodyEl.innerHTML = '<div class="jnl-empty">אין רשומות עדיין</div>';
     return;
   }
+
+  // Group by YYYY-MM
+  const months = {};
+  for (const e of entries) {
+    const key = e.date.slice(0, 7);
+    if (!months[key]) months[key] = [];
+    months[key].push(e);
+  }
+  const heMonthLabel = key => {
+    const [y, m] = key.split('-');
+    return new Date(+y, +m - 1, 1).toLocaleDateString('he-IL', { month: 'long', year: 'numeric' });
+  };
   const heDate = d => new Date(d + 'T12:00:00Z').toLocaleDateString('he-IL',
-    { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-  body.innerHTML = entries.map(e => `
-    <div class="jnl-arch-entry">
-      <div class="jnl-arch-date">${heDate(e.date)}</div>
-      <div class="jnl-arch-body">${e.body.split('\n').map(l =>
-        l.startsWith('[') ? `<div class="jnl-line jnl-ts">${_esc(l)}</div>` : `<div class="jnl-line">${_esc(l)}</div>`
-      ).join('')}</div>
+    { weekday: 'long', day: 'numeric', month: 'long' });
+  const renderLines = body => body.split('\n').map(l =>
+    l.startsWith('[') ? `<div class="jnl-line jnl-ts">${_esc(l)}</div>` : `<div class="jnl-line">${_esc(l)}</div>`
+  ).join('');
+
+  const keys = Object.keys(months);
+  bodyEl.innerHTML = keys.map((key, i) => `
+    <div class="jnl-month-group">
+      <button class="jnl-month-toggle${i === 0 ? ' open' : ''}" data-key="${key}">
+        <span>📅 ${heMonthLabel(key)}</span>
+        <span class="jnl-month-count">${months[key].length} רשומות</span>
+        <span class="jnl-month-arr">${i === 0 ? '▴' : '▾'}</span>
+      </button>
+      <div class="jnl-month-body" style="${i === 0 ? '' : 'display:none'}">
+        ${months[key].map(e => `
+          <div class="jnl-arch-entry">
+            <div class="jnl-arch-date">${heDate(e.date)}</div>
+            <div class="jnl-arch-body">${renderLines(e.body)}</div>
+          </div>`).join('')}
+      </div>
     </div>`).join('');
+
+  bodyEl.querySelectorAll('.jnl-month-toggle').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const mb = btn.nextElementSibling;
+      const open = btn.classList.toggle('open');
+      mb.style.display = open ? '' : 'none';
+      btn.querySelector('.jnl-month-arr').textContent = open ? '▴' : '▾';
+    });
+  });
 });
 
 document.getElementById('journal-modal-close').addEventListener('click', () => {
@@ -2342,16 +2376,27 @@ ${_hTip('אם Google Calendar לא מחובר — אפשר להזין אירוע
 
   { icon: '📝', title: 'יומן אישי — מחשבות ורעיונות', body: `
 <div class="hs-journal-demo">
-  <div class="hs-jd-date">📝 ראשון, 21 יוני</div>
-  <div class="hs-jd-text">היום הייתה שיחה מעניינת עם לקוח חדש. למדתי שצריך לשפר את ההצגה הראשונית...</div>
-  <div class="hs-jd-btn">💾 שמור ליומן</div>
+  <div class="hs-jd-prev">
+    <div class="hs-jd-prev-line hs-jd-ts">[09:14] פגישה טובה עם דני — פוטנציאל גבוה</div>
+    <div class="hs-jd-prev-line hs-jd-ts">[15:30] צריך לזכור לשלוח הצעת מחיר</div>
+  </div>
+  <textarea class="hs-jd-textarea" disabled placeholder="הוסף רשומה..."></textarea>
+  <div class="hs-jd-actions">
+    <span class="hs-jd-btn">💾 שמור ליומן</span>
+    <span class="hs-jd-hist">📚 ארכיון</span>
+  </div>
 </div>
 <br>
-כתוב בחופשיות — מחשבות, תובנות, תכנון, סיכום יום. אין פורמט מחייב.
-<br><br>
-${_hStep('1','כתוב בשדה הטקסט')}
-${_hStep('2','לחץ "💾 שמור ליומן" — נשמר אוטומטית תחת תאריך היום')}
-${_hStep('3','לחץ "📜 היסטוריה" בכותרת הדאשבורד לצפייה בכל הרשומות')}` },
+${_hStep('1','כתוב בשדה הטקסט — בחופשיות, בלי פורמט')}
+${_hStep('2','לחץ "💾 שמור ליומן" — מוסיף עם חותמת שעה')}
+${_hStep('3','ניתן לשמור <strong>כמה פעמים ביום</strong> — כל שמירה <em>מצטרפת</em> לרשומת היום')}
+${_hStep('4','לחץ "📚 ארכיון" כדי לצפות בכל הרשומות מאז ומעולם')}
+<br>
+<div class="hs-cards-2">
+  <div class="hs-card2"><div class="hs-c2-title">📅 ארגון חודשי</div><div class="hs-c2-body">הארכיון מסודר לפי חודשים — לחץ על חודש כדי לפתוח את כל הרשומות שלו</div></div>
+  <div class="hs-card2"><div class="hs-c2-title">♾️ ללא הגבלה</div><div class="hs-c2-body">כל הרשומות נשמרות לעד — אפשר לחזור לרשומה מלפני שנה בקלות</div></div>
+</div>
+${_hTip('מה שכתבת היום מוצג אוטומטית מעל תיבת הטקסט — כדי שתמיד תדע מה כבר רשמת')}` },
 
   { icon: '💬', title: 'שאל קרלוס — העוזר האישי', body: `
 <div class="hs-chat-demo">
