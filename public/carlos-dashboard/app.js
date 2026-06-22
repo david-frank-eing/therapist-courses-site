@@ -1111,8 +1111,14 @@ function _getAudioCtx() {
   return _audioCtx;
 }
 
-// Call during any user gesture to prime iOS audio
-function unlockAudio() { try { _getAudioCtx(); } catch (e) {} }
+function unlockAudio() {
+  try {
+    _getAudioCtx();
+    if (_audioCtx && _audioCtx.state === 'running') {
+      document.removeEventListener('click', unlockAudio);
+    }
+  } catch (e) {}
+}
 document.addEventListener('click', unlockAudio);
 
 function _playOscillator(pattern) {
@@ -1200,10 +1206,14 @@ function resetTimer() {
   clearInterval(interval); interval = null;
   clearTimeout(endTimeout); endTimeout = null;
   startTs = 0; endTs = 0; plannedTotal = 0;
-  localStorage.removeItem('carlos-timer');
   $('#tw-display').textContent = fmt(timerMode === 'timer' ? configuredSeconds() : 0);
   $('#tw-start').classList.remove('hidden');
   $('#tw-stop').classList.add('hidden');
+}
+
+function _clearTimerState() {
+  resetTimer();
+  localStorage.removeItem('carlos-timer');
 }
 
 function tick() {
@@ -1259,10 +1269,13 @@ $('#tw-stop').addEventListener('click', finishTimer);
 function finishTimer() {
   clearInterval(interval); interval = null;
   clearTimeout(endTimeout); endTimeout = null;
+  localStorage.removeItem('carlos-timer');
   $('#tw-stop').classList.add('hidden');
+  if (!startTs) { resetTimer(); return; }
   const totalSec = (timerMode === 'timer')
     ? plannedTotal
     : Math.floor((Date.now() - startTs) / 1000);
+  startTs = 0; endTs = 0; plannedTotal = 0;
   if (totalSec > 0) openAttrib(totalSec); else resetTimer();
 }
 
@@ -2163,22 +2176,23 @@ function _renderPbView(bodyEl, content) {
 function mdToHtml(md) {
   const lines = md.split('\n');
   let html = '';
-  let inList = false;
+  let listTag = '';
+  const closeList = () => { if (listTag) { html += `</${listTag}>`; listTag = ''; } };
   for (const raw of lines) {
     const safe = _esc(raw);
     const line = safe
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
       .replace(/`([^`]+)`/g, '<code>$1</code>');
-    if (/^# /.test(raw))       { if (inList) { html += '</ul>'; inList = false; } html += `<h3 class="pb-h1">${line.slice(2)}</h3>`; }
-    else if (/^## /.test(raw)) { if (inList) { html += '</ul>'; inList = false; } html += `<h4 class="pb-h2">${line.slice(3)}</h4>`; }
-    else if (/^### /.test(raw)){ if (inList) { html += '</ul>'; inList = false; } html += `<h5 class="pb-h3">${line.slice(4)}</h5>`; }
-    else if (/^> /.test(raw))  { if (inList) { html += '</ul>'; inList = false; } html += `<blockquote class="pb-quote">${line.slice(2)}</blockquote>`; }
-    else if (/^[-*] /.test(raw)){ if (!inList) { html += '<ul class="pb-list">'; inList = true; } html += `<li>${line.slice(2)}</li>`; }
-    else if (/^\d+\. /.test(raw)){ if (!inList) { html += '<ol class="pb-list">'; inList = true; } html += `<li>${line.replace(/^\d+\. /, '')}</li>`; }
-    else if (raw.trim() === '')  { if (inList) { html += '</ul>'; inList = false; } html += '<div class="pb-gap"></div>'; }
-    else                         { if (inList) { html += '</ul>'; inList = false; } html += `<div class="pb-line">${line}</div>`; }
+    if (/^# /.test(raw))       { closeList(); html += `<h3 class="pb-h1">${line.slice(2)}</h3>`; }
+    else if (/^## /.test(raw)) { closeList(); html += `<h4 class="pb-h2">${line.slice(3)}</h4>`; }
+    else if (/^### /.test(raw)){ closeList(); html += `<h5 class="pb-h3">${line.slice(4)}</h5>`; }
+    else if (/^> /.test(raw))  { closeList(); html += `<blockquote class="pb-quote">${line.slice(2)}</blockquote>`; }
+    else if (/^[-*] /.test(raw)){ if (listTag !== 'ul') { closeList(); html += '<ul class="pb-list">'; listTag = 'ul'; } html += `<li>${line.slice(2)}</li>`; }
+    else if (/^\d+\. /.test(raw)){ if (listTag !== 'ol') { closeList(); html += '<ol class="pb-list">'; listTag = 'ol'; } html += `<li>${line.replace(/^\d+\. /, '')}</li>`; }
+    else if (raw.trim() === '')  { closeList(); html += '<div class="pb-gap"></div>'; }
+    else                         { closeList(); html += `<div class="pb-line">${line}</div>`; }
   }
-  if (inList) html += '</ul>';
+  closeList();
   return html;
 }
 

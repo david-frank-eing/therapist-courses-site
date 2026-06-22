@@ -80,7 +80,7 @@ export default function BookingPage() {
     // Re-check slot availability to prevent race conditions
     const { data: slotCheck } = await supabase
       .from("availability_slots").select("booked").eq("id", selectedSlot.id).single();
-    if (slotCheck?.booked) {
+    if (!slotCheck || slotCheck.booked) {
       setError("מצטערים, חלון זה כבר נתפס. אנא בחר חלון אחר.");
       setSubmitting(false);
       setSelectedSlot(null);
