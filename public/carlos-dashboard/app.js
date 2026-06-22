@@ -1075,37 +1075,72 @@ document.getElementById('journal-modal').addEventListener('click', e => {
   if (e.target === e.currentTarget) e.currentTarget.style.display = 'none';
 });
 
-// ---------- Sound (real audio files + unlock on first gesture) ----------
-let audioReady = false;
-function unlockAudio() {
-  if (audioReady) return;
-  audioReady = true;
-  ['snd-beep', 'snd-chime'].forEach(id => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    el.muted = true;
-    Promise.resolve(el.play()).then(() => {
-      el.pause(); el.currentTime = 0; el.muted = false;
-    }).catch(() => { el.muted = false; });
-  });
+// ---------- Sound — Web Audio API (works on all platforms, no WAV dependency) ----------
+let _audioCtx = null;
+
+function _getAudioCtx() {
+  if (!_audioCtx) {
+    _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  // Resume if browser suspended it (required on iOS after inactivity)
+  if (_audioCtx.state === 'suspended') _audioCtx.resume();
+  return _audioCtx;
 }
+
+// Call during any user gesture to prime iOS audio
+function unlockAudio() { try { _getAudioCtx(); } catch (e) {} }
 document.addEventListener('click', unlockAudio);
 
-function playSound(loop = false) {
-  const type = localStorage.getItem('carlos-sound') || 'chime';
-  const el = document.getElementById('snd-' + type);
-  if (!el) return;
-  el.muted = false;
-  el.loop = (loop && type === 'chime');           // לולאה רק כשהטיימר מסיים, לא בתצוגה מקדימה
-  try { el.currentTime = 0; } catch (e) {}
-  Promise.resolve(el.play()).catch(() =>
-    toast('הדפדפן חסם את הצליל — לחץ פעם אחת על הדף ונסה שוב', false));
+function _playOscillator(pattern) {
+  // pattern = [{freq, start, dur}, ...]
+  try {
+    const ctx = _getAudioCtx();
+    pattern.forEach(({ freq, start, dur }) => {
+      const osc  = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      const t = ctx.currentTime + start;
+      gain.gain.setValueAtTime(0.35, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + dur);
+      osc.start(t);
+      osc.stop(t + dur + 0.02);
+    });
+  } catch (e) {
+    toast('הדפדפן לא תמך בצליל', false);
+  }
 }
 
+let _chimeInterval = null;
 function silenceChime() {
+  clearInterval(_chimeInterval); _chimeInterval = null;
+  // also stop WAV fallback if playing
   const el = document.getElementById('snd-chime');
   if (el) { el.loop = false; el.pause(); try { el.currentTime = 0; } catch (e) {} }
   $('#attrib-silence').classList.add('hidden');
+}
+
+function playSound(loop = false) {
+  silenceChime();
+  const type = localStorage.getItem('carlos-sound') || 'chime';
+
+  if (type === 'beep') {
+    // Short double-beep
+    const pat = [{ freq: 1046, start: 0, dur: 0.12 }, { freq: 1046, start: 0.18, dur: 0.12 }];
+    _playOscillator(pat);
+    if (loop) _chimeInterval = setInterval(() => _playOscillator(pat), 2500);
+  } else {
+    // Chime: 3 descending tones
+    const pat = [
+      { freq: 1047, start: 0,    dur: 0.35 },
+      { freq:  880, start: 0.38, dur: 0.35 },
+      { freq:  659, start: 0.76, dur: 0.55 },
+    ];
+    _playOscillator(pat);
+    if (loop) _chimeInterval = setInterval(() => _playOscillator(pat), 3500);
+  }
 }
 function refreshSoundLabel() {
   const type = localStorage.getItem('carlos-sound') || 'chime';
@@ -1173,6 +1208,7 @@ document.addEventListener('visibilitychange', () => {
 });
 
 $('#tw-start').addEventListener('click', () => {
+  unlockAudio(); // prime AudioContext during user gesture — required for iOS
   if (timerMode === 'timer') {
     plannedTotal = configuredSeconds();
     if (plannedTotal <= 0) { toast('קבע דקות או שניות', false); return; }
