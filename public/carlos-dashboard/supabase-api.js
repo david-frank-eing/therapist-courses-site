@@ -640,7 +640,22 @@ window._sbApi = async function(url, body) {
   // ── No-op / not-available in cloud ───────────────────────────────────────
   if (url === '/api/setup/run-refresh') return { ok: true, message: 'לא זמין בגרסת הענן' };
   if (url === '/api/setup/schedule-task') return { ok: true };
-  if (url === '/api/upload') return { ok: false, url: null };
+  if (url === '/api/upload') {
+    const { filename, dataBase64 } = body || {};
+    if (!filename || !dataBase64) throw new Error('missing filename or data');
+    const byteStr = atob(dataBase64);
+    const bytes = new Uint8Array(byteStr.length);
+    for (let i = 0; i < byteStr.length; i++) bytes[i] = byteStr.charCodeAt(i);
+    const ext = filename.split('.').pop().toLowerCase();
+    const mime = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', gif: 'image/gif', webp: 'image/webp', svg: 'image/svg+xml', mp4: 'video/mp4', mov: 'video/quicktime' }[ext] || 'application/octet-stream';
+    const blob = new Blob([bytes], { type: mime });
+    const safeName = Date.now() + '-' + filename.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const path = uid + '/' + safeName;
+    const { error } = await sb.storage.from('content-creatives').upload(path, blob, { contentType: mime, upsert: false });
+    if (error) throw error;
+    const { data: pub } = sb.storage.from('content-creatives').getPublicUrl(path);
+    return { ok: true, url: pub.publicUrl };
+  }
   if (url === '/api/ask') return { ok: false, error: 'AI לא זמין בגרסת הענן' };
   if (url === '/api/tunnel/start') return { ok: false, message: 'לא זמין' };
   if (url === '/api/tunnel/stop') return { ok: true };
