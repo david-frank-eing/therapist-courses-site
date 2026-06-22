@@ -3411,8 +3411,8 @@ document.getElementById('export-pdf-btn')?.addEventListener('click', () => {
 // ---------- Timer collapse ----------
 (function() {
   const stored = localStorage.getItem('tw-collapsed');
-  const isMobile = window.innerWidth <= 768;
-  let collapsed = stored !== null ? stored === '1' : isMobile;
+  // Default: always open (user can collapse manually)
+  let collapsed = stored !== null ? stored === '1' : false;
 
   function applyCollapse() {
     const body = document.getElementById('tw-body');
