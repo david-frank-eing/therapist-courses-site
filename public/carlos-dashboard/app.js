@@ -2553,6 +2553,7 @@ function openHelp() {
         <button class="help-quick-btn" data-q="הרגלים" data-title-only="1">🌱 הרגלים</button>
         <button class="help-quick-btn" data-q="פרטיות" data-title-only="1">🔐 פרטיות</button>
         <button class="help-quick-btn" data-q="זימונים" data-title-only="1">🔔 זימונים</button>
+        <button class="help-quick-btn" data-q="יומן אישי" data-title-only="1">📝 יומן</button>
         <div style="margin-right:auto;display:flex;gap:4px">
           <button id="help-expand-all" class="help-ctrl-btn">פתח הכל ▼</button>
           <button id="help-collapse-all" class="help-ctrl-btn">כווץ הכל ▲</button>
