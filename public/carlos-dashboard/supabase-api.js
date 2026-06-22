@@ -29,8 +29,8 @@ async function _sbGetState(sb, uid) {
     configRes, slotsRes, apptsRes, notifsRes, pubLogRes, bookingProfileRes, playbooksRes
   ] = await Promise.all([
     sb.from('tasks').select('*').eq('user_id', uid).eq('status', 'pending').order('created_at'),
-    sb.from('tasks').select('id').eq('user_id', uid).eq('status', 'completed').gte('completed_at', today + 'T00:00:00+00:00'),
-    sb.from('tasks').select('id').eq('user_id', uid).eq('status', 'completed').gte('completed_at', _getWeekStart(today) + 'T00:00:00+00:00'),
+    sb.from('tasks').select('*').eq('user_id', uid).eq('status', 'completed').gte('completed_at', today + 'T00:00:00+00:00'),
+    sb.from('tasks').select('*').eq('user_id', uid).eq('status', 'completed').gte('completed_at', _getWeekStart(today) + 'T00:00:00+00:00'),
     sb.from('habit_definitions').select('*').eq('user_id', uid).eq('active', true).order('sort_order'),
     sb.from('habits_log').select('*').eq('user_id', uid).gte('date', monthAgo),
     sb.from('weekly_plan').select('*').eq('user_id', uid).order('week_of', { ascending: false }).limit(1),
