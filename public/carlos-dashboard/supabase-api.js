@@ -360,7 +360,7 @@ window._sbApi = async function(url, body) {
 
   if (url === '/api/content/update') {
     const { id, ...fields } = body || {};
-    const allowed = ['title', 'type', 'status', 'domain', 'creative_urls'];
+    const allowed = ['title', 'type', 'status', 'domain', 'creative_urls', 'body', 'scheduled_for', 'docs_url'];
     const update = { updated_at: new Date().toISOString() };
     for (const k of allowed) if (k in fields) update[k] = fields[k];
     const { error } = await sb.from('content_items').update(update).eq('id', id).eq('user_id', uid);
