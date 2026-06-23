@@ -451,16 +451,19 @@ function renderMultiImgGallery(container, urls) {
   const list = container.querySelector('.mig-list');
   if (!list) return;
   list.innerHTML = (urls || []).map((url) => {
-    const fname = url.split('/').pop();
-    const displayName = fname.replace(/^[a-z0-9]+-/, '');          // strip timestamp prefix
-    const fullPath = '/uploads/' + fname;
-    const isImg = /\.(jpe?g|png|gif|webp|svg)(\?|$)/i.test(url);
+    const fname = decodeURIComponent(url.split('/').pop().split('?')[0]);
+    const displayName = fname.replace(/^\d+-/, '');
+    const isImg = /\.(jpe?g|png|gif|webp|svg)/i.test(fname);
+    const isVid = /\.(mp4|mov|webm|avi)/i.test(fname);
+    const preview = isImg
+      ? `<img src="${url}" class="mig-thumb" alt="${displayName}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+      : isVid
+        ? `<video src="${url}" class="mig-thumb" muted playsinline preload="metadata"></video>`
+        : `<div class="mig-file-icon">📎</div>`;
     return `<div class="mig-item" data-url="${url}">
-      ${isImg
-        ? `<img src="${url}" class="mig-thumb" alt="${displayName}">`
-        : `<div class="mig-file-icon">📎</div>`}
-      <span class="mig-name" title="${displayName}">${displayName}</span>
-      <span class="mig-path" title="${fullPath}">uploads\\${fname.slice(0,20)}${fname.length>20?'…':''}</span>
+      ${preview}
+      ${isImg ? `<div class="mig-file-icon" style="display:none">🖼️</div>` : ''}
+      <span class="mig-name" title="${displayName}">${displayName.slice(0,28)}${displayName.length>28?'…':''}</span>
       <button class="mig-remove" type="button" title="הסר">✕</button>
     </div>`;
   }).join('');
