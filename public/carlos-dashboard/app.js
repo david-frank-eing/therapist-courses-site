@@ -455,6 +455,9 @@ function renderMultiImgGallery(container, urls) {
     const displayName = fname.replace(/^\d+-/, '');
     const isImg = /\.(jpe?g|png|gif|webp|svg)/i.test(fname);
     const isVid = /\.(mp4|mov|webm|avi)/i.test(fname);
+    const badge = isImg ? `<span class="mig-badge mig-badge-img">🖼️ תמונה</span>`
+                : isVid ? `<span class="mig-badge mig-badge-vid">🎬 וידאו</span>`
+                : `<span class="mig-badge mig-badge-file">📎 קובץ</span>`;
     const preview = isImg
       ? `<a href="${url}" target="_blank" rel="noopener"><img src="${url}" class="mig-thumb" alt="${displayName}" onerror="this.style.display='none'"></a>`
       : isVid
@@ -462,7 +465,7 @@ function renderMultiImgGallery(container, urls) {
         : `<a href="${url}" target="_blank" rel="noopener" class="mig-file-icon">📎</a>`;
     return `<div class="mig-item" data-url="${url}">
       ${preview}
-      ${isImg ? `<div class="mig-file-icon" style="display:none">🖼️</div>` : ''}
+      ${badge}
       <span class="mig-name" title="${displayName}">${displayName.slice(0,28)}${displayName.length>28?'…':''}</span>
       <button class="mig-remove" type="button" title="הסר">✕</button>
     </div>`;
