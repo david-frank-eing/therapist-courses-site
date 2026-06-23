@@ -456,10 +456,10 @@ function renderMultiImgGallery(container, urls) {
     const isImg = /\.(jpe?g|png|gif|webp|svg)/i.test(fname);
     const isVid = /\.(mp4|mov|webm|avi)/i.test(fname);
     const preview = isImg
-      ? `<img src="${url}" class="mig-thumb" alt="${displayName}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+      ? `<a href="${url}" target="_blank" rel="noopener"><img src="${url}" class="mig-thumb" alt="${displayName}" onerror="this.style.display='none'"></a>`
       : isVid
-        ? `<video src="${url}" class="mig-thumb" muted playsinline preload="metadata"></video>`
-        : `<div class="mig-file-icon">📎</div>`;
+        ? `<a href="${url}" target="_blank" rel="noopener"><video src="${url}" class="mig-thumb" muted playsinline preload="metadata"></video></a>`
+        : `<a href="${url}" target="_blank" rel="noopener" class="mig-file-icon">📎</a>`;
     return `<div class="mig-item" data-url="${url}">
       ${preview}
       ${isImg ? `<div class="mig-file-icon" style="display:none">🖼️</div>` : ''}
@@ -825,11 +825,15 @@ function renderContent(content, weekly) {
           ? item.creative_urls
           : (item.creative_url ? [item.creative_url] : []);
         const firstThumb = thumbUrls[0] || '';
-        const isImg = firstThumb && /\.(jpe?g|png|gif|webp|svg)(\?|$)/i.test(firstThumb);
+        const firstFname = decodeURIComponent(firstThumb.split('/').pop().split('?')[0]);
+        const isImg = firstThumb && /\.(jpe?g|png|gif|webp|svg)/i.test(firstFname);
+        const isVid = firstThumb && /\.(mp4|mov|webm)/i.test(firstFname);
         const thumbHtml = thumbUrls.length
           ? (isImg
-              ? `<img src="${firstThumb}" class="c-item-thumb" title="${thumbUrls.length} תמונות">`
-              : `<span class="c-img-badge">📎 ${thumbUrls.length}</span>`)
+              ? `<a href="${firstThumb}" target="_blank" rel="noopener"><img src="${firstThumb}" class="c-item-thumb" title="${thumbUrls.length} קבצים" onerror="this.parentElement.outerHTML='<span class=\\'c-img-badge\\'>📎 ${thumbUrls.length}</span>'"></a>`
+              : isVid
+                ? `<a href="${firstThumb}" target="_blank" rel="noopener"><span class="c-img-badge">🎬 ${thumbUrls.length}</span></a>`
+                : `<a href="${firstThumb}" target="_blank" rel="noopener"><span class="c-img-badge">📎 ${thumbUrls.length}</span></a>`)
           : '';
         return `<div class="c-item" data-id="${item.id}">
           ${thumbHtml}
