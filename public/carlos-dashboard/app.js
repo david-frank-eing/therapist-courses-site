@@ -260,6 +260,10 @@ function renderBriefing(text) {
 }
 
 async function _generateByokBriefing() {
+  if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+    toast('⚠️ יצירת בריפינג לא זמינה בהרצה מקומית', false);
+    return;
+  }
   const btn = document.getElementById('byok-gen-btn');
   if (btn) { btn.disabled = true; btn.textContent = '⏳ יוצר בריפינג...'; }
   try {
@@ -2809,6 +2813,12 @@ document.getElementById('history-all')?.addEventListener('click', () => {
   loadHistory();
 });
 
+// ---------- Logout ----------
+document.getElementById('logout-btn')?.addEventListener('click', async () => {
+  await window._supabase.auth.signOut();
+  window.location.href = '/auth';
+});
+
 // ---------- Settings Modal ----------
 document.getElementById('settings-btn')?.addEventListener('click', openSettings);
 document.getElementById('settings-close')?.addEventListener('click', () =>
@@ -3219,6 +3229,10 @@ async function _googleDisconnect() {
 }
 
 async function _googleRefreshData() {
+  if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+    toast('⚠️ רענון Google לא זמין בהרצה מקומית', false);
+    return;
+  }
   const btn = document.getElementById('conn-google-refresh');
   if (btn) { btn.disabled = true; btn.textContent = '⏳ מרענן...'; }
   try {
