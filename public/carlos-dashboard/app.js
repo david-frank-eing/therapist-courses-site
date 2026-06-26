@@ -169,7 +169,12 @@ function _bindManualRefresh() {
     try {
       const r = await api('/api/setup/run-refresh', {});
       const pid = r.pid;
-      if (!pid) throw new Error(r.error || 'no pid');
+      if (!pid) {
+        // Cloud mode — use Netlify function directly
+        await _googleRefreshData();
+        btn.disabled = false; btn.textContent = '🔄 עדכן עכשיו';
+        return;
+      }
       const start = Date.now();
       const poll = async () => {
         try {
