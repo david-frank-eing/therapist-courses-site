@@ -198,6 +198,14 @@ exports.handler = async (event) => {
     if (body.action === 'delete_user') {
       const { userId } = body;
       if (!userId) return json(400, { error: 'Missing userId' }, cors);
+      // Prevent deleting the admin account even via direct API call
+      const checkRes = await fetch(`${supabaseUrl}/auth/v1/admin/users/${userId}`, {
+        headers: { apikey: serviceKey, Authorization: 'Bearer ' + serviceKey }
+      });
+      if (checkRes.ok) {
+        const checkData = await checkRes.json();
+        if (checkData.email === ADMIN_EMAIL) return json(403, { error: 'Cannot delete admin account' }, cors);
+      }
       const r = await fetch(`${supabaseUrl}/auth/v1/admin/users/${userId}`, {
         method: 'DELETE',
         headers: { apikey: serviceKey, Authorization: 'Bearer ' + serviceKey }

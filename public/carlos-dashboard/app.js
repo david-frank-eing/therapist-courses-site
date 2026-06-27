@@ -3531,24 +3531,28 @@ async function _adminGetSession() {
   return session;
 }
 
+function _esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
 function _renderAdminUserRow(u) {
   const isAdmin = u.email === 'david1.frank@gmail.com';
   const hasAccess = u.tier === 'premium' || u.tier === 'vip';
   return `
-    <div class="admin-user-row" data-id="${u.id}">
+    <div class="admin-user-row" data-id="${_esc(u.id)}">
       <div class="admin-user-info">
-        <div class="admin-user-name">${u.name || '—'}</div>
-        <div class="admin-user-email">${u.email}</div>
+        <div class="admin-user-name">${_esc(u.name || '—')}</div>
+        <div class="admin-user-email">${_esc(u.email)}</div>
       </div>
       <div class="admin-user-actions">
         <span class="admin-tier-badge" style="color:${TIER_COLORS[u.tier]||'#999'}">${TIER_LABELS[u.tier]||u.tier}</span>
         ${isAdmin
           ? '<span class="muted-text" style="font-size:.75rem">מנהל</span>'
           : hasAccess
-            ? `<button class="admin-revoke-btn" data-uid="${u.id}" data-tier="free">🚫 בטל גישה</button>`
-            : `<button class="admin-approve-btn" data-uid="${u.id}" data-tier="premium">✅ אשר גישה</button>`
+            ? `<button class="admin-revoke-btn" data-uid="${_esc(u.id)}" data-tier="free">🚫 בטל גישה</button>`
+            : `<button class="admin-approve-btn" data-uid="${_esc(u.id)}" data-tier="premium">✅ אשר גישה</button>`
         }
-        ${isAdmin ? '' : `<button class="admin-delete-btn" data-delete-uid="${u.id}" data-email="${u.email}" title="מחק משתמש">🗑️</button>`}
+        ${isAdmin ? '' : `<button class="admin-delete-btn" data-delete-uid="${_esc(u.id)}" data-email="${_esc(u.email)}" title="מחק משתמש">🗑️</button>`}
       </div>
     </div>`;
 }
@@ -3601,7 +3605,7 @@ async function _loadAdminPanel() {
           <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px">
             <div style="font-size:.8rem;color:var(--text2);margin-bottom:10px">שלח ל-<strong>${email}</strong> קישור להגדרת סיסמה וכניסה לדאשבורד:</div>
             <div style="display:flex;gap:8px;margin-bottom:8px">
-              <a id="admin-mailto-btn" href="mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent('הזמנה לדאשבורד קרלוס')}&body=${encodeURIComponent('שלום,\n\nהוזמנת לדאשבורד קרלוס!\n\nכדי להיכנס — בצע 3 שלבים פשוטים:\n1. לחץ על הקישור הבא\n2. בחר סיסמה\n3. הדאשבורד ייפתח אוטומטית\n\n' + d.login_link + '\n\n⚠️ הקישור תקף לשימוש אחד בלבד.\nאם פג תוקפו — לחץ "שכחת סיסמה" בדף הכניסה.')}" style="flex:1;padding:9px 4px;border:none;border-radius:8px;background:#e8f0fe;color:#1a56db;font-size:.85rem;font-weight:700;cursor:pointer;text-align:center;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:4px">📧 מייל</a>
+              <a id="admin-mailto-btn" href="mailto:${email}?subject=${encodeURIComponent('הזמנה לדאשבורד קרלוס')}&body=${encodeURIComponent('שלום,\n\nהוזמנת לדאשבורד קרלוס!\n\nכדי להיכנס — בצע 3 שלבים פשוטים:\n1. לחץ על הקישור הבא\n2. בחר סיסמה\n3. הדאשבורד ייפתח אוטומטית\n\n' + d.login_link + '\n\n⚠️ הקישור תקף לשימוש אחד בלבד.\nאם פג תוקפו — לחץ "שכחת סיסמה" בדף הכניסה.')}" style="flex:1;padding:9px 4px;border:none;border-radius:8px;background:#e8f0fe;color:#1a56db;font-size:.85rem;font-weight:700;cursor:pointer;text-align:center;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:4px">📧 מייל</a>
               <a id="admin-whatsapp-btn" href="https://wa.me/?text=${encodeURIComponent('שלום! הוזמנת לדאשבורד קרלוס 🎉\n\nכדי להיכנס — 3 שלבים:\n1️⃣ לחץ על הקישור\n2️⃣ בחר סיסמה\n3️⃣ הדאשבורד ייפתח אוטומטית\n\n' + d.login_link + '\n\n⚠️ הקישור תקף לשימוש אחד.')}" target="_blank" rel="noopener" style="flex:1;padding:9px 4px;border:none;border-radius:8px;background:#e8fef0;color:#16a34a;font-size:.85rem;font-weight:700;cursor:pointer;text-align:center;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:4px">💬 וואטסאפ</a>
               <button id="admin-copy-link-btn" style="flex:1;padding:9px 4px;border:none;border-radius:8px;background:var(--primary);color:#fff;font-size:.85rem;font-weight:700;cursor:pointer">📋 העתק</button>
             </div>
@@ -3639,13 +3643,14 @@ async function _loadAdminPanel() {
           </div>`;
       }
       emailEl.value = ''; nameEl.value = '';
-      // Add new user row to top of list
+      // Add new user row to top of list — bind events only on the new row
       const rowsEl = document.getElementById('admin-users-rows');
       if (rowsEl) {
         const tmp = document.createElement('div');
         tmp.innerHTML = _renderAdminUserRow(d.user);
-        rowsEl.prepend(tmp.firstElementChild);
-        _bindAdminRowEvents(rowsEl);
+        const newRow = tmp.firstElementChild;
+        rowsEl.prepend(newRow);
+        _bindAdminRowEvents(newRow);
       }
     } catch (e) {
       msgEl.style.color = 'var(--danger)';
