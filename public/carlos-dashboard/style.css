@@ -1666,6 +1666,8 @@ body.lite-mode:not(.has-ai-briefing) #briefing { display: none !important; }
 .admin-approve-btn:hover { opacity: .8; }
 .admin-revoke-btn:hover  { opacity: .8; }
 .admin-approve-btn:disabled, .admin-revoke-btn:disabled { opacity: .5; cursor: default; }
+.admin-delete-btn { background: none; border: none; cursor: pointer; font-size: .9rem; padding: 2px 4px; border-radius: 6px; opacity: .4; transition: opacity .15s; }
+.admin-delete-btn:hover { opacity: 1; background: rgba(255,80,80,.15); }
 .admin-invite-form { background: var(--bg); border-radius: 10px; padding: 12px 14px; border: 1px solid var(--sep); }
 .admin-invite-title { font-size: .82rem; font-weight: 700; color: var(--text2); margin-bottom: 8px; }
 .admin-invite-fields { display: flex; gap: 6px; flex-wrap: wrap; }

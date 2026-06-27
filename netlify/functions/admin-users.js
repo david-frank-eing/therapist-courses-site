@@ -194,6 +194,21 @@ exports.handler = async (event) => {
       }
     }
 
+    // ── delete_user ──
+    if (body.action === 'delete_user') {
+      const { userId } = body;
+      if (!userId) return json(400, { error: 'Missing userId' }, cors);
+      const r = await fetch(`${supabaseUrl}/auth/v1/admin/users/${userId}`, {
+        method: 'DELETE',
+        headers: { apikey: serviceKey, Authorization: 'Bearer ' + serviceKey }
+      });
+      if (!r.ok) {
+        const txt = await r.text();
+        return json(500, { error: 'Delete failed: ' + txt.slice(0, 100) }, cors);
+      }
+      return json(200, { ok: true }, cors);
+    }
+
     return json(400, { error: 'Unknown action' }, cors);
   }
 

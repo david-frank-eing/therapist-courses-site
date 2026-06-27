@@ -3548,6 +3548,7 @@ function _renderAdminUserRow(u) {
             ? `<button class="admin-revoke-btn" data-uid="${u.id}" data-tier="free">🚫 בטל גישה</button>`
             : `<button class="admin-approve-btn" data-uid="${u.id}" data-tier="premium">✅ אשר גישה</button>`
         }
+        ${isAdmin ? '' : `<button class="admin-delete-btn" data-delete-uid="${u.id}" data-email="${u.email}" title="מחק משתמש">🗑️</button>`}
       </div>
     </div>`;
 }
@@ -3707,6 +3708,32 @@ function _bindAdminRowEvents(container) {
         toast('שגיאה: ' + e.message, false);
         btn.disabled = false;
         btn.textContent = tier === 'free' ? '🚫 בטל גישה' : '✅ אשר גישה';
+      }
+    });
+  });
+
+  container.querySelectorAll('.admin-delete-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const uid   = btn.dataset.deleteUid;
+      const email = btn.dataset.email;
+      const row   = btn.closest('.admin-user-row');
+      if (!confirm(`למחוק את ${email} לצמיתות?\n\nהפעולה אינה הפיכה.`)) return;
+      btn.disabled = true; btn.textContent = '⏳';
+      try {
+        const s = await _adminGetSession();
+        const res = await fetch('/.netlify/functions/admin-users', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + s.access_token },
+          body: JSON.stringify({ action: 'delete_user', userId: uid })
+        });
+        if (!res.ok) throw new Error('שגיאת שרת');
+        row.style.transition = 'opacity .3s';
+        row.style.opacity = '0';
+        setTimeout(() => row.remove(), 300);
+        toast('🗑️ המשתמש נמחק');
+      } catch (e) {
+        toast('שגיאה: ' + e.message, false);
+        btn.disabled = false; btn.textContent = '🗑️';
       }
     });
   });
