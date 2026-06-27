@@ -449,12 +449,12 @@
         .from('profiles').select('subscription_tier, full_name').eq('id', session.user.id).single();
       if (!profile || !['premium','vip'].includes(profile.subscription_tier)) {
         document.body.innerHTML = `
-          <div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;direction:rtl">
-            <div style="text-align:center;padding:40px;background:#fff;border-radius:16px;box-shadow:0 4px 32px #0002">
-              <div style="font-size:3rem;margin-bottom:16px">🔒</div>
-              <h2 style="margin:0 0 8px">גישה לפרימיום בלבד</h2>
-              <p style="color:#666;margin:0 0 24px">הדאשבורד זמין למנויי פרימיום.</p>
-              <a href="/" style="background:#4a6aee;color:#fff;padding:12px 28px;border-radius:10px;text-decoration:none;font-weight:700">שדרג עכשיו</a>
+          <div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;direction:rtl;background:#f5f5f5">
+            <div style="text-align:center;padding:40px;background:#fff;border-radius:16px;box-shadow:0 4px 32px #0002;max-width:360px">
+              <div style="font-size:3rem;margin-bottom:16px">⏳</div>
+              <h2 style="margin:0 0 8px;color:#333">ממתין לאישור</h2>
+              <p style="color:#666;margin:0 0 24px;line-height:1.6">החשבון שלך נוצר בהצלחה!<br>המנהל יאשר את גישתך בקרוב.</p>
+              <a href="/auth" style="background:#e5e7eb;color:#374151;padding:10px 24px;border-radius:10px;text-decoration:none;font-weight:600;font-size:.9rem">התנתק</a>
             </div>
           </div>`;
         return;
@@ -470,6 +470,6 @@
     })();
   </script>
   <script src="supabase-api.js?v=1"></script>
-  <script src="app.js?v=95"></script>
+  <script src="app.js?v=96"></script>
 </body>
 </html>

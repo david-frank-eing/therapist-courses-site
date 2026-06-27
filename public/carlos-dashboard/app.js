@@ -3523,8 +3523,8 @@ async function scheduleDailyTask() {
 }
 
 // ---------- Admin Panel ----------
-const TIER_LABELS = { free: 'חינמי', basic: 'בסיסי', premium: '⭐ פרימיום', vip: '👑 VIP' };
-const TIER_COLORS = { free: '#999', basic: '#6ca', premium: '#4a6aee', vip: '#e59a00' };
+const TIER_LABELS = { free: '⏳ ממתין לאישור', basic: 'בסיסי', premium: '⭐ פרימיום', vip: '👑 VIP' };
+const TIER_COLORS = { free: '#e07a00', basic: '#6ca', premium: '#4a6aee', vip: '#e59a00' };
 
 async function _adminGetSession() {
   const { data: { session } } = await window._supabase.auth.getSession();
@@ -3561,104 +3561,44 @@ async function _loadAdminPanel() {
   const el = document.getElementById('admin-users-list');
   if (!el) return;
 
-  // Invite form at top
+  const signupUrl = 'https://stupendous-lily-f8cd84.netlify.app/auth';
+  // Invite section at top
   el.innerHTML = `
     <div class="admin-invite-form">
       <div class="admin-invite-title">➕ הזמן משתמש חדש</div>
-      <div class="admin-invite-fields">
-        <input type="email" id="admin-invite-email" placeholder="אימייל..." dir="ltr" class="admin-invite-input">
-        <input type="text" id="admin-invite-name" placeholder="שם (אופציונלי)..." class="admin-invite-input">
-        <button id="admin-invite-btn" class="admin-approve-btn" style="white-space:nowrap">📨 שלח הזמנה</button>
+      <div style="font-size:.82rem;color:var(--text2);margin-bottom:10px;line-height:1.6">
+        שלח לו/לה את קישור ההרשמה. אחרי שנרשמ/ה — יופיע/תופיע ברשימה עם סטטוס "ממתין לאישור" ותוכל לאשר גישה.
       </div>
-      <div id="admin-invite-msg" class="muted-text" style="font-size:.78rem;margin-top:4px"></div>
+      <div style="display:flex;gap:8px">
+        <a href="mailto:?subject=${encodeURIComponent('הזמנה לדאשבורד קרלוס')}&body=${encodeURIComponent('שלום,\n\nהוזמנת להצטרף לדאשבורד קרלוס!\n\nלחץ על הקישור כדי להירשם:\n' + signupUrl + '\n\nלאחר ההרשמה תקבל/י גישה מלאה.')}" style="flex:1;padding:8px 4px;border-radius:8px;background:#e8f0fe;color:#1a56db;font-size:.82rem;font-weight:700;text-align:center;text-decoration:none">📧 שלח במייל</a>
+        <a href="https://wa.me/?text=${encodeURIComponent('שלום! הוזמנת לדאשבורד קרלוס 🎉\nלחץ על הקישור כדי להירשם:\n' + signupUrl)}" target="_blank" rel="noopener" style="flex:1;padding:8px 4px;border-radius:8px;background:#e8fef0;color:#16a34a;font-size:.82rem;font-weight:700;text-align:center;text-decoration:none">💬 וואטסאפ</a>
+        <button id="admin-copy-signup-btn" style="flex:1;padding:8px 4px;border-radius:8px;background:var(--primary);color:#fff;font-size:.82rem;font-weight:700;border:none;cursor:pointer">📋 העתק</button>
+      </div>
+      <div id="admin-copy-signup-confirm" style="text-align:center;font-size:.78rem;color:var(--success);margin-top:4px;display:none">✅ הקישור הועתק!</div>
     </div>
     <div class="admin-users-divider"></div>
     <div id="admin-users-rows"><div class="muted-text">טוען...</div></div>`;
 
-  document.getElementById('admin-invite-btn')?.addEventListener('click', async () => {
-    const emailEl = document.getElementById('admin-invite-email');
-    const nameEl  = document.getElementById('admin-invite-name');
-    const msgEl   = document.getElementById('admin-invite-msg');
-    const btn     = document.getElementById('admin-invite-btn');
-    const email   = emailEl.value.trim();
-    const name    = nameEl.value.trim();
-    if (!email.includes('@')) { msgEl.textContent = 'נא להזין אימייל תקין'; return; }
-    btn.disabled = true; btn.textContent = '⏳';
-    msgEl.textContent = '';
-    try {
-      const s = await _adminGetSession();
-      const r = await fetch('/.netlify/functions/admin-users', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + s.access_token },
-        body: JSON.stringify({ action: 'invite_user', email, name })
+  // Copy signup link button
+  document.getElementById('admin-copy-signup-btn')?.addEventListener('click', () => {
+    const btn = document.getElementById('admin-copy-signup-btn');
+    const confirm = document.getElementById('admin-copy-signup-confirm');
+    navigator.clipboard.writeText(signupUrl)
+      .then(() => { btn.textContent = '✅ הועתק!'; confirm.style.display = 'block'; setTimeout(() => { btn.textContent = '📋 העתק'; confirm.style.display = 'none'; }, 2000); })
+      .catch(() => {
+        const ta = document.createElement('textarea');
+        ta.value = signupUrl; ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+        btn.textContent = '✅ הועתק!'; setTimeout(() => { btn.textContent = '📋 העתק'; }, 2000);
       });
-      const rawText = await r.text();
-      let d = {};
-      try { d = JSON.parse(rawText); } catch (_) { throw new Error('תגובה לא תקינה מהשרת: ' + rawText.slice(0, 100)); }
-      if (!r.ok) throw new Error(d.error || `שגיאת שרת ${r.status}`);
-      msgEl.style.color = 'var(--success)';
-      if (d.already_existed) {
-        msgEl.textContent = `✅ המשתמש ${email} כבר קיים — גישה עודכנה לפרימיום`;
-      } else if (d.login_link) {
-        msgEl.innerHTML = `
-          <div style="color:var(--success);margin-bottom:8px">✅ משתמש נוצר עם גישת פרימיום!</div>
-          <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px">
-            <div style="font-size:.8rem;color:var(--text2);margin-bottom:10px">שלח ל-<strong>${email}</strong> קישור להגדרת סיסמה וכניסה לדאשבורד:</div>
-            <div style="display:flex;gap:8px;margin-bottom:8px">
-              <a id="admin-mailto-btn" href="mailto:${email}?subject=${encodeURIComponent('הזמנה לדאשבורד קרלוס')}&body=${encodeURIComponent('שלום,\n\nהוזמנת לדאשבורד קרלוס!\n\nכדי להיכנס — בצע 3 שלבים פשוטים:\n1. לחץ על הקישור הבא\n2. בחר סיסמה\n3. הדאשבורד ייפתח אוטומטית\n\n' + d.login_link + '\n\n⚠️ הקישור תקף לשימוש אחד בלבד.\nאם פג תוקפו — לחץ "שכחת סיסמה" בדף הכניסה.')}" style="flex:1;padding:9px 4px;border:none;border-radius:8px;background:#e8f0fe;color:#1a56db;font-size:.85rem;font-weight:700;cursor:pointer;text-align:center;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:4px">📧 מייל</a>
-              <a id="admin-whatsapp-btn" href="https://wa.me/?text=${encodeURIComponent('שלום! הוזמנת לדאשבורד קרלוס 🎉\n\nכדי להיכנס — 3 שלבים:\n1️⃣ לחץ על הקישור\n2️⃣ בחר סיסמה\n3️⃣ הדאשבורד ייפתח אוטומטית\n\n' + d.login_link + '\n\n⚠️ הקישור תקף לשימוש אחד.')}" target="_blank" rel="noopener" style="flex:1;padding:9px 4px;border:none;border-radius:8px;background:#e8fef0;color:#16a34a;font-size:.85rem;font-weight:700;cursor:pointer;text-align:center;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:4px">💬 וואטסאפ</a>
-              <button id="admin-copy-link-btn" style="flex:1;padding:9px 4px;border:none;border-radius:8px;background:var(--primary);color:#fff;font-size:.85rem;font-weight:700;cursor:pointer">📋 העתק</button>
-            </div>
-            <div id="admin-copy-confirm" style="text-align:center;font-size:.8rem;color:var(--success);display:none">✅ הקישור הועתק!</div>
-            <div style="font-size:.72rem;color:var(--text-muted);margin-top:6px;text-align:center">הקישור תקף לשימוש אחד. אם יפוג — יש ללחוץ "שכחת סיסמה" בדף הכניסה</div>
-          </div>`;
-        const copyBtn = document.getElementById('admin-copy-link-btn');
-        const confirm = document.getElementById('admin-copy-confirm');
-        if (copyBtn) {
-          copyBtn.addEventListener('click', () => {
-            navigator.clipboard.writeText(d.login_link)
-              .then(() => {
-                copyBtn.textContent = '✅ הועתק!';
-                copyBtn.style.background = 'var(--success)';
-                confirm.style.display = 'block';
-              })
-              .catch(() => {
-                // fallback: select the text
-                const ta = document.createElement('textarea');
-                ta.value = d.login_link;
-                ta.style.position = 'fixed'; ta.style.opacity = '0';
-                document.body.appendChild(ta);
-                ta.select(); document.execCommand('copy');
-                document.body.removeChild(ta);
-                copyBtn.textContent = '✅ הועתק!';
-                confirm.style.display = 'block';
-              });
-          });
-        }
-      } else {
-        msgEl.innerHTML = `
-          <div style="color:var(--success);margin-bottom:6px">✅ המשתמש ${email} נוצר עם גישת פרימיום</div>
-          <div style="font-size:.8rem;color:var(--text-muted);background:var(--card);padding:10px;border-radius:8px">
-            שלח לו/לה את כתובת האתר ובקש ללחוץ <strong>"שכחת סיסמה"</strong> כדי לקבוע סיסמה ולהיכנס
-          </div>`;
-      }
-      emailEl.value = ''; nameEl.value = '';
-      // Add new user row to top of list — bind events only on the new row
-      const rowsEl = document.getElementById('admin-users-rows');
-      if (rowsEl) {
-        const tmp = document.createElement('div');
-        tmp.innerHTML = _renderAdminUserRow(d.user);
-        const newRow = tmp.firstElementChild;
-        rowsEl.prepend(newRow);
-        _bindAdminRowEvents(newRow);
-      }
-    } catch (e) {
+  });
+
+  if (false) { // legacy invite API — kept for reference, no longer used in UI
+    try {
       msgEl.style.color = 'var(--danger)';
       msgEl.textContent = 'שגיאה: ' + e.message;
-    } finally {
-      btn.disabled = false; btn.textContent = '📨 שלח הזמנה';
-    }
-  });
+    } catch (_legacyErr) { /* legacy path unused */ }
+  } // end if(false)
 
   // Load user list
   await _reloadAdminUsers();
