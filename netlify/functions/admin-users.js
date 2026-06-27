@@ -140,12 +140,24 @@ exports.handler = async (event) => {
         const newUserId = createData.id;
         if (!newUserId) return json(500, { error: 'לא התקבל מזהה: ' + createText.slice(0, 200) }, cors);
 
-        // Step 4: set profile as premium
-        await fetch(`${supabaseUrl}/rest/v1/profiles`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', apikey: serviceKey, Authorization: 'Bearer ' + serviceKey, Prefer: 'resolution=merge-duplicates' },
-          body: JSON.stringify({ id: newUserId, full_name: name || '', subscription_tier: 'premium' })
+        // Step 4: wait for Supabase trigger to create the profile row, then update to premium
+        await new Promise(r => setTimeout(r, 800));
+
+        // Try PATCH first (updates the row the trigger created)
+        const patchRes = await fetch(`${supabaseUrl}/rest/v1/profiles?id=eq.${newUserId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', apikey: serviceKey, Authorization: 'Bearer ' + serviceKey, Prefer: 'return=minimal' },
+          body: JSON.stringify({ subscription_tier: 'premium', full_name: name || '' })
         });
+
+        // Fallback: if no row existed (no trigger), INSERT it
+        if (!patchRes.ok || patchRes.headers.get('content-range') === '*/0') {
+          await fetch(`${supabaseUrl}/rest/v1/profiles`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', apikey: serviceKey, Authorization: 'Bearer ' + serviceKey, Prefer: 'resolution=merge-duplicates' },
+            body: JSON.stringify({ id: newUserId, full_name: name || '', subscription_tier: 'premium' })
+          });
+        }
 
         // Step 5: generate password-reset link so user can set their password
         let loginLink = null;
