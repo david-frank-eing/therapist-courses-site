@@ -3598,10 +3598,14 @@ async function _loadAdminPanel() {
         msgEl.innerHTML = `
           <div style="color:var(--success);margin-bottom:8px">✅ משתמש נוצר עם גישת פרימיום!</div>
           <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px">
-            <div style="font-size:.8rem;color:var(--text2);margin-bottom:8px">שלח את הקישור הבא ל-<strong>${email}</strong> — לחיצה עליו תפתח את הדאשבורד ותאפשר קביעת סיסמה:</div>
-            <button id="admin-copy-link-btn" style="width:100%;padding:10px;border:none;border-radius:8px;background:var(--primary);color:#fff;font-size:.95rem;font-weight:700;cursor:pointer;letter-spacing:.02em">📋 העתק קישור כניסה</button>
-            <div id="admin-copy-confirm" style="text-align:center;font-size:.8rem;color:var(--success);margin-top:6px;display:none">✅ הקישור הועתק! עכשיו שלח אותו בוואטסאפ / מייל</div>
-            <div style="font-size:.72rem;color:var(--text-muted);margin-top:8px;text-align:center">הקישור תקף לשימוש אחד. אם יפוג — יש ללחוץ "שכחת סיסמה" בדף הכניסה</div>
+            <div style="font-size:.8rem;color:var(--text2);margin-bottom:10px">שלח ל-<strong>${email}</strong> קישור להגדרת סיסמה וכניסה לדאשבורד:</div>
+            <div style="display:flex;gap:8px;margin-bottom:8px">
+              <a id="admin-mailto-btn" href="mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent('הזמנה לדאשבורד קרלוס')}&body=${encodeURIComponent('שלום,\n\nהוזמנת לדאשבורד קרלוס.\nלחץ על הקישור הבא כדי להגדיר סיסמה ולהיכנס:\n\n' + d.login_link + '\n\nהקישור תקף לשימוש אחד.')}" style="flex:1;padding:9px 4px;border:none;border-radius:8px;background:#e8f0fe;color:#1a56db;font-size:.85rem;font-weight:700;cursor:pointer;text-align:center;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:4px">📧 מייל</a>
+              <a id="admin-whatsapp-btn" href="https://wa.me/?text=${encodeURIComponent('שלום! הוזמנת לדאשבורד קרלוס 🎉\nלחץ על הקישור הבא כדי להגדיר סיסמה ולהיכנס:\n\n' + d.login_link)}" target="_blank" rel="noopener" style="flex:1;padding:9px 4px;border:none;border-radius:8px;background:#e8fef0;color:#16a34a;font-size:.85rem;font-weight:700;cursor:pointer;text-align:center;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:4px">💬 וואטסאפ</a>
+              <button id="admin-copy-link-btn" style="flex:1;padding:9px 4px;border:none;border-radius:8px;background:var(--primary);color:#fff;font-size:.85rem;font-weight:700;cursor:pointer">📋 העתק</button>
+            </div>
+            <div id="admin-copy-confirm" style="text-align:center;font-size:.8rem;color:var(--success);display:none">✅ הקישור הועתק!</div>
+            <div style="font-size:.72rem;color:var(--text-muted);margin-top:6px;text-align:center">הקישור תקף לשימוש אחד. אם יפוג — יש ללחוץ "שכחת סיסמה" בדף הכניסה</div>
           </div>`;
         const copyBtn = document.getElementById('admin-copy-link-btn');
         const confirm = document.getElementById('admin-copy-confirm');
