@@ -5,10 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title id="page-title">קרלוס · דאשבורד</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
-  <link rel="stylesheet" href="style.css?v=82">
+  <link rel="stylesheet" href="style.css?v=83">
 </head>
 <body>
   <div id="toast-area"></div>
+  <div id="section-backdrop" class="section-backdrop"></div>
 
   <div class="page-wrap">
     <header>
@@ -53,7 +54,7 @@
         </section>
 
         <section id="tasks" class="card collapsible">
-          <h2><span>📌 משימות</span><button class="section-toggle" type="button">▾</button></h2>
+          <h2><span>📌 משימות</span><button class="section-toggle" type="button">▾</button><button class="section-expand-btn" data-section="tasks" title="הרחב">⤢</button></h2>
           <div class="section-body">
             <div class="add-row">
               <input type="text" id="new-task" placeholder="משימה חדשה..." maxlength="300">
@@ -110,7 +111,7 @@
         </section>
 
         <section id="content" class="card collapsible">
-          <h2><span>📲 תוכן השבוע</span><button class="section-toggle" type="button">▾</button></h2>
+          <h2><span>📲 תוכן השבוע</span><button class="section-toggle" type="button">▾</button><button class="section-expand-btn" data-section="content" title="הרחב">⤢</button></h2>
           <div class="section-body">
             <div class="content-add">
               <select id="new-content-type">
@@ -126,6 +127,7 @@
               <input type="text" id="new-content-title" placeholder="שם / רעיון...">
               <button id="add-content">הוסף</button>
             </div>
+            <div id="new-content-platforms" class="c-platform-checkboxes"></div>
             <div class="content-edit-hint">
               <span>ניתן לערוך תחומים וסוגי תוכן</span>
               <button class="content-edit-hint-btn" onclick="openSettings('domains')">⚙️ ערוך</button>
@@ -136,7 +138,7 @@
         </section>
 
         <section id="contacts" class="card collapsible">
-          <h2><span>👥 מטופלים ואירועים <a id="cal-link" href="#" class="cal-inline">📅 פתח יומן</a></span><button class="section-toggle" type="button">▾</button></h2>
+          <h2><span>👥 מטופלים ואירועים <a id="cal-link" href="#" class="cal-inline">📅 פתח יומן</a></span><button class="section-toggle" type="button">▾</button><button class="section-expand-btn" data-section="contacts" title="הרחב">⤢</button></h2>
           <div class="section-body">
             <div class="ct-tabs">
               <button class="ct-tab active" data-tab="clients">💆 מטופלים</button>
@@ -180,7 +182,7 @@
         </section>
 
         <section id="journal" class="card collapsible">
-          <h2><span>📝 יומן אישי</span><button class="section-toggle" type="button">▾</button></h2>
+          <h2><span>📝 יומן אישי</span><button class="section-toggle" type="button">▾</button><button class="section-expand-btn" data-section="journal" title="הרחב">⤢</button></h2>
           <div class="section-body">
             <div id="journal-today" class="jnl-today-entries"></div>
             <textarea id="journal-text" placeholder="הוסף רשומה..." maxlength="2000"></textarea>
@@ -467,6 +469,6 @@
     })();
   </script>
   <script src="supabase-api.js?v=1"></script>
-  <script src="app.js?v=83"></script>
+  <script src="app.js?v=84"></script>
 </body>
 </html>

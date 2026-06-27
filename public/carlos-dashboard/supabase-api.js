@@ -100,6 +100,9 @@ async function _sbGetState(sb, uid) {
   const contactsLabels = configRow && configRow.contacts_labels
     ? (typeof configRow.contacts_labels === 'string' ? JSON.parse(configRow.contacts_labels) : configRow.contacts_labels)
     : { sectionTitle: 'אנשי קשר ואירועים', tab1Emoji: '👤', tab1Label: 'אנשי קשר', tab2Emoji: '📅', tab2Label: 'אירועים' };
+  const platforms = configRow && configRow.platform_options
+    ? (typeof configRow.platform_options === 'string' ? JSON.parse(configRow.platform_options) : configRow.platform_options)
+    : null; // null = use DEFAULT_PLATFORMS from app.js
 
   // Calendar
   const calRow = calRes.data && calRes.data[0];
@@ -151,7 +154,8 @@ async function _sbGetState(sb, uid) {
       aiBriefing: false,
       domains,
       contentTypes,
-      contactsLabels
+      contactsLabels,
+      platforms
     },
     bookingData: {
       slots: slotsRes.data || [],
@@ -344,13 +348,14 @@ window._sbApi = async function(url, body) {
 
   // ── Content ───────────────────────────────────────────────────────────────
   if (url === '/api/content/add') {
-    const { type, domain, title } = body || {};
+    const { type, domain, title, platforms } = body || {};
     const { error } = await sb.from('content_items').insert({
       user_id: uid,
       title,
       type: type || 'post',
       domain: domain || 'unassigned',
       status: 'idea',
+      platforms: platforms || [],
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     });
@@ -360,7 +365,7 @@ window._sbApi = async function(url, body) {
 
   if (url === '/api/content/update') {
     const { id, ...fields } = body || {};
-    const allowed = ['title', 'type', 'status', 'domain', 'creative_urls', 'body', 'scheduled_for', 'docs_url'];
+    const allowed = ['title', 'type', 'status', 'domain', 'creative_urls', 'body', 'scheduled_for', 'docs_url', 'platforms'];
     const update = { updated_at: new Date().toISOString() };
     for (const k of allowed) if (k in fields) update[k] = fields[k];
     const { error } = await sb.from('content_items').update(update).eq('id', id).eq('user_id', uid);
@@ -569,6 +574,7 @@ window._sbApi = async function(url, body) {
     if (body.domains !== undefined) update.domains = body.domains;
     if (body.content_types !== undefined) update.content_types = body.content_types;
     if (body.contacts_labels !== undefined) update.contacts_labels = body.contacts_labels;
+    if (body.platform_options !== undefined) update.platform_options = body.platform_options;
     if (body.categories !== undefined) update.categories = body.categories;
     if (body.edition !== undefined) update.edition = body.edition;
     const { error } = await sb.from('dashboard_config').upsert(

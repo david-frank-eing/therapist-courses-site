@@ -40,6 +40,20 @@ async function api(url, body) {
 // Default fallback used before first state load
 let DOMAINS = [{ id: 'unassigned', label: '⚪ לא משויך' }];
 
+// Platforms — preset list, users toggle active/inactive in settings
+const DEFAULT_PLATFORMS = [
+  { id: 'instagram', emoji: '📸', label: 'Instagram', active: true },
+  { id: 'tiktok',    emoji: '🎵', label: 'TikTok',    active: true },
+  { id: 'facebook',  emoji: '👥', label: 'Facebook',  active: true },
+  { id: 'youtube',   emoji: '▶️', label: 'YouTube',   active: false },
+  { id: 'linkedin',  emoji: '💼', label: 'LinkedIn',  active: false },
+  { id: 'pinterest', emoji: '📌', label: 'Pinterest', active: false },
+  { id: 'x',         emoji: '🐦', label: 'X',         active: false },
+  { id: 'podcast',   emoji: '🎙️', label: 'Podcast',   active: false },
+];
+let PLATFORMS = DEFAULT_PLATFORMS;
+const activePlatforms = () => PLATFORMS.filter(p => p.active);
+
 // תיקון timezone: שימוש בתאריך מקומי (לא UTC) למניעת קפיצת יום אחרי חצות
 const todayStr = () => ilDate();
 
@@ -69,6 +83,10 @@ async function loadState() {
       ...s.userConfig.domains.map(d => ({ id: d.id, label: d.emoji + ' ' + d.label })),
       { id: 'unassigned', label: '⚪ לא משויך' }
     ];
+  }
+  // Update PLATFORMS from config
+  if (s.userConfig && s.userConfig.platforms && s.userConfig.platforms.length) {
+    PLATFORMS = s.userConfig.platforms;
   }
   // Lite-mode toggle: hide AI surfaces when edition=lite
   const isLite = s.userConfig && s.userConfig.edition === 'lite';
@@ -738,6 +756,14 @@ function renderContentSelects(contentTypes, domains) {
     ).join('');
     if (domains.find(d => d.id === prev)) domainEl.value = prev;
   }
+  // Render platform checkboxes for add-content form
+  const platEl = document.getElementById('new-content-platforms');
+  if (platEl) {
+    const active = activePlatforms();
+    platEl.innerHTML = active.length ? active.map(p =>
+      `<label class="c-plat-check"><input type="checkbox" name="plat" value="${p.id}"> ${p.emoji} ${p.label}</label>`
+    ).join('') : '';
+  }
 }
 
 function _renderContentTypesSettings(contentTypes) {
@@ -848,10 +874,16 @@ function renderContent(content, weekly) {
                 ? `<a href="${firstThumb}" target="_blank" rel="noopener"><span class="c-img-badge">🎬 ${thumbUrls.length}</span></a>`
                 : `<a href="${firstThumb}" target="_blank" rel="noopener"><span class="c-img-badge">📎 ${thumbUrls.length}</span></a>`)
           : '';
+        const itemPlatforms = Array.isArray(item.platforms) ? item.platforms : [];
+        const platformTags = itemPlatforms.map(pid => {
+          const p = PLATFORMS.find(x => x.id === pid);
+          return p ? `<span class="c-platform-tag">${p.emoji} ${p.label}</span>` : '';
+        }).join('');
         return `<div class="c-item" data-id="${item.id}">
           ${thumbHtml}
           <span class="c-item-title">${icon} ${item.title || '(ללא כותרת)'}</span>
           <span class="c-domain">${domainLabel(item.domain)}</span>
+          ${platformTags}
           ${thumbUrls.length > 1 ? `<span class="c-img-badge">📸 ${thumbUrls.length}</span>` : ''}
           ${next ? `<button class="c-next-btn" data-id="${item.id}" data-next="${next}">${NEXT_LABEL[item.status]}</button>` : ''}
           <button class="row-edit-btn" data-id="${item.id}" data-kind="content" title="ערוך">✏️</button>
@@ -900,8 +932,10 @@ $('#add-content').addEventListener('click', async () => {
   if (!title) { toast('כתוב שם/רעיון', false); return; }
   const type = $('#new-content-type').value;
   const domain = $('#new-content-domain').value;
-  await api('/api/content/add', { type, domain, title });
+  const platforms = [...document.querySelectorAll('#new-content-platforms input[name="plat"]:checked')].map(c => c.value);
+  await api('/api/content/add', { type, domain, title, platforms });
   $('#new-content-title').value = '';
+  document.querySelectorAll('#new-content-platforms input[name="plat"]').forEach(c => c.checked = false);
   toast('✓ נוסף לבנק כרעיון · ' + domainLabel(domain));
   loadState();
 });
@@ -1121,6 +1155,7 @@ document.getElementById('journal-modal').addEventListener('click', e => {
 
 document.addEventListener('keydown', e => {
   if (e.key !== 'Escape') return;
+  _collapseSection();
   ['journal-modal', 'pb-modal'].forEach(id => {
     const m = document.getElementById(id);
     if (m && m.style.display === 'flex') m.style.display = 'none';
@@ -1128,6 +1163,48 @@ document.addEventListener('keydown', e => {
   document.getElementById('help-modal')?.classList.add('hidden');
   document.getElementById('settings-modal')?.classList.add('hidden');
 });
+
+// ---------- Section expand (fullscreen mode) ----------
+let _expandedSection = null;
+
+function _expandSection(id) {
+  if (_expandedSection) _collapseSection();
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.add('section-fullscreen');
+  // Ensure section body is visible
+  el.querySelector('.section-body')?.classList.remove('collapsed');
+  document.getElementById('section-backdrop').classList.add('active');
+  document.body.style.overflow = 'hidden';
+  _expandedSection = id;
+  // Update button icon
+  el.querySelector('.section-expand-btn').textContent = '✕';
+  el.querySelector('.section-expand-btn').title = 'סגור';
+}
+
+function _collapseSection() {
+  if (!_expandedSection) return;
+  const el = document.getElementById(_expandedSection);
+  if (el) {
+    el.classList.remove('section-fullscreen');
+    const btn = el.querySelector('.section-expand-btn');
+    if (btn) { btn.textContent = '⤢'; btn.title = 'הרחב'; }
+  }
+  document.getElementById('section-backdrop').classList.remove('active');
+  document.body.style.overflow = '';
+  _expandedSection = null;
+}
+
+document.querySelectorAll('.section-expand-btn').forEach(btn => {
+  btn.addEventListener('click', e => {
+    e.stopPropagation();
+    const id = btn.dataset.section;
+    if (_expandedSection === id) _collapseSection();
+    else _expandSection(id);
+  });
+});
+
+document.getElementById('section-backdrop').addEventListener('click', _collapseSection);
 
 // ---------- Sound — Web Audio API (works on all platforms, no WAV dependency) ----------
 let _audioCtx = null;
@@ -3009,6 +3086,31 @@ function _renderDomainsSettings(domains, playbooks) {
   _redraw();
 }
 
+function _renderPlatformsSettings(platforms) {
+  const el = document.getElementById('platforms-settings-list');
+  if (!el) return;
+  const list = platforms && platforms.length ? platforms : DEFAULT_PLATFORMS;
+  el.innerHTML = list.map(p => `
+    <div class="plat-row" data-id="${p.id}">
+      <label class="plat-toggle">
+        <input type="checkbox" ${p.active ? 'checked' : ''} data-plat="${p.id}">
+        <span>${p.emoji} ${p.label}</span>
+      </label>
+    </div>`).join('');
+  el.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+    cb.addEventListener('change', async () => {
+      const updated = list.map(p => ({
+        ...p,
+        active: el.querySelector(`input[data-plat="${p.id}"]`)?.checked ?? p.active
+      }));
+      await api('/api/settings/update', { platform_options: updated });
+      PLATFORMS = updated;
+      toast('✓ פלטפורמות עודכנו');
+      loadState();
+    });
+  });
+}
+
 function _renderPlaybooksSettings(domains, playbooks) {
   const listEl = document.getElementById('playbooks-settings-list');
   if (!listEl) return;
@@ -3170,6 +3272,7 @@ async function openSettings(scrollTo) {
     s._domains          = (lastState && lastState.userConfig && lastState.userConfig.domains) || [];
     s._contentTypes     = (lastState && lastState.userConfig && lastState.userConfig.contentTypes) || [];
     s._contactsLabels   = (lastState && lastState.userConfig && lastState.userConfig.contactsLabels) || {};
+    s._platforms        = (lastState && lastState.userConfig && lastState.userConfig.platforms) || DEFAULT_PLATFORMS;
     renderSettings(s, bodyEl);
   } catch (e) {
     bodyEl.innerHTML = '<div class="muted-text">שגיאה: ' + e.message + '</div>';
@@ -3436,6 +3539,12 @@ function renderSettings(s, bodyEl) {
       <div id="content-types-settings-list"></div>
     </div>
 
+    <div class="settings-section">
+      <div class="settings-section-title">📱 פלטפורמות פרסום</div>
+      <div class="settings-hint" style="margin-bottom:10px">סמן אילו פלטפורמות פעילות — רק הן יופיעו כאפשרות בתוכן</div>
+      <div id="platforms-settings-list"></div>
+    </div>
+
     <div class="settings-section connections-section">
       <div class="settings-section-title">🔌 חיבורים</div>
       <div id="connections-body" class="connections-body"></div>
@@ -3462,6 +3571,9 @@ function renderSettings(s, bodyEl) {
 
   // ── Content types section ─────────────────────────────────
   _renderContentTypesSettings(s._contentTypes);
+
+  // ── Platforms section ─────────────────────────────────────
+  _renderPlatformsSettings(s._platforms);
 
   // ── Playbooks section ─────────────────────────────────────
   _renderPlaybooksSettings(s._domains, s._playbooks);
