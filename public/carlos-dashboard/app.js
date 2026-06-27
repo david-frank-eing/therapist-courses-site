@@ -88,6 +88,7 @@ async function loadState() {
   renderContentSelects(s.userConfig && s.userConfig.contentTypes, s.userConfig && s.userConfig.domains);
   renderContactsHeader(s.userConfig && s.userConfig.contactsLabels);
   renderContent(s.content, s.weekly);
+  renderJournalToday(s.journalToday);
   renderTasks(s.tasks, s.date, s.completedToday || []);
   renderContacts(s);
   renderHabits(s.habits, s.date);
@@ -1035,6 +1036,16 @@ $('#add-task').addEventListener('click', async () => {
 $('#new-task').addEventListener('keydown', e => { if (e.key === 'Enter') $('#add-task').click(); });
 
 // ---------- Journal ----------
+function renderJournalToday(body) {
+  const el = document.getElementById('journal-today');
+  if (!el) return;
+  if (!body || !body.trim()) { el.innerHTML = ''; return; }
+  const lines = body.split('\n').map(l =>
+    l.startsWith('[') ? `<div class="jnl-line jnl-ts">${_esc(l)}</div>` : `<div class="jnl-line">${_esc(l)}</div>`
+  ).join('');
+  el.innerHTML = `<div class="jnl-today-label">📝 היום</div>${lines}`;
+}
+
 $('#journal-save').addEventListener('click', async () => {
   const v = $('#journal-text').value.trim();
   if (!v) { toast('כתוב משהו קודם', false); return; }
