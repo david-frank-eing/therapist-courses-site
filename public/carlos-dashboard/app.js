@@ -8,12 +8,12 @@ function ilDate(offsetDays = 0) {
   return d.toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' });
 }
 
-function toast(msg, ok = true) {
+function toast(msg, ok = true, ms = 3400) {
   const t = document.createElement('div');
   t.className = 'toast ' + (ok ? 'ok' : 'err');
   t.textContent = msg;
   $('#toast-area').appendChild(t);
-  setTimeout(() => t.remove(), 3400);
+  setTimeout(() => t.remove(), ms);
 }
 
 function _esc(s) {
@@ -3242,6 +3242,7 @@ async function _googleRefreshData() {
   if (btn) { btn.disabled = true; btn.textContent = '⏳ מרענן...'; }
   try {
     const { data: { session } } = await window._supabase.auth.getSession();
+    if (!session) { toast('נדרשת כניסה מחדש', false); return; }
     const r = await fetch('/.netlify/functions/google-data', {
       headers: { Authorization: 'Bearer ' + session.access_token }
     });
@@ -4069,11 +4070,13 @@ function _initApp() {
     toast('שגיאה בחיבור Google: ' + decodeURIComponent(urlParams.get('google_error')), false);
   }
   loadState().then(() => {
-    // Auto-refresh Google data on open if not refreshed today
-    const lr = lastState && lastState.lastRefresh;
-    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' });
-    if (!lr || lr.date !== today) {
-      setTimeout(_googleRefreshData, 2000);
+    // Auto-refresh Google data on open if not refreshed today (cloud only)
+    if (location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+      const lr = lastState && lastState.lastRefresh;
+      const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' });
+      if (!lr || lr.date !== today) {
+        setTimeout(_googleRefreshData, 2000);
+      }
     }
   });
   // Auto-poll for new bookings every 30s
