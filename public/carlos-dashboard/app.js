@@ -4068,7 +4068,14 @@ function _initApp() {
     history.replaceState({}, '', window.location.pathname);
     toast('שגיאה בחיבור Google: ' + decodeURIComponent(urlParams.get('google_error')), false);
   }
-  loadState();
+  loadState().then(() => {
+    // Auto-refresh Google data on open if not refreshed today
+    const lr = lastState && lastState.lastRefresh;
+    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' });
+    if (!lr || lr.date !== today) {
+      setTimeout(_googleRefreshData, 2000);
+    }
+  });
   // Auto-poll for new bookings every 30s
   setInterval(async () => {
     try {
