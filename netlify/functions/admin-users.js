@@ -86,15 +86,20 @@ exports.handler = async (event) => {
       const valid = ['free', 'basic', 'premium', 'vip'];
       if (!userId || !valid.includes(tier)) return json(400, { error: 'Invalid params' }, cors);
 
-      const r = await fetch(`${supabaseUrl}/rest/v1/profiles?id=eq.${userId}`, {
-        method: 'PATCH',
+      // UPSERT — creates profile row if missing, updates if exists
+      const r = await fetch(`${supabaseUrl}/rest/v1/profiles`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          apikey: serviceKey, Authorization: 'Bearer ' + serviceKey
+          apikey: serviceKey, Authorization: 'Bearer ' + serviceKey,
+          Prefer: 'resolution=merge-duplicates'
         },
-        body: JSON.stringify({ subscription_tier: tier })
+        body: JSON.stringify({ id: userId, subscription_tier: tier })
       });
-      if (!r.ok) return json(500, { error: 'DB update failed' }, cors);
+      if (!r.ok) {
+        const errText = await r.text();
+        return json(500, { error: 'DB update failed: ' + errText.slice(0, 100) }, cors);
+      }
       return json(200, { ok: true }, cors);
     }
 
