@@ -90,20 +90,40 @@ exports.handler = async (event) => {
     // ── invite_user ──
     if (body.action === 'invite_user') {
       const { email, name } = body;
-      if (!email || !email.includes('@')) return json(400, { error: 'Invalid email' }, cors);
+      if (!email || !email.includes('@')) return json(400, { error: 'אימייל לא תקין' }, cors);
 
-      // Send Supabase invite email — redirect to password-setup page after click
-      const siteUrl = process.env.URL || 'https://stupendous-lily-f8cd84.netlify.app';
+      // Check if user already exists — if so, just update their tier
+      const existRes = await fetch(`${supabaseUrl}/auth/v1/admin/users?filter=${encodeURIComponent(email)}&per_page=10`, {
+        headers: { apikey: serviceKey, Authorization: 'Bearer ' + serviceKey }
+      });
+      const existData = await existRes.json();
+      const existingUser = (existData.users || []).find(u => u.email === email);
+      if (existingUser) {
+        await fetch(`${supabaseUrl}/rest/v1/profiles?id=eq.${existingUser.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', apikey: serviceKey, Authorization: 'Bearer ' + serviceKey },
+          body: JSON.stringify({ subscription_tier: 'premium', ...(name ? { full_name: name } : {}) })
+        });
+        return json(200, {
+          ok: true, already_existed: true,
+          user: { id: existingUser.id, email, name: name || existingUser.user_metadata?.full_name || '', tier: 'premium' }
+        }, cors);
+      }
+
+      // Send Supabase invite email
       const invRes = await fetch(`${supabaseUrl}/auth/v1/admin/invite`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           apikey: serviceKey, Authorization: 'Bearer ' + serviceKey
         },
-        body: JSON.stringify({ email, redirect_to: `${siteUrl}/reset-password` })
+        body: JSON.stringify({ email })
       });
       const invData = await invRes.json();
-      if (!invRes.ok) return json(500, { error: invData.msg || invData.message || 'Invite failed' }, cors);
+      if (!invRes.ok) {
+        const errMsg = invData.msg || invData.message || invData.error_description || invData.error || JSON.stringify(invData);
+        return json(500, { error: errMsg }, cors);
+      }
 
       const newUserId = invData.id;
 

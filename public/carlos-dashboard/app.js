@@ -3590,7 +3590,9 @@ async function _loadAdminPanel() {
       const d = await r.json();
       if (!r.ok) throw new Error(d.error || 'שגיאה');
       msgEl.style.color = 'var(--success)';
-      msgEl.textContent = `✅ הזמנה נשלחה ל-${email} עם גישת פרימיום`;
+      msgEl.textContent = d.already_existed
+        ? `✅ המשתמש ${email} כבר קיים — גישה עודכנה לפרימיום`
+        : `✅ הזמנה נשלחה ל-${email} עם גישת פרימיום`;
       emailEl.value = ''; nameEl.value = '';
       // Add new user row to top of list
       const rowsEl = document.getElementById('admin-users-rows');
