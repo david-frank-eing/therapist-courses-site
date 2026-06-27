@@ -3587,8 +3587,10 @@ async function _loadAdminPanel() {
         headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + s.access_token },
         body: JSON.stringify({ action: 'invite_user', email, name })
       });
-      const d = await r.json();
-      if (!r.ok) throw new Error(d.error || 'שגיאה');
+      const rawText = await r.text();
+      let d = {};
+      try { d = JSON.parse(rawText); } catch (_) { throw new Error('תגובה לא תקינה מהשרת: ' + rawText.slice(0, 100)); }
+      if (!r.ok) throw new Error(d.error || `שגיאת שרת ${r.status}`);
       msgEl.style.color = 'var(--success)';
       msgEl.textContent = d.already_existed
         ? `✅ המשתמש ${email} כבר קיים — גישה עודכנה לפרימיום`

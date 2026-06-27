@@ -92,60 +92,62 @@ exports.handler = async (event) => {
       const { email, name } = body;
       if (!email || !email.includes('@')) return json(400, { error: 'אימייל לא תקין' }, cors);
 
-      // Check if user already exists — if so, just update their tier
-      const existRes = await fetch(`${supabaseUrl}/auth/v1/admin/users?filter=${encodeURIComponent(email)}&per_page=10`, {
-        headers: { apikey: serviceKey, Authorization: 'Bearer ' + serviceKey }
-      });
-      const existData = await existRes.json();
-      const existingUser = (existData.users || []).find(u => u.email === email);
-      if (existingUser) {
-        await fetch(`${supabaseUrl}/rest/v1/profiles?id=eq.${existingUser.id}`, {
-          method: 'PATCH',
+      try {
+        // Step 1: check if user already exists
+        let existingUser = null;
+        try {
+          const existRes = await fetch(`${supabaseUrl}/auth/v1/admin/users?per_page=200`, {
+            headers: { apikey: serviceKey, Authorization: 'Bearer ' + serviceKey }
+          });
+          if (existRes.ok) {
+            const existData = await existRes.json();
+            existingUser = (existData.users || []).find(u => u.email === email) || null;
+          }
+        } catch (_) { /* ignore — if check fails, proceed to invite */ }
+
+        // Step 2: if exists, just upgrade tier
+        if (existingUser) {
+          await fetch(`${supabaseUrl}/rest/v1/profiles?id=eq.${existingUser.id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json', apikey: serviceKey, Authorization: 'Bearer ' + serviceKey },
+            body: JSON.stringify({ subscription_tier: 'premium', ...(name ? { full_name: name } : {}) })
+          });
+          return json(200, {
+            ok: true, already_existed: true,
+            user: { id: existingUser.id, email, name: name || existingUser.user_metadata?.full_name || '', tier: 'premium' }
+          }, cors);
+        }
+
+        // Step 3: send invite
+        const invRes = await fetch(`${supabaseUrl}/auth/v1/admin/invite`, {
+          method: 'POST',
           headers: { 'Content-Type': 'application/json', apikey: serviceKey, Authorization: 'Bearer ' + serviceKey },
-          body: JSON.stringify({ subscription_tier: 'premium', ...(name ? { full_name: name } : {}) })
+          body: JSON.stringify({ email })
         });
-        return json(200, {
-          ok: true, already_existed: true,
-          user: { id: existingUser.id, email, name: name || existingUser.user_metadata?.full_name || '', tier: 'premium' }
-        }, cors);
+        const invText = await invRes.text();
+        let invData = {};
+        try { invData = JSON.parse(invText); } catch (_) { invData = { error: invText }; }
+
+        if (!invRes.ok) {
+          const errMsg = invData.msg || invData.message || invData.error_description || invData.error || `HTTP ${invRes.status}: ${invText.slice(0, 200)}`;
+          return json(500, { error: errMsg }, cors);
+        }
+
+        const newUserId = invData.id;
+        if (!newUserId) return json(500, { error: 'לא התקבל מזהה משתמש: ' + invText.slice(0, 200) }, cors);
+
+        // Step 4: set profile as premium
+        await fetch(`${supabaseUrl}/rest/v1/profiles`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', apikey: serviceKey, Authorization: 'Bearer ' + serviceKey, Prefer: 'resolution=merge-duplicates' },
+          body: JSON.stringify({ id: newUserId, full_name: name || '', subscription_tier: 'premium' })
+        });
+
+        return json(200, { ok: true, user: { id: newUserId, email, name: name || '', tier: 'premium' } }, cors);
+
+      } catch (e) {
+        return json(500, { error: e.message || 'שגיאה לא צפויה' }, cors);
       }
-
-      // Send Supabase invite email
-      const invRes = await fetch(`${supabaseUrl}/auth/v1/admin/invite`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          apikey: serviceKey, Authorization: 'Bearer ' + serviceKey
-        },
-        body: JSON.stringify({ email })
-      });
-      const invData = await invRes.json();
-      if (!invRes.ok) {
-        const errMsg = invData.msg || invData.message || invData.error_description || invData.error || JSON.stringify(invData);
-        return json(500, { error: errMsg }, cors);
-      }
-
-      const newUserId = invData.id;
-
-      // Upsert profile with premium tier
-      await fetch(`${supabaseUrl}/rest/v1/profiles`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          apikey: serviceKey, Authorization: 'Bearer ' + serviceKey,
-          Prefer: 'resolution=merge-duplicates'
-        },
-        body: JSON.stringify({
-          id: newUserId,
-          full_name: name || '',
-          subscription_tier: 'premium'
-        })
-      });
-
-      return json(200, {
-        ok: true,
-        user: { id: newUserId, email, name: name || '', tier: 'premium' }
-      }, cors);
     }
 
     return json(400, { error: 'Unknown action' }, cors);
