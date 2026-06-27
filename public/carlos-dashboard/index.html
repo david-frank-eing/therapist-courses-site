@@ -454,7 +454,7 @@
               <div style="font-size:3rem;margin-bottom:16px">⏳</div>
               <h2 style="margin:0 0 8px;color:#333">ממתין לאישור</h2>
               <p style="color:#666;margin:0 0 24px;line-height:1.6">החשבון שלך נוצר בהצלחה!<br>המנהל יאשר את גישתך בקרוב.</p>
-              <a href="/auth" style="background:#e5e7eb;color:#374151;padding:10px 24px;border-radius:10px;text-decoration:none;font-weight:600;font-size:.9rem">התנתק</a>
+              <button onclick="window._supabase.auth.signOut().then(()=>window.location.href='/auth')" style="background:#e5e7eb;color:#374151;padding:10px 24px;border-radius:10px;border:none;font-weight:600;font-size:.9rem;cursor:pointer">התנתק</button>
             </div>
           </div>`;
         return;
