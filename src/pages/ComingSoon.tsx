@@ -26,14 +26,33 @@ export default function ComingSoon() {
         </p>
 
         {!user && (
-          <Button onClick={() => navigate("/auth")} size="lg" className="px-8">
-            כניסה
-          </Button>
+          <div className="flex flex-col gap-3 items-center">
+            <Button onClick={() => navigate("/auth")} size="lg" className="px-8 w-full max-w-xs">
+              כניסה
+            </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              className="px-8 w-full max-w-xs"
+              onClick={() => window.location.href = "/auth?redirect=/carlos-dashboard/"}
+            >
+              🚪 כניסה לדאשבורד
+            </Button>
+          </div>
         )}
 
         {isPending && (
-          <div className="bg-muted rounded-xl px-6 py-4 text-sm text-muted-foreground">
-            מחכים לאישור גישה — נחזור אליך בקרוב 👋
+          <div className="flex flex-col gap-3 items-center">
+            <div className="bg-muted rounded-xl px-6 py-4 text-sm text-muted-foreground">
+              מחכים לאישור גישה — נחזור אליך בקרוב 👋
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => window.location.href = "/auth?redirect=/carlos-dashboard/"}
+            >
+              כבר יש לי גישה — כניסה לדאשבורד
+            </Button>
           </div>
         )}
       </div>
