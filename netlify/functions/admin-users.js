@@ -118,23 +118,27 @@ exports.handler = async (event) => {
           }, cors);
         }
 
-        // Step 3: send invite
-        const invRes = await fetch(`${supabaseUrl}/auth/v1/admin/invite`, {
+        // Step 3: create user account (email confirmed, no password)
+        const createRes = await fetch(`${supabaseUrl}/auth/v1/admin/users`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', apikey: serviceKey, Authorization: 'Bearer ' + serviceKey },
-          body: JSON.stringify({ email })
+          body: JSON.stringify({
+            email,
+            email_confirm: true,
+            user_metadata: { full_name: name || '' }
+          })
         });
-        const invText = await invRes.text();
-        let invData = {};
-        try { invData = JSON.parse(invText); } catch (_) { invData = { error: invText }; }
+        const createText = await createRes.text();
+        let createData = {};
+        try { createData = JSON.parse(createText); } catch (_) { createData = { error: createText }; }
 
-        if (!invRes.ok) {
-          const errMsg = invData.msg || invData.message || invData.error_description || invData.error || `HTTP ${invRes.status}: ${invText.slice(0, 200)}`;
+        if (!createRes.ok) {
+          const errMsg = createData.msg || createData.message || createData.error_description || createData.error || `HTTP ${createRes.status}: ${createText.slice(0, 200)}`;
           return json(500, { error: errMsg }, cors);
         }
 
-        const newUserId = invData.id;
-        if (!newUserId) return json(500, { error: 'לא התקבל מזהה משתמש: ' + invText.slice(0, 200) }, cors);
+        const newUserId = createData.id;
+        if (!newUserId) return json(500, { error: 'לא התקבל מזהה: ' + createText.slice(0, 200) }, cors);
 
         // Step 4: set profile as premium
         await fetch(`${supabaseUrl}/rest/v1/profiles`, {
@@ -143,7 +147,21 @@ exports.handler = async (event) => {
           body: JSON.stringify({ id: newUserId, full_name: name || '', subscription_tier: 'premium' })
         });
 
-        return json(200, { ok: true, user: { id: newUserId, email, name: name || '', tier: 'premium' } }, cors);
+        // Step 5: generate password-reset link so user can set their password
+        let loginLink = null;
+        try {
+          const linkRes = await fetch(`${supabaseUrl}/auth/v1/admin/generate_link`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', apikey: serviceKey, Authorization: 'Bearer ' + serviceKey },
+            body: JSON.stringify({ type: 'recovery', email })
+          });
+          if (linkRes.ok) {
+            const linkData = await linkRes.json();
+            loginLink = linkData.action_link || linkData.hashed_token || null;
+          }
+        } catch (_) { /* generate_link optional */ }
+
+        return json(200, { ok: true, login_link: loginLink, user: { id: newUserId, email, name: name || '', tier: 'premium' } }, cors);
 
       } catch (e) {
         return json(500, { error: e.message || 'שגיאה לא צפויה' }, cors);

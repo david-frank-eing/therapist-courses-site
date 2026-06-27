@@ -3592,9 +3592,19 @@ async function _loadAdminPanel() {
       try { d = JSON.parse(rawText); } catch (_) { throw new Error('תגובה לא תקינה מהשרת: ' + rawText.slice(0, 100)); }
       if (!r.ok) throw new Error(d.error || `שגיאת שרת ${r.status}`);
       msgEl.style.color = 'var(--success)';
-      msgEl.textContent = d.already_existed
-        ? `✅ המשתמש ${email} כבר קיים — גישה עודכנה לפרימיום`
-        : `✅ הזמנה נשלחה ל-${email} עם גישת פרימיום`;
+      if (d.already_existed) {
+        msgEl.textContent = `✅ המשתמש ${email} כבר קיים — גישה עודכנה לפרימיום`;
+      } else if (d.login_link) {
+        msgEl.innerHTML = `✅ משתמש נוצר! שלח את הקישור הבא ל-${email}:<br>
+          <div style="margin-top:6px;display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+            <input type="text" value="${d.login_link}" readonly style="flex:1;min-width:0;font-size:.72rem;padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:var(--input-bg);color:var(--text);direction:ltr">
+            <button onclick="navigator.clipboard.writeText('${d.login_link}').then(()=>this.textContent='✅').catch(()=>{})" style="white-space:nowrap;padding:4px 10px;border:none;border-radius:6px;background:var(--primary);color:#fff;cursor:pointer;font-size:.8rem">📋 העתק</button>
+          </div>
+          <div style="font-size:.75rem;margin-top:4px;color:var(--text-muted)">הקישור פג תוקף אחרי שימוש. אם יפוג — יכול להשתמש ב"שכחת סיסמה"</div>`;
+      } else {
+        msgEl.innerHTML = `✅ המשתמש ${email} נוצר עם גישת פרימיום.<br>
+          <span style="font-size:.78rem;color:var(--text-muted)">שלח לו/לה את כתובת האתר ובקש ללחוץ "שכחת סיסמה" כדי לקבוע סיסמה.</span>`;
+      }
       emailEl.value = ''; nameEl.value = '';
       // Add new user row to top of list
       const rowsEl = document.getElementById('admin-users-rows');
