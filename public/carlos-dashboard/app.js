@@ -3595,15 +3595,43 @@ async function _loadAdminPanel() {
       if (d.already_existed) {
         msgEl.textContent = `✅ המשתמש ${email} כבר קיים — גישה עודכנה לפרימיום`;
       } else if (d.login_link) {
-        msgEl.innerHTML = `✅ משתמש נוצר! שלח את הקישור הבא ל-${email}:<br>
-          <div style="margin-top:6px;display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-            <input type="text" value="${d.login_link}" readonly style="flex:1;min-width:0;font-size:.72rem;padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:var(--input-bg);color:var(--text);direction:ltr">
-            <button onclick="navigator.clipboard.writeText('${d.login_link}').then(()=>this.textContent='✅').catch(()=>{})" style="white-space:nowrap;padding:4px 10px;border:none;border-radius:6px;background:var(--primary);color:#fff;cursor:pointer;font-size:.8rem">📋 העתק</button>
-          </div>
-          <div style="font-size:.75rem;margin-top:4px;color:var(--text-muted)">הקישור פג תוקף אחרי שימוש. אם יפוג — יכול להשתמש ב"שכחת סיסמה"</div>`;
+        msgEl.innerHTML = `
+          <div style="color:var(--success);margin-bottom:8px">✅ משתמש נוצר עם גישת פרימיום!</div>
+          <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px">
+            <div style="font-size:.8rem;color:var(--text2);margin-bottom:8px">שלח את הקישור הבא ל-<strong>${email}</strong> — לחיצה עליו תפתח את הדאשבורד ותאפשר קביעת סיסמה:</div>
+            <button id="admin-copy-link-btn" style="width:100%;padding:10px;border:none;border-radius:8px;background:var(--primary);color:#fff;font-size:.95rem;font-weight:700;cursor:pointer;letter-spacing:.02em">📋 העתק קישור כניסה</button>
+            <div id="admin-copy-confirm" style="text-align:center;font-size:.8rem;color:var(--success);margin-top:6px;display:none">✅ הקישור הועתק! עכשיו שלח אותו בוואטסאפ / מייל</div>
+            <div style="font-size:.72rem;color:var(--text-muted);margin-top:8px;text-align:center">הקישור תקף לשימוש אחד. אם יפוג — יש ללחוץ "שכחת סיסמה" בדף הכניסה</div>
+          </div>`;
+        const copyBtn = document.getElementById('admin-copy-link-btn');
+        const confirm = document.getElementById('admin-copy-confirm');
+        if (copyBtn) {
+          copyBtn.addEventListener('click', () => {
+            navigator.clipboard.writeText(d.login_link)
+              .then(() => {
+                copyBtn.textContent = '✅ הועתק!';
+                copyBtn.style.background = 'var(--success)';
+                confirm.style.display = 'block';
+              })
+              .catch(() => {
+                // fallback: select the text
+                const ta = document.createElement('textarea');
+                ta.value = d.login_link;
+                ta.style.position = 'fixed'; ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.select(); document.execCommand('copy');
+                document.body.removeChild(ta);
+                copyBtn.textContent = '✅ הועתק!';
+                confirm.style.display = 'block';
+              });
+          });
+        }
       } else {
-        msgEl.innerHTML = `✅ המשתמש ${email} נוצר עם גישת פרימיום.<br>
-          <span style="font-size:.78rem;color:var(--text-muted)">שלח לו/לה את כתובת האתר ובקש ללחוץ "שכחת סיסמה" כדי לקבוע סיסמה.</span>`;
+        msgEl.innerHTML = `
+          <div style="color:var(--success);margin-bottom:6px">✅ המשתמש ${email} נוצר עם גישת פרימיום</div>
+          <div style="font-size:.8rem;color:var(--text-muted);background:var(--card);padding:10px;border-radius:8px">
+            שלח לו/לה את כתובת האתר ובקש ללחוץ <strong>"שכחת סיסמה"</strong> כדי לקבוע סיסמה ולהיכנס
+          </div>`;
       }
       emailEl.value = ''; nameEl.value = '';
       // Add new user row to top of list
