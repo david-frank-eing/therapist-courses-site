@@ -1195,14 +1195,27 @@ function _collapseSection() {
   _expandedSection = null;
 }
 
-document.querySelectorAll('.section-expand-btn').forEach(btn => {
-  btn.addEventListener('click', e => {
-    e.stopPropagation();
-    const id = btn.dataset.section;
-    if (_expandedSection === id) _collapseSection();
-    else _expandSection(id);
+function _initExpandButtons() {
+  // Remove any leftover hardcoded expand buttons
+  document.querySelectorAll('.section-expand-btn').forEach(b => b.remove());
+  // Inject expand button right after section-toggle in every collapsible section
+  document.querySelectorAll('section.card.collapsible').forEach(sec => {
+    const toggle = sec.querySelector(':scope > h2 > .section-toggle');
+    if (!toggle) return;
+    const btn = document.createElement('button');
+    btn.className = 'section-expand-btn';
+    btn.dataset.section = sec.id;
+    btn.title = 'הרחב';
+    btn.textContent = '⤢';
+    btn.type = 'button';
+    toggle.insertAdjacentElement('afterend', btn);
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      if (_expandedSection === sec.id) _collapseSection();
+      else _expandSection(sec.id);
+    });
   });
-});
+}
 
 document.getElementById('section-backdrop').addEventListener('click', _collapseSection);
 
@@ -3509,6 +3522,80 @@ async function scheduleDailyTask() {
   }
 }
 
+// ---------- Admin Panel ----------
+const TIER_LABELS = { free: 'חינמי', basic: 'בסיסי', premium: '⭐ פרימיום', vip: '👑 VIP' };
+const TIER_COLORS = { free: '#999', basic: '#6ca', premium: '#4a6aee', vip: '#e59a00' };
+
+async function _loadAdminPanel() {
+  const el = document.getElementById('admin-users-list');
+  if (!el) return;
+  try {
+    const { data: { session } } = await window._supabase.auth.getSession();
+    if (!session) return;
+    const r = await fetch('/.netlify/functions/admin-users', {
+      headers: { Authorization: 'Bearer ' + session.access_token }
+    });
+    if (!r.ok) { el.innerHTML = '<div class="muted-text">שגיאה בטעינה</div>'; return; }
+    const { users } = await r.json();
+    if (!users || !users.length) { el.innerHTML = '<div class="muted-text">אין משתמשים רשומים</div>'; return; }
+    el.innerHTML = users.map(u => `
+      <div class="admin-user-row" data-id="${u.id}">
+        <div class="admin-user-info">
+          <div class="admin-user-name">${u.name || '—'}</div>
+          <div class="admin-user-email">${u.email}</div>
+        </div>
+        <div class="admin-user-actions">
+          <span class="admin-tier-badge" style="color:${TIER_COLORS[u.tier]||'#999'}">${TIER_LABELS[u.tier]||u.tier}</span>
+          ${u.email !== 'david1.frank@gmail.com' ? `
+            ${u.tier === 'premium' || u.tier === 'vip'
+              ? `<button class="admin-revoke-btn" data-uid="${u.id}" data-tier="free">🚫 בטל גישה</button>`
+              : `<button class="admin-approve-btn" data-uid="${u.id}" data-tier="premium">✅ אשר גישה</button>`
+            }` : '<span class="muted-text" style="font-size:.75rem">מנהל</span>'}
+        </div>
+      </div>`).join('');
+
+    el.querySelectorAll('[data-uid]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const uid  = btn.dataset.uid;
+        const tier = btn.dataset.tier;
+        const row  = btn.closest('.admin-user-row');
+        btn.disabled = true;
+        btn.textContent = '⏳';
+        try {
+          const { data: { session: s2 } } = await window._supabase.auth.getSession();
+          const res = await fetch('/.netlify/functions/admin-users', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + s2.access_token },
+            body: JSON.stringify({ action: 'set_tier', userId: uid, tier })
+          });
+          if (!res.ok) throw new Error('שגיאת שרת');
+          const badge = row.querySelector('.admin-tier-badge');
+          badge.textContent = TIER_LABELS[tier] || tier;
+          badge.style.color = TIER_COLORS[tier] || '#999';
+          if (tier === 'free') {
+            btn.className = 'admin-approve-btn';
+            btn.dataset.tier = 'premium';
+            btn.textContent = '✅ אשר גישה';
+            btn.disabled = false;
+          } else {
+            btn.className = 'admin-revoke-btn';
+            btn.dataset.tier = 'free';
+            btn.textContent = '🚫 בטל גישה';
+            btn.disabled = false;
+          }
+          toast(tier === 'free' ? '🚫 גישה בוטלה' : '✅ גישה אושרה');
+        } catch (e) {
+          toast('שגיאה: ' + e.message, false);
+          btn.disabled = false;
+          btn.textContent = tier === 'free' ? '🚫 בטל גישה' : '✅ אשר גישה';
+        }
+      });
+    });
+  } catch (e) {
+    el.innerHTML = '<div class="muted-text">שגיאה: ' + e.message + '</div>';
+  }
+}
+
 function renderSettings(s, bodyEl) {
   const isLite = (s.edition || 'full') === 'lite';
   bodyEl.innerHTML = `
@@ -3584,6 +3671,14 @@ function renderSettings(s, bodyEl) {
       <div id="playbooks-settings-list"></div>
     </div>
 
+    ${window._userEmail === 'david1.frank@gmail.com' ? `
+    <div class="settings-section" id="admin-panel-section">
+      <div class="settings-section-title">👑 ניהול משתמשים</div>
+      <div id="admin-users-list" class="admin-users-list">
+        <div class="muted-text">טוען...</div>
+      </div>
+    </div>` : ''}
+
     <div class="settings-actions">
       <button id="settings-save">💾 שמור</button>
       <button id="settings-cancel-btn" class="settings-cancel-btn">ביטול</button>
@@ -3609,6 +3704,11 @@ function renderSettings(s, bodyEl) {
 
   // Load diagnose immediately after rendering
   loadConnectionsDiagnose();
+
+  // Load admin panel if admin
+  if (window._userEmail === 'david1.frank@gmail.com') {
+    _loadAdminPanel();
+  }
 
   // Scroll to requested section
   if (scrollTo) {
@@ -4207,6 +4307,7 @@ function _initApp() {
   applyMode();
   refreshSoundLabel();
   initSectionToggles();
+  _initExpandButtons();
   _restoreTimer();
   const nd = $('#new-task-date');
   if (nd) nd.value = todayStr();

@@ -1644,3 +1644,25 @@ body.lite-mode:not(.has-ai-briefing) #briefing { display: none !important; }
 .welcome-skip { margin: 0; }
 .welcome-skip a { color: var(--text-muted); font-size: .82rem; text-decoration: none; }
 .welcome-skip a:hover { color: var(--text2); }
+
+/* ── Admin Panel ── */
+.admin-users-list { display: flex; flex-direction: column; gap: 8px; }
+.admin-user-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 10px 12px; background: var(--bg); border-radius: 10px;
+  border: 1px solid var(--sep);
+}
+.admin-user-info { flex: 1; min-width: 0; }
+.admin-user-name { font-size: .88rem; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.admin-user-email { font-size: .78rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.admin-user-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.admin-tier-badge { font-size: .78rem; font-weight: 700; }
+.admin-approve-btn, .admin-revoke-btn {
+  font-size: .78rem; padding: 4px 10px; border: none; border-radius: 8px; cursor: pointer;
+  font-family: inherit; transition: opacity .15s;
+}
+.admin-approve-btn { background: rgba(95,214,160,.18); color: var(--success); }
+.admin-revoke-btn  { background: rgba(255,128,128,.14); color: var(--danger); }
+.admin-approve-btn:hover { opacity: .8; }
+.admin-revoke-btn:hover  { opacity: .8; }
+.admin-approve-btn:disabled, .admin-revoke-btn:disabled { opacity: .5; cursor: default; }
