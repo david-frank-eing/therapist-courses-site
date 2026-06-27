@@ -26,13 +26,17 @@ const ResetPassword = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // The recovery link establishes a temporary session (detectSessionInUrl).
+  // Detect if this is an invite flow (type=invite in URL hash)
+  const isInvite = typeof window !== 'undefined' &&
+    (window.location.hash.includes('type=invite') || window.location.search.includes('type=invite'));
+
+  // The recovery/invite link establishes a temporary session (detectSessionInUrl).
   // We wait for it via onAuthStateChange / getSession before showing the form.
   useEffect(() => {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "PASSWORD_RECOVERY" || session) {
+      if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN" || session) {
         setStatus("ready");
       }
     });
@@ -77,10 +81,10 @@ const ResetPassword = () => {
     }
 
     toast({
-      title: "הסיסמה עודכנה",
-      description: "הסיסמה החדשה נשמרה. אתם מחוברים.",
+      title: isInvite ? "ברוך הבא! הסיסמה נקבעה" : "הסיסמה עודכנה",
+      description: isInvite ? "החשבון שלך מוכן. מיד תועבר לדאשבורד." : "הסיסמה החדשה נשמרה. אתם מחוברים.",
     });
-    navigate("/");
+    window.location.href = isInvite ? "/carlos-dashboard/" : "/";
   };
 
   return (
@@ -97,10 +101,12 @@ const ResetPassword = () => {
 
         <Card className="shadow-card">
           <CardHeader className="text-center">
-            <CardTitle>קביעת סיסמה חדשה</CardTitle>
+            <CardTitle>{isInvite ? "ברוך הבא! קבע סיסמה" : "קביעת סיסמה חדשה"}</CardTitle>
             <CardDescription>
               {status === "ready"
-                ? "בחרו סיסמה חדשה לחשבון שלכם"
+                ? isInvite
+                  ? "בחר סיסמה כדי להשלים את ההרשמה לדאשבורד"
+                  : "בחרו סיסמה חדשה לחשבון שלכם"
                 : status === "checking"
                 ? "מאמתים את הקישור..."
                 : "הקישור אינו תקף"}

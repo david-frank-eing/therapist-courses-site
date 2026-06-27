@@ -92,14 +92,15 @@ exports.handler = async (event) => {
       const { email, name } = body;
       if (!email || !email.includes('@')) return json(400, { error: 'Invalid email' }, cors);
 
-      // Send Supabase invite email
+      // Send Supabase invite email — redirect to password-setup page after click
+      const siteUrl = process.env.URL || 'https://stupendous-lily-f8cd84.netlify.app';
       const invRes = await fetch(`${supabaseUrl}/auth/v1/admin/invite`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           apikey: serviceKey, Authorization: 'Bearer ' + serviceKey
         },
-        body: JSON.stringify({ email })
+        body: JSON.stringify({ email, redirect_to: `${siteUrl}/reset-password` })
       });
       const invData = await invRes.json();
       if (!invRes.ok) return json(500, { error: invData.msg || invData.message || 'Invite failed' }, cors);
