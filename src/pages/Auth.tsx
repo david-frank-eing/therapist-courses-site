@@ -37,9 +37,10 @@ const Auth = () => {
 
   useEffect(() => {
     if (user) {
-      navigate(redirectTo);
+      // Use full page navigation so static files (e.g. /carlos-dashboard/) load correctly
+      window.location.href = redirectTo;
     }
-  }, [user, navigate, redirectTo]);
+  }, [user, redirectTo]);
 
   const switchMode = (next: Mode) => {
     setMode(next);
@@ -98,7 +99,7 @@ const Auth = () => {
           }
         } else {
           toast({ title: "התחברת בהצלחה!", description: "ברוכים הבאים למרחב למטפלים" });
-          navigate(redirectTo);
+          window.location.href = redirectTo;
         }
       } else {
         const { error } = await signUp(email, password, fullName);
@@ -114,7 +115,7 @@ const Auth = () => {
           }
         } else {
           toast({ title: "נרשמת בהצלחה!", description: "ברוכים הבאים למרחב למטפלים" });
-          navigate(redirectTo);
+          window.location.href = redirectTo;
         }
       }
     } catch (error) {

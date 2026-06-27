@@ -64,11 +64,12 @@ exports.handler = async (event) => {
     return json(200, { users: result }, cors);
   }
 
-  // ── POST: set tier ───────────────────────────────────────────────────────────
+  // ── POST: set tier / invite user ────────────────────────────────────────────
   if (event.httpMethod === 'POST') {
     let body;
     try { body = JSON.parse(event.body || '{}'); } catch { return json(400, { error: 'Bad JSON' }, cors); }
 
+    // ── set_tier ──
     if (body.action === 'set_tier') {
       const { userId, tier } = body;
       const valid = ['free', 'basic', 'premium', 'vip'];
@@ -84,6 +85,46 @@ exports.handler = async (event) => {
       });
       if (!r.ok) return json(500, { error: 'DB update failed' }, cors);
       return json(200, { ok: true }, cors);
+    }
+
+    // ── invite_user ──
+    if (body.action === 'invite_user') {
+      const { email, name } = body;
+      if (!email || !email.includes('@')) return json(400, { error: 'Invalid email' }, cors);
+
+      // Send Supabase invite email
+      const invRes = await fetch(`${supabaseUrl}/auth/v1/admin/invite`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          apikey: serviceKey, Authorization: 'Bearer ' + serviceKey
+        },
+        body: JSON.stringify({ email })
+      });
+      const invData = await invRes.json();
+      if (!invRes.ok) return json(500, { error: invData.msg || invData.message || 'Invite failed' }, cors);
+
+      const newUserId = invData.id;
+
+      // Upsert profile with premium tier
+      await fetch(`${supabaseUrl}/rest/v1/profiles`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          apikey: serviceKey, Authorization: 'Bearer ' + serviceKey,
+          Prefer: 'resolution=merge-duplicates'
+        },
+        body: JSON.stringify({
+          id: newUserId,
+          full_name: name || '',
+          subscription_tier: 'premium'
+        })
+      });
+
+      return json(200, {
+        ok: true,
+        user: { id: newUserId, email, name: name || '', tier: 'premium' }
+      }, cors);
     }
 
     return json(400, { error: 'Unknown action' }, cors);

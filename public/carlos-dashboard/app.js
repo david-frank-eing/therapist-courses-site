@@ -3526,74 +3526,144 @@ async function scheduleDailyTask() {
 const TIER_LABELS = { free: 'חינמי', basic: 'בסיסי', premium: '⭐ פרימיום', vip: '👑 VIP' };
 const TIER_COLORS = { free: '#999', basic: '#6ca', premium: '#4a6aee', vip: '#e59a00' };
 
+async function _adminGetSession() {
+  const { data: { session } } = await window._supabase.auth.getSession();
+  return session;
+}
+
+function _renderAdminUserRow(u) {
+  const isAdmin = u.email === 'david1.frank@gmail.com';
+  const hasAccess = u.tier === 'premium' || u.tier === 'vip';
+  return `
+    <div class="admin-user-row" data-id="${u.id}">
+      <div class="admin-user-info">
+        <div class="admin-user-name">${u.name || '—'}</div>
+        <div class="admin-user-email">${u.email}</div>
+      </div>
+      <div class="admin-user-actions">
+        <span class="admin-tier-badge" style="color:${TIER_COLORS[u.tier]||'#999'}">${TIER_LABELS[u.tier]||u.tier}</span>
+        ${isAdmin
+          ? '<span class="muted-text" style="font-size:.75rem">מנהל</span>'
+          : hasAccess
+            ? `<button class="admin-revoke-btn" data-uid="${u.id}" data-tier="free">🚫 בטל גישה</button>`
+            : `<button class="admin-approve-btn" data-uid="${u.id}" data-tier="premium">✅ אשר גישה</button>`
+        }
+      </div>
+    </div>`;
+}
+
 async function _loadAdminPanel() {
   const el = document.getElementById('admin-users-list');
   if (!el) return;
-  try {
-    const { data: { session } } = await window._supabase.auth.getSession();
-    if (!session) return;
-    const r = await fetch('/.netlify/functions/admin-users', {
-      headers: { Authorization: 'Bearer ' + session.access_token }
-    });
-    if (!r.ok) { el.innerHTML = '<div class="muted-text">שגיאה בטעינה</div>'; return; }
-    const { users } = await r.json();
-    if (!users || !users.length) { el.innerHTML = '<div class="muted-text">אין משתמשים רשומים</div>'; return; }
-    el.innerHTML = users.map(u => `
-      <div class="admin-user-row" data-id="${u.id}">
-        <div class="admin-user-info">
-          <div class="admin-user-name">${u.name || '—'}</div>
-          <div class="admin-user-email">${u.email}</div>
-        </div>
-        <div class="admin-user-actions">
-          <span class="admin-tier-badge" style="color:${TIER_COLORS[u.tier]||'#999'}">${TIER_LABELS[u.tier]||u.tier}</span>
-          ${u.email !== 'david1.frank@gmail.com' ? `
-            ${u.tier === 'premium' || u.tier === 'vip'
-              ? `<button class="admin-revoke-btn" data-uid="${u.id}" data-tier="free">🚫 בטל גישה</button>`
-              : `<button class="admin-approve-btn" data-uid="${u.id}" data-tier="premium">✅ אשר גישה</button>`
-            }` : '<span class="muted-text" style="font-size:.75rem">מנהל</span>'}
-        </div>
-      </div>`).join('');
 
-    el.querySelectorAll('[data-uid]').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        const uid  = btn.dataset.uid;
-        const tier = btn.dataset.tier;
-        const row  = btn.closest('.admin-user-row');
-        btn.disabled = true;
-        btn.textContent = '⏳';
-        try {
-          const { data: { session: s2 } } = await window._supabase.auth.getSession();
-          const res = await fetch('/.netlify/functions/admin-users', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + s2.access_token },
-            body: JSON.stringify({ action: 'set_tier', userId: uid, tier })
-          });
-          if (!res.ok) throw new Error('שגיאת שרת');
-          const badge = row.querySelector('.admin-tier-badge');
-          badge.textContent = TIER_LABELS[tier] || tier;
-          badge.style.color = TIER_COLORS[tier] || '#999';
-          if (tier === 'free') {
-            btn.className = 'admin-approve-btn';
-            btn.dataset.tier = 'premium';
-            btn.textContent = '✅ אשר גישה';
-            btn.disabled = false;
-          } else {
-            btn.className = 'admin-revoke-btn';
-            btn.dataset.tier = 'free';
-            btn.textContent = '🚫 בטל גישה';
-            btn.disabled = false;
-          }
-          toast(tier === 'free' ? '🚫 גישה בוטלה' : '✅ גישה אושרה');
-        } catch (e) {
-          toast('שגיאה: ' + e.message, false);
-          btn.disabled = false;
-          btn.textContent = tier === 'free' ? '🚫 בטל גישה' : '✅ אשר גישה';
-        }
+  // Invite form at top
+  el.innerHTML = `
+    <div class="admin-invite-form">
+      <div class="admin-invite-title">➕ הזמן משתמש חדש</div>
+      <div class="admin-invite-fields">
+        <input type="email" id="admin-invite-email" placeholder="אימייל..." dir="ltr" class="admin-invite-input">
+        <input type="text" id="admin-invite-name" placeholder="שם (אופציונלי)..." class="admin-invite-input">
+        <button id="admin-invite-btn" class="admin-approve-btn" style="white-space:nowrap">📨 שלח הזמנה</button>
+      </div>
+      <div id="admin-invite-msg" class="muted-text" style="font-size:.78rem;margin-top:4px"></div>
+    </div>
+    <div class="admin-users-divider"></div>
+    <div id="admin-users-rows"><div class="muted-text">טוען...</div></div>`;
+
+  document.getElementById('admin-invite-btn')?.addEventListener('click', async () => {
+    const emailEl = document.getElementById('admin-invite-email');
+    const nameEl  = document.getElementById('admin-invite-name');
+    const msgEl   = document.getElementById('admin-invite-msg');
+    const btn     = document.getElementById('admin-invite-btn');
+    const email   = emailEl.value.trim();
+    const name    = nameEl.value.trim();
+    if (!email.includes('@')) { msgEl.textContent = 'נא להזין אימייל תקין'; return; }
+    btn.disabled = true; btn.textContent = '⏳';
+    msgEl.textContent = '';
+    try {
+      const s = await _adminGetSession();
+      const r = await fetch('/.netlify/functions/admin-users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + s.access_token },
+        body: JSON.stringify({ action: 'invite_user', email, name })
       });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || 'שגיאה');
+      msgEl.style.color = 'var(--success)';
+      msgEl.textContent = `✅ הזמנה נשלחה ל-${email} עם גישת פרימיום`;
+      emailEl.value = ''; nameEl.value = '';
+      // Add new user row to top of list
+      const rowsEl = document.getElementById('admin-users-rows');
+      if (rowsEl) {
+        const tmp = document.createElement('div');
+        tmp.innerHTML = _renderAdminUserRow(d.user);
+        rowsEl.prepend(tmp.firstElementChild);
+        _bindAdminRowEvents(rowsEl);
+      }
+    } catch (e) {
+      msgEl.style.color = 'var(--danger)';
+      msgEl.textContent = 'שגיאה: ' + e.message;
+    } finally {
+      btn.disabled = false; btn.textContent = '📨 שלח הזמנה';
+    }
+  });
+
+  // Load user list
+  await _reloadAdminUsers();
+}
+
+async function _reloadAdminUsers() {
+  const rowsEl = document.getElementById('admin-users-rows');
+  if (!rowsEl) return;
+  try {
+    const s = await _adminGetSession();
+    if (!s) return;
+    const r = await fetch('/.netlify/functions/admin-users', {
+      headers: { Authorization: 'Bearer ' + s.access_token }
     });
+    if (!r.ok) { rowsEl.innerHTML = '<div class="muted-text">שגיאה בטעינה</div>'; return; }
+    const { users } = await r.json();
+    if (!users || !users.length) { rowsEl.innerHTML = '<div class="muted-text">אין משתמשים רשומים עדיין</div>'; return; }
+    rowsEl.innerHTML = users.map(_renderAdminUserRow).join('');
+    _bindAdminRowEvents(rowsEl);
   } catch (e) {
-    el.innerHTML = '<div class="muted-text">שגיאה: ' + e.message + '</div>';
+    rowsEl.innerHTML = '<div class="muted-text">שגיאה: ' + e.message + '</div>';
   }
+}
+
+function _bindAdminRowEvents(container) {
+  container.querySelectorAll('[data-uid]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const uid  = btn.dataset.uid;
+      const tier = btn.dataset.tier;
+      const row  = btn.closest('.admin-user-row');
+      btn.disabled = true; btn.textContent = '⏳';
+      try {
+        const s = await _adminGetSession();
+        const res = await fetch('/.netlify/functions/admin-users', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + s.access_token },
+          body: JSON.stringify({ action: 'set_tier', userId: uid, tier })
+        });
+        if (!res.ok) throw new Error('שגיאת שרת');
+        const badge = row.querySelector('.admin-tier-badge');
+        badge.textContent = TIER_LABELS[tier] || tier;
+        badge.style.color = TIER_COLORS[tier] || '#999';
+        if (tier === 'free') {
+          btn.className = 'admin-approve-btn'; btn.dataset.tier = 'premium';
+          btn.textContent = '✅ אשר גישה'; btn.disabled = false;
+        } else {
+          btn.className = 'admin-revoke-btn'; btn.dataset.tier = 'free';
+          btn.textContent = '🚫 בטל גישה'; btn.disabled = false;
+        }
+        toast(tier === 'free' ? '🚫 גישה בוטלה' : '✅ גישה אושרה');
+      } catch (e) {
+        toast('שגיאה: ' + e.message, false);
+        btn.disabled = false;
+        btn.textContent = tier === 'free' ? '🚫 בטל גישה' : '✅ אשר גישה';
+      }
+    });
+  });
 }
 
 function renderSettings(s, bodyEl) {

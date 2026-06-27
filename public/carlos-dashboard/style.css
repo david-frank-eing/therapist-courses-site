@@ -1666,3 +1666,11 @@ body.lite-mode:not(.has-ai-briefing) #briefing { display: none !important; }
 .admin-approve-btn:hover { opacity: .8; }
 .admin-revoke-btn:hover  { opacity: .8; }
 .admin-approve-btn:disabled, .admin-revoke-btn:disabled { opacity: .5; cursor: default; }
+.admin-invite-form { background: var(--bg); border-radius: 10px; padding: 12px 14px; border: 1px solid var(--sep); }
+.admin-invite-title { font-size: .82rem; font-weight: 700; color: var(--text2); margin-bottom: 8px; }
+.admin-invite-fields { display: flex; gap: 6px; flex-wrap: wrap; }
+.admin-invite-input {
+  flex: 1; min-width: 130px; padding: 7px 10px; border: 1px solid var(--input-border);
+  border-radius: 8px; background: var(--card); color: var(--text); font-family: inherit; font-size: .85rem;
+}
+.admin-users-divider { height: 1px; background: var(--sep); margin: 12px 0; }
