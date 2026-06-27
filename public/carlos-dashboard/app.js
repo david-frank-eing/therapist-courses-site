@@ -2353,6 +2353,28 @@ const HELP_SECTIONS = [
 </div>
 ${_hTip('כל כותרת של קטע ניתנת ללחיצה — לחץ עליה כדי לכווץ או להרחיב אותו')}` },
 
+  { icon: '⤢', title: 'תצוגה מורחבת — פתח קטע כמסך מלא', body: `
+<div class="hs-cards-2" style="margin-bottom:14px">
+  <div class="hs-card2">
+    <div class="hs-c2-title">🖥️ למה להשתמש?</div>
+    <div class="hs-c2-body">כשיש הרבה תוכן בקטע אחד — הרחב אותו כדי לראות ולנהל הכל בנוחות, בלי לגלול את שאר הדף</div>
+  </div>
+  <div class="hs-card2">
+    <div class="hs-c2-title">📱 בנייד</div>
+    <div class="hs-c2-body">המסך המורחב תופס את כל המסך — חווית שימוש נוחה בדיוק כמו אפליקציה</div>
+  </div>
+</div>
+<div style="background:var(--bg);border-radius:10px;padding:12px 14px;margin-bottom:12px;font-size:.88rem">
+  <div style="display:flex;align-items:center;gap:10px;color:var(--text2)">
+    <span style="font-size:1.3rem;background:var(--sep2);border-radius:7px;padding:3px 9px">⤢</span>
+    <span>הכפתור הזה מופיע בפינת כותרת של <strong>4 קטעים</strong>: משימות, תוכן שבועי, לקוחות ויומן אישי</span>
+  </div>
+</div>
+${_hStep('1','לחץ על <strong>⤢</strong> בפינת הכותרת של הקטע — הוא ייפתח כמסך מלא')}
+${_hStep('2','כל הפעולות עובדות בדיוק אותו הדבר — הוספה, עריכה, מחיקה, סימון')}
+${_hStep('3','לסגירה: לחץ <strong>✕</strong> בפינת הכותרת, לחץ <strong>ESC</strong> במקלדת, או לחץ על הרקע האפור')}
+${_hTip('השינויים נשמרים מיד — אין צורך "לשמור לפני סגירה"')}` },
+
   { icon: '🔐', title: 'פרטיות ואבטחה — חשוב!', body: `
 <div class="hs-privacy-hero">
   <div class="hs-privacy-title">🛡️ המידע שלך שייך לך בלבד</div>
@@ -2463,13 +2485,18 @@ ${_hFlow(['✅ פורסם','🟢 מוכן','✏️ טיוטה','💡 רעיון'
 <div style="font-size:.8rem;color:var(--text-muted);margin:-6px 0 10px;text-align:center">לחץ על הסטטוס כדי להתקדם שלב</div>
 <br>
 ${_hStep('1','לחץ "+ הוסף תוכן" ← תן כותרת + בחר סוג + בחר תחום')}
-${_hStep('2','לחץ ✏️ לעריכה: תוכן, קישור Docs, קובץ מדיה, תאריך')}
-${_hStep('3','כשהפוסט עלה — לחץ עד שמגיע ל"פורסם" ← המכסה מתעדכנת אוטומטית')}
+${_hStep('2','סמן <strong>פלטפורמות</strong> — לאיזו רשת זה מיועד? (📸 Instagram / 🎵 TikTok / 👥 Facebook...)')}
+${_hStep('3','לחץ ✏️ לעריכה: תוכן, קישור Docs, קובץ מדיה, תאריך')}
+${_hStep('4','כשהפוסט עלה — לחץ עד שמגיע ל"פורסם" ← המכסה מתעדכנת אוטומטית')}
+<div class="hs-editable-note">
+  <span class="hs-editable-badge">📱 פלטפורמות</span>
+  כל פריט תוכן מציג תגיות צבעוניות לפי הרשתות שנבחרו — כך ניתן לראות בבת אחת מה מיועד לאיפה.<br>
+  <span style="font-size:.78rem">⚙️ הגדרות ← "📱 פלטפורמות פרסום" — הפעל / כבה כל פלטפורמה לפי מה שרלוונטי אליך</span>
+</div>
 <div class="hs-editable-note">
   <span class="hs-editable-badge">✏️ ניתן לעריכה</span>
   <strong>סוגי התוכן</strong> (רילס / פוסט / וכו') <strong>והתחומים</strong> — ניתנים לשינוי מלא בהגדרות.<br>
-  <span style="font-size:.78rem">⚙️ הגדרות ← "📲 סוגי תוכן" — הוסף סוג חדש, שנה שם ואמוג'י, מחק</span><br>
-  <span style="font-size:.78rem">⚙️ הגדרות ← "📖 פלייבוקים" ← למעלה — שנה את שמות התחומים</span>
+  <span style="font-size:.78rem">⚙️ הגדרות ← "📲 סוגי תוכן" — הוסף סוג חדש, שנה שם ואמוג'י, מחק</span>
 </div>
 ${_hTip('הסטטיסטיקות מתעדכנות בזמן אמת לפי מה שסימנת כ"פורסם"')}` },
 
@@ -2547,20 +2574,22 @@ ${_hTip('אם Google Calendar לא מחובר — אפשר להזין אירוע
   { icon: '📝', title: 'יומן אישי — מחשבות ורעיונות', body: `
 <div class="hs-journal-demo">
   <div class="hs-jd-prev">
+    <div style="font-size:.75rem;color:var(--text-muted);margin-bottom:4px;font-weight:600">📝 היום</div>
     <div class="hs-jd-prev-line hs-jd-ts">[09:14] פגישה טובה עם דני — פוטנציאל גבוה</div>
     <div class="hs-jd-prev-line hs-jd-ts">[15:30] צריך לזכור לשלוח הצעת מחיר</div>
   </div>
   <textarea class="hs-jd-textarea" disabled placeholder="הוסף רשומה..."></textarea>
   <div class="hs-jd-actions">
     <span class="hs-jd-btn">💾 שמור ליומן</span>
-    <span class="hs-jd-hist">📚 ארכיון</span>
+    <span class="hs-jd-hist">📖 ראה יומן</span>
   </div>
 </div>
 <br>
-${_hStep('1','כתוב בשדה הטקסט — בחופשיות, בלי פורמט')}
-${_hStep('2','לחץ "💾 שמור ליומן" — מוסיף עם חותמת שעה')}
-${_hStep('3','ניתן לשמור <strong>כמה פעמים ביום</strong> — כל שמירה <em>מצטרפת</em> לרשומת היום')}
-${_hStep('4','לחץ "📚 ארכיון" כדי לצפות בכל הרשומות מאז ומעולם')}
+${_hStep('1','מה שכתבת <strong>היום</strong> מופיע אוטומטית מעל שדה הטקסט עם שעה מדויקת')}
+${_hStep('2','כתוב בשדה הטקסט — בחופשיות, בלי פורמט')}
+${_hStep('3','לחץ "💾 שמור ליומן" — הרשומה מצטרפת לרשומות היום עם חותמת שעה')}
+${_hStep('4','ניתן לשמור <strong>כמה פעמים ביום</strong> — כל שמירה נוספת לאותו היום')}
+${_hStep('5','לחץ "📖 ראה יומן" לצפייה בכל הרשומות מאז ומעולם — מסודרות לפי חודשים')}
 <br>
 <div class="hs-cards-2">
   <div class="hs-card2"><div class="hs-c2-title">📅 ארגון חודשי</div><div class="hs-c2-body">הארכיון מסודר לפי חודשים — לחץ על חודש כדי לפתוח את כל הרשומות שלו</div></div>
