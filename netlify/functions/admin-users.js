@@ -36,32 +36,43 @@ exports.handler = async (event) => {
 
   // ── GET: list users ──────────────────────────────────────────────────────────
   if (event.httpMethod === 'GET') {
-    const [usersRes, profRes] = await Promise.all([
-      fetch(`${supabaseUrl}/auth/v1/admin/users?per_page=200`, {
-        headers: { apikey: serviceKey, Authorization: 'Bearer ' + serviceKey }
-      }),
-      fetch(`${supabaseUrl}/rest/v1/profiles?select=id,full_name,subscription_tier`, {
-        headers: { apikey: serviceKey, Authorization: 'Bearer ' + serviceKey }
-      })
-    ]);
+    try {
+      const [usersRes, profRes] = await Promise.all([
+        fetch(`${supabaseUrl}/auth/v1/admin/users?per_page=200`, {
+          headers: { apikey: serviceKey, Authorization: 'Bearer ' + serviceKey }
+        }),
+        fetch(`${supabaseUrl}/rest/v1/profiles?select=id,full_name,subscription_tier`, {
+          headers: { apikey: serviceKey, Authorization: 'Bearer ' + serviceKey }
+        })
+      ]);
 
-    const { users = [] } = await usersRes.json();
-    const profiles       = await profRes.json();
-    const profMap = {};
-    (Array.isArray(profiles) ? profiles : []).forEach(p => { profMap[p.id] = p; });
+      const usersText = await usersRes.text();
+      const profText  = await profRes.text();
 
-    const result = users
-      .filter(u => u.email)
-      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-      .map(u => ({
-        id:         u.id,
-        email:      u.email,
-        name:       profMap[u.id]?.full_name || '',
-        tier:       profMap[u.id]?.subscription_tier || 'free',
-        created_at: u.created_at
-      }));
+      let usersData = {};
+      let profiles  = [];
+      try { usersData = JSON.parse(usersText); } catch (_) { return json(500, { error: 'Users parse error: ' + usersText.slice(0, 100) }, cors); }
+      try { profiles  = JSON.parse(profText);  } catch (_) { profiles = []; }
 
-    return json(200, { users: result }, cors);
+      const users = usersData.users || [];
+      const profMap = {};
+      (Array.isArray(profiles) ? profiles : []).forEach(p => { profMap[p.id] = p; });
+
+      const result = users
+        .filter(u => u.email)
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+        .map(u => ({
+          id:         u.id,
+          email:      u.email,
+          name:       profMap[u.id]?.full_name || '',
+          tier:       profMap[u.id]?.subscription_tier || 'free',
+          created_at: u.created_at
+        }));
+
+      return json(200, { users: result }, cors);
+    } catch (e) {
+      return json(500, { error: 'GET failed: ' + e.message }, cors);
+    }
   }
 
   // ── POST: set tier / invite user ────────────────────────────────────────────
