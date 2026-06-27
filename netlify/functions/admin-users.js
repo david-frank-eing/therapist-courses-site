@@ -152,17 +152,20 @@ exports.handler = async (event) => {
         if (!newUserId) return json(500, { error: 'לא התקבל מזהה: ' + createText.slice(0, 200) }, cors);
 
         // Step 4: wait for Supabase trigger to create the profile row, then update to premium
-        await new Promise(r => setTimeout(r, 800));
+        // Using 1500ms — trigger can be slow under load
+        await new Promise(r => setTimeout(r, 1500));
 
-        // Try PATCH first (updates the row the trigger created)
+        // Try PATCH with return=representation so we can detect 0-row updates
         const patchRes = await fetch(`${supabaseUrl}/rest/v1/profiles?id=eq.${newUserId}`, {
           method: 'PATCH',
-          headers: { 'Content-Type': 'application/json', apikey: serviceKey, Authorization: 'Bearer ' + serviceKey, Prefer: 'return=minimal' },
+          headers: { 'Content-Type': 'application/json', apikey: serviceKey, Authorization: 'Bearer ' + serviceKey, Prefer: 'return=representation' },
           body: JSON.stringify({ subscription_tier: 'premium', full_name: name || '' })
         });
 
-        // Fallback: if no row existed (no trigger), INSERT it
-        if (!patchRes.ok || patchRes.headers.get('content-range') === '*/0') {
+        // If PATCH returned [] (no row existed yet) → INSERT it directly
+        let patchedRows = [];
+        try { patchedRows = await patchRes.json(); } catch (_) { patchedRows = []; }
+        if (!Array.isArray(patchedRows) || patchedRows.length === 0) {
           await fetch(`${supabaseUrl}/rest/v1/profiles`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', apikey: serviceKey, Authorization: 'Bearer ' + serviceKey, Prefer: 'resolution=merge-duplicates' },
