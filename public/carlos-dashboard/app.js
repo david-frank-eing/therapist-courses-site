@@ -1066,14 +1066,27 @@ $('#add-task').addEventListener('click', async () => {
   const payload = { action: 'add', title: v, category, priority };
   if (date) {
     payload.due_date = date;
-    if (time) payload.reminder_at = date + 'T' + time;
+    if (time) {
+      const off = -new Date().getTimezoneOffset();
+      const tzStr = (off >= 0 ? '+' : '-') + String(Math.floor(Math.abs(off)/60)).padStart(2,'0') + ':' + String(Math.abs(off)%60).padStart(2,'0');
+      payload.reminder_at = date + 'T' + time + tzStr;
+    }
   }
   try {
     await api('/api/task', payload);
     $('#new-task').value = ''; $('#new-task-date').value = todayStr(); $('#new-task-time').value = '';
     $('#new-task-category').value = 'general'; $('#new-task-priority').value = 'normal';
     toast('✓ ' + (date ? 'משימה נקבעה ל-' + (date === todayStr() ? 'היום' : date) + (time ? ' ' + time : '') : 'המשימה נוספה'));
-    loadState();
+    loadState().then(() => {
+      _checkReminders();
+      if (payload.reminder_at) {
+        const due = new Date(payload.reminder_at).getTime();
+        if (!isNaN(due) && due <= Date.now()) {
+          const task = (lastState && lastState.tasks || []).find(t => t.title === v && t.reminder_at);
+          if (task) { const sk = task.id + '_' + new Date(due).toDateString(); const s = JSON.parse(localStorage.getItem('carlos_reminders_shown') || '{}'); if (!s[sk]) _fireReminder(task); }
+        }
+      }
+    });
   } finally {
     btn.disabled = false;
   }
