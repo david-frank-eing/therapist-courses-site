@@ -649,22 +649,6 @@ function renderTomorrow(tasks, upcomingEvents) {
   bindRowEditBtns('#tomorrow-list');
 }
 
-$('#add-tomorrow').addEventListener('click', async () => {
-  const v = document.getElementById('tomorrow-task').value.trim();
-  if (!v) { toast('כתוב משימה קודם', false); return; }
-  const tmrw = tomorrowStr();
-  const time = document.getElementById('tomorrow-time').value;
-  const payload = { action: 'add', title: v, due_date: tmrw };
-  if (time) payload.reminder_at = tmrw + 'T' + time;
-  await api('/api/task', payload);
-  document.getElementById('tomorrow-task').value = '';
-  document.getElementById('tomorrow-time').value = '';
-  toast('✓ נוסף למחר — ' + (time ? time : 'ללא שעה'));
-  loadState();
-});
-document.getElementById('tomorrow-task')?.addEventListener('keydown', e => {
-  if (e.key === 'Enter') document.getElementById('add-tomorrow').click();
-});
 
 function renderHabits(habits, date) {
   const completions = habits.completions || {};
