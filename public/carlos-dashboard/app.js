@@ -441,6 +441,13 @@ function openEditForm(rowEl, kind, id) {
   rowEl.insertAdjacentHTML('afterend', formHtml);
   const form = rowEl.nextElementSibling;
 
+  // Auto-grow textareas
+  form.querySelectorAll('textarea[data-autogrow]').forEach(ta => {
+    const _grow = () => { ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 'px'; };
+    ta.addEventListener('input', _grow);
+    _grow();
+  });
+
   // inject multi-image widget for content items
   if (kind === 'content') {
     const existingUrls = item.creative_urls && item.creative_urls.length
@@ -468,8 +475,9 @@ function openEditForm(rowEl, kind, id) {
   });
   const del = form.querySelector('.ef-del');
   if (del) del.addEventListener('click', async () => {
-    await api('/api/task', { action: 'toggle', id });
-    toast('🗑️ המשימה הוסרה');
+    if (!confirm('למחוק את המשימה לצמיתות?')) return;
+    await api('/api/task/delete', { id });
+    toast('🗑️ המשימה נמחקה');
     loadState();
   });
   form.querySelector('.ef-cancel').addEventListener('click', () => loadState());
@@ -1642,7 +1650,7 @@ function fld(name, label, value, type, options) {
   const v = (value == null ? '' : String(value)).replace(/"/g, '&quot;');
   if (type === 'textarea') {
     const ph = name === 'notes' ? 'כתוב בחופשיות על השיחה — קרלוס ישאב את הפרטים' : '';
-    return `<label>${label}<textarea name="${name}" placeholder="${ph}">${v}</textarea></label>`;
+    return `<label>${label}<textarea name="${name}" data-autogrow placeholder="${ph}">${v}</textarea></label>`;
   }
   if (type === 'select' && options) {
     const opts = options.map(([val, txt]) => `<option value="${val}"${val === value ? ' selected' : ''}>${txt}</option>`).join('');
