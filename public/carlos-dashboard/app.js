@@ -448,6 +448,15 @@ function openEditForm(rowEl, kind, id) {
     _grow();
   });
 
+  // Clear time field button
+  form.addEventListener('click', e => {
+    if (e.target.classList.contains('time-clear')) {
+      const input = e.target.previousElementSibling;
+      input.value = '';
+      input.dataset.cleared = '1';
+    }
+  });
+
   // inject multi-image widget for content items
   if (kind === 'content') {
     const existingUrls = item.creative_urls && item.creative_urls.length
@@ -459,6 +468,8 @@ function openEditForm(rowEl, kind, id) {
 
   form.querySelector('.ef-save').addEventListener('click', async () => {
     const data = collectForm(form);
+    const timeInput = form.querySelector('input[name="reminder_at"]');
+    if (timeInput && timeInput.dataset.cleared) data.reminder_at = null;
     if (kind === 'task' && data.reminder_at && !data.reminder_at.includes('T')) {
       // Include local timezone offset so Supabase (UTC) stores the correct time
       const off = -new Date().getTimezoneOffset();
@@ -1642,7 +1653,7 @@ function fld(name, label, value, type, options) {
   }
   if (type === 'number') return `<label>${label}<input type="number" name="${name}" value="${v}"></label>`;
   if (type === 'date') return `<label>${label}<input type="date" name="${name}" value="${v}"></label>`;
-  if (type === 'time') return `<label>${label}<input type="time" name="${name}" value="${v}"></label>`;
+  if (type === 'time') return `<label>${label}<div class="time-field-wrap"><input type="time" name="${name}" value="${v}"><button type="button" class="time-clear" title="נקה שעה">✕</button></div></label>`;
   if (type === 'file_upload') return `<label>${label}<input type="file" data-upload-target="${name}" accept="image/*,video/*"><div class="hint muted-text">קובץ עד 20MB יישמר אצלך מקומית</div></label>`;
   return `<label>${label}<input type="text" name="${name}" value="${v}"></label>`;
 }

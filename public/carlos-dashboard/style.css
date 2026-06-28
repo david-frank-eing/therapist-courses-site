@@ -517,6 +517,10 @@ input[type=checkbox] { width: 18px; height: 18px; cursor: pointer; accent-color:
 .inline-edit-form label { font-size: .82rem; color: var(--text-muted); display: flex; flex-direction: column; gap: 4px; }
 .inline-edit-form input, .inline-edit-form textarea { font-size: .92rem; padding: 7px 10px; }
 .inline-edit-form textarea { min-height: 70px; resize: none; overflow: hidden; transition: height 0.1s ease; }
+.time-field-wrap { display: flex; align-items: center; gap: 6px; }
+.time-field-wrap input[type=time] { flex: 1; }
+.time-clear { background: none; border: none; color: var(--text2); cursor: pointer; font-size: .85rem; padding: 2px 6px; border-radius: 4px; opacity: .45; line-height: 1; }
+.time-clear:hover { opacity: 1; color: #ff6666; }
 .ef-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 .ef-save { background: #5fd6a0; color: #10241b; padding: 7px 14px; font-size: .9rem; }
 .ef-del { background: #ff8080; color: #2a0d0d; padding: 7px 14px; font-size: .9rem; }
