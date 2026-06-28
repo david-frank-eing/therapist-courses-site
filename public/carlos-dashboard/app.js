@@ -987,27 +987,67 @@ function renderConsistency(stats) {
 function renderOpenLoops(state) {
   const STALE_DAYS = 14;
   const ms = STALE_DAYS * 86400 * 1000;
-  const now = Date.now();
-  const ageOf = iso => iso ? Math.floor((now - new Date(iso).getTime()) / 86400000) : 0;
-  const stale = iso => iso && (now - new Date(iso).getTime() > ms);
+  const nowMs = Date.now();
+  const ageOf = iso => iso ? Math.floor((nowMs - new Date(iso).getTime()) / 86400000) : 0;
+  const stale = iso => iso && (nowMs - new Date(iso).getTime() > ms);
 
-  const tasks = (state.tasks || []).filter(t => stale(t.created_at));
-  const leads = (state.events || []).filter(e => e.status === 'lead' && stale(e.updated_at || e.created_at));
-  const ideas = ((state.content || {}).items || []).filter(c => c.status === 'idea' && stale(c.created_at));
+  // Load & auto-clean dismissed items
+  let dismissed = {};
+  try { dismissed = JSON.parse(localStorage.getItem('carlos_ol_dismissed') || '{}'); } catch (_) {}
+  Object.keys(dismissed).forEach(k => { if (dismissed[k] < nowMs) delete dismissed[k]; });
+  localStorage.setItem('carlos_ol_dismissed', JSON.stringify(dismissed));
 
-  if (!(tasks.length + leads.length + ideas.length)) {
-    $('#open-loops-content').innerHTML = '<div class="muted-text">הכל מתעדכן 🎯 אין דברים תקועים מעל 14 ימים</div>';
+  const dismiss = id => {
+    dismissed[id] = nowMs + 30 * 86400 * 1000;
+    localStorage.setItem('carlos_ol_dismissed', JSON.stringify(dismissed));
+    renderOpenLoops(state);
+  };
+
+  const allTasks = (state.tasks || []).filter(t => stale(t.created_at));
+  const allLeads = (state.events || []).filter(e => e.status === 'lead' && stale(e.updated_at || e.created_at));
+  const allIdeas = ((state.content || {}).items || []).filter(c => c.status === 'idea' && stale(c.created_at));
+
+  const tasks = allTasks.filter(t => !dismissed[t.id]);
+  const leads = allLeads.filter(e => !dismissed[e.id]);
+  const ideas = allIdeas.filter(c => !dismissed[c.id || c.title]);
+
+  const hiddenCount = (allTasks.length + allLeads.length + allIdeas.length) - (tasks.length + leads.length + ideas.length);
+
+  const el = $('#open-loops-content');
+  if (!(tasks.length + leads.length + ideas.length) && !hiddenCount) {
+    el.innerHTML = '<div class="muted-text">הכל מתעדכן 🎯 אין דברים תקועים מעל 14 ימים</div>';
     return;
   }
-  const group = (title, items, render) => items.length ? `<div class="ol-group">
+
+  const olItem = (label, id, age) => `<div class="ol-item">
+    <span>${_esc(label)}</span>
+    <span class="ol-age">${age} ימים</span>
+    <button class="ol-dismiss" data-id="${_esc(String(id))}" title="הסתר ל-30 יום">✕</button>
+  </div>`;
+
+  const group = (title, items) => items.length ? `<div class="ol-group">
     <div class="ol-title">${title} (${items.length})</div>
-    ${items.map(render).join('')}
+    ${items.join('')}
   </div>` : '';
 
-  $('#open-loops-content').innerHTML =
-    group('⏰ משימות ישנות', tasks, t => `<div class="ol-item"><span>${t.title}</span><span class="ol-age">${ageOf(t.created_at)} ימים</span></div>`) +
-    group('🟡 לידים תקועים', leads, e => `<div class="ol-item"><span>${[e.date, e.contact].filter(Boolean).join(' · ') || '(אירוע)'}</span><span class="ol-age">${ageOf(e.updated_at || e.created_at)} ימים</span></div>`) +
-    group('💡 רעיונות לא קודמו', ideas, c => `<div class="ol-item"><span>${c.title || '(ללא כותרת)'}</span><span class="ol-age">${ageOf(c.created_at)} ימים</span></div>`);
+  const footer = hiddenCount > 0
+    ? `<div class="ol-archive-footer">📦 ${hiddenCount} פריט${hiddenCount > 1 ? 'ים' : ''} מוסתר${hiddenCount > 1 ? 'ים' : ''} · <button class="ol-show-all">הצג הכל</button></div>`
+    : '';
+
+  el.innerHTML =
+    group('⏰ משימות ישנות', tasks.map(t => olItem(t.title, t.id, ageOf(t.created_at)))) +
+    group('🟡 לידים תקועים', leads.map(e => olItem([e.date, e.contact].filter(Boolean).join(' · ') || '(אירוע)', e.id, ageOf(e.updated_at || e.created_at)))) +
+    group('💡 רעיונות לא קודמו', ideas.map(c => olItem(c.title || '(ללא כותרת)', c.id || c.title, ageOf(c.created_at)))) +
+    footer;
+
+  el.addEventListener('click', e => {
+    const btn = e.target.closest('.ol-dismiss');
+    if (btn) { dismiss(btn.dataset.id); return; }
+    if (e.target.classList.contains('ol-show-all')) {
+      localStorage.removeItem('carlos_ol_dismissed');
+      renderOpenLoops(state);
+    }
+  }, { once: true });
 }
 
 function editQuota(btn) {
