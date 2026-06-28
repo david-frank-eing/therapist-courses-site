@@ -3705,7 +3705,9 @@ function _bindAdminRowEvents(container) {
           headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + s.access_token },
           body: JSON.stringify({ action: 'set_tier', userId: uid, tier })
         });
-        if (!res.ok) throw new Error('שגיאת שרת');
+        const resBody = await res.json().catch(() => ({}));
+        console.log('[admin set_tier]', res.status, resBody);
+        if (!res.ok) throw new Error(resBody.error || 'שגיאת שרת ' + res.status);
         const badge = row.querySelector('.admin-tier-badge');
         badge.textContent = TIER_LABELS[tier] || tier;
         badge.style.color = TIER_COLORS[tier] || '#999';
