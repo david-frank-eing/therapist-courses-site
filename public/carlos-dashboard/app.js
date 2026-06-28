@@ -4460,6 +4460,10 @@ function _initApp() {
       if (d.hasNew) loadState().then(() => _scheduleReminders());
     } catch(e) {}
   }, 30000);
+  // Reminder safety net: recheck every 60s in case setTimeout was lost
+  setInterval(_scheduleReminders, 60_000);
+  // Recheck immediately when user returns to this tab
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) _scheduleReminders(); });
   // Request notification permission after 3s (non-blocking)
   if ('Notification' in window && Notification.permission === 'default') {
     setTimeout(() => Notification.requestPermission(), 3000);
@@ -4477,7 +4481,7 @@ function _scheduleReminders() {
     if (!task.reminder_at || task.status === 'completed') return;
     const due = new Date(task.reminder_at).getTime();
     if (isNaN(due)) return;
-    const shownKey = task.id + '_' + new Date(due).toDateString();
+    const shownKey = task.id + '_' + due;
     if (shown[shownKey]) return;
 
     const delay = due - now;
@@ -4497,7 +4501,7 @@ function _scheduleReminders() {
     const tid = setTimeout(() => {
       _reminderTimeouts.delete(task.id);
       const s = JSON.parse(localStorage.getItem('carlos_reminders_shown') || '{}');
-      const sk = task.id + '_' + new Date(due).toDateString();
+      const sk = task.id + '_' + due;
       if (!s[sk]) {
         s[sk] = true;
         localStorage.setItem('carlos_reminders_shown', JSON.stringify(s));
@@ -4523,6 +4527,7 @@ window.reminders = () => {
 function _checkReminders() { _scheduleReminders(); }
 
 function _fireReminder(task) {
+  try { playSound(false); } catch (_) {}
   if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
     try {
       new Notification('⏰ ' + task.title, {
@@ -4568,12 +4573,12 @@ function _showReminderPopup(task) {
     try {
       const shown = JSON.parse(localStorage.getItem('carlos_reminders_shown') || '{}');
       const due = new Date(task.reminder_at).getTime();
-      delete shown[task.id + '_' + new Date(due).toDateString()];
+      delete shown[task.id + '_' + due];
       localStorage.setItem('carlos_reminders_shown', JSON.stringify(shown));
     } catch (_) {}
     setTimeout(() => _fireReminder(task), 10 * 60_000);
   });
-  setTimeout(() => { if (el.isConnected) el.remove(); }, 30_000);
+  setTimeout(() => { if (el.isConnected) el.remove(); }, 300_000);
 }
 
 // If running locally (no Supabase auth layer) or auth already resolved → start now.
