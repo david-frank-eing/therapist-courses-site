@@ -126,7 +126,7 @@ exports.handler = async (event) => {
   let emailSummary = '';
   try {
     const gmailRes = await fetch(
-      'https://gmail.googleapis.com/gmail/v1/users/me/messages?q=is:unread+newer_than:1d&maxResults=20',
+      'https://gmail.googleapis.com/gmail/v1/users/me/messages?q=is:unread&maxResults=20',
       { headers: authH }
     );
     const gmailData = await gmailRes.json();
