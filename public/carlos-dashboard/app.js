@@ -316,7 +316,7 @@ function dueLabel(task) {
   const d = task.due_date;
   const day = d === todayStr() ? 'היום' : d === tmrw ? 'מחר' : d.slice(8, 10) + '/' + d.slice(5, 7);
   let time = '';
-  if (task.reminder_at && task.reminder_at.length >= 16) time = ' ' + task.reminder_at.slice(11, 16);
+  if (task.reminder_at) { const _rd = new Date(task.reminder_at); if (!isNaN(_rd)) time = ' ' + _rd.toLocaleTimeString('en-GB', { timeZone: 'Asia/Jerusalem', hour: '2-digit', minute: '2-digit' }); }
   return '📅 ' + day + time;
 }
 
@@ -424,7 +424,7 @@ function openEditForm(rowEl, kind, id) {
     : [['title','כותרת','text'],['body','תוכן הפוסט','textarea'],
        ['scheduled_for','מתוזמן ליום','date'],['docs_url','Google Docs URL','text']];
   const valueOf = (k) => {
-    if (kind === 'task' && k === 'reminder_at' && item.reminder_at && item.reminder_at.length >= 16) return item.reminder_at.slice(11, 16);
+    if (kind === 'task' && k === 'reminder_at' && item.reminder_at) { const _d = new Date(item.reminder_at); if (!isNaN(_d)) return _d.toLocaleTimeString('en-GB', { timeZone: 'Asia/Jerusalem', hour: '2-digit', minute: '2-digit' }); }
     if (kind === 'task' && k === 'category') return item.category || 'general';
     if (kind === 'task' && k === 'priority') return item.priority || 'normal';
     return item[k] != null ? item[k] : '';
@@ -620,7 +620,7 @@ function renderTomorrow(tasks, upcomingEvents) {
 
   list.innerHTML = tmrwTasks.length
     ? tmrwTasks.map(t => {
-        const time = t.reminder_at && t.reminder_at.length >= 16 ? ' · ' + t.reminder_at.slice(11, 16) : '';
+        const time = t.reminder_at ? (() => { const _d = new Date(t.reminder_at); return isNaN(_d) ? '' : ' · ' + _d.toLocaleTimeString('en-GB', { timeZone: 'Asia/Jerusalem', hour: '2-digit', minute: '2-digit' }); })() : '';
         return `<li data-id="${t.id}">
           <input type="checkbox" data-id="${t.id}">
           <span>${t.title}</span>
