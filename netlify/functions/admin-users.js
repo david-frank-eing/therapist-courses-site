@@ -86,20 +86,39 @@ exports.handler = async (event) => {
       const valid = ['free', 'basic', 'premium', 'vip'];
       if (!userId || !valid.includes(tier)) return json(400, { error: 'Invalid params' }, cors);
 
-      // UPSERT — creates profile row if missing, updates if exists
-      const r = await fetch(`${supabaseUrl}/rest/v1/profiles`, {
-        method: 'POST',
+      // Step 1: PATCH existing row
+      const patchRes = await fetch(`${supabaseUrl}/rest/v1/profiles?id=eq.${userId}`, {
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           apikey: serviceKey, Authorization: 'Bearer ' + serviceKey,
-          Prefer: 'resolution=merge-duplicates'
+          Prefer: 'return=representation'
         },
-        body: JSON.stringify({ id: userId, subscription_tier: tier })
+        body: JSON.stringify({ subscription_tier: tier })
       });
-      if (!r.ok) {
-        const errText = await r.text();
-        return json(500, { error: 'DB update failed: ' + errText.slice(0, 100) }, cors);
+      if (!patchRes.ok) {
+        const errText = await patchRes.text();
+        return json(500, { error: 'DB patch failed: ' + errText.slice(0, 200) }, cors);
       }
+
+      // Step 2: if no row existed yet, INSERT
+      let patchedRows = [];
+      try { patchedRows = await patchRes.json(); } catch (_) {}
+      if (!Array.isArray(patchedRows) || patchedRows.length === 0) {
+        const insertRes = await fetch(`${supabaseUrl}/rest/v1/profiles`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            apikey: serviceKey, Authorization: 'Bearer ' + serviceKey
+          },
+          body: JSON.stringify({ id: userId, subscription_tier: tier })
+        });
+        if (!insertRes.ok) {
+          const errText = await insertRes.text();
+          return json(500, { error: 'DB insert failed: ' + errText.slice(0, 200) }, cors);
+        }
+      }
+
       return json(200, { ok: true }, cors);
     }
 
