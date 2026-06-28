@@ -463,7 +463,17 @@ function openEditForm(rowEl, kind, id) {
     }
     await api(kind === 'task' ? '/api/task/update' : '/api/content/update', { ...data, id });
     toast('✓ עודכן');
-    loadState().then(() => _checkReminders());
+    loadState().then(() => {
+      _checkReminders();
+      // fire immediately if reminder_at is in the past (bypasses 10-min window)
+      if (data.reminder_at && kind === 'task') {
+        const due = new Date(data.reminder_at).getTime();
+        if (due <= Date.now()) {
+          const task = (lastState && lastState.tasks || []).find(t => t.id === id);
+          if (task) { const sk = task.id + '_' + new Date(due).toDateString(); const s = JSON.parse(localStorage.getItem('carlos_reminders_shown') || '{}'); if (!s[sk]) _fireReminder(task); }
+        }
+      }
+    });
   });
   const del = form.querySelector('.ef-del');
   if (del) del.addEventListener('click', async () => {
