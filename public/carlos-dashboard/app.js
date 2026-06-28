@@ -4475,14 +4475,20 @@ window.testReminder = () => _fireReminder({ id: 'test', title: 'בדיקת תז�
 
 function _showReminderPopup(task) {
   const el = document.createElement('div');
-  el.className = 'reminder-popup';
+  el.style.cssText = [
+    'position:fixed','bottom:24px','right:24px','z-index:99999',
+    'background:#1e1d38','border:2px solid #4a6aee','border-radius:14px',
+    'padding:18px 20px','box-shadow:0 8px 32px rgba(0,0,0,.4)',
+    'max-width:300px','min-width:240px','direction:rtl','font-family:inherit',
+    'color:#e8e8f0','animation:none'
+  ].join(';');
   el.innerHTML = `
     <div style="font-size:1.6rem;margin-bottom:6px">⏰</div>
-    <div class="reminder-popup-title">${_esc(task.title)}</div>
-    <div class="reminder-popup-body">${_esc(task.notes || 'הגיע הזמן לבצע את המשימה')}</div>
-    <div class="reminder-popup-actions">
-      <button class="reminder-dismiss">✅ הבנתי</button>
-      <button class="reminder-snooze">😴 דחה 10 דקות</button>
+    <div style="font-weight:700;font-size:1rem;margin-bottom:4px">${_esc(task.title)}</div>
+    <div style="font-size:.82rem;color:#aaa;margin-bottom:14px;line-height:1.5">${_esc(task.notes || 'הגיע הזמן לבצע את המשימה')}</div>
+    <div style="display:flex;gap:8px">
+      <button class="reminder-dismiss" style="flex:1;padding:8px;border-radius:8px;background:#4a6aee;color:#fff;border:none;cursor:pointer;font-weight:700;font-size:.85rem">✅ הבנתי</button>
+      <button class="reminder-snooze" style="flex:1;padding:8px;border-radius:8px;background:transparent;border:1px solid #444;color:#aaa;cursor:pointer;font-size:.85rem">😴 10 דקות</button>
     </div>`;
   document.body.appendChild(el);
   el.querySelector('.reminder-dismiss').addEventListener('click', () => el.remove());
