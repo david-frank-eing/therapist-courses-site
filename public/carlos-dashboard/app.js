@@ -2431,8 +2431,9 @@ ${_hInfo('כל גישה לנתונים מחייבת את הכניסה האישי
 </div>
 <br>
 ${_hStep('1','כתוב את שם המשימה בשדה למעלה')}
-${_hStep('2','בחר תאריך יעד (אופציונלי)')}
-${_hStep('3','לחץ "הוסף" — המשימה מופיעה ברשימה')}
+${_hStep('2','בחר <strong>תאריך</strong> יעד (אופציונלי)')}
+${_hStep('3','בחר <strong>שעה</strong> — תקבל צלצול + popup בדיוק בשעה זו (ראה: ⏰ תזכורות)')}
+${_hStep('4','לחץ "הוסף" — המשימה מופיעה ברשימה')}
 <br>
 <div class="hs-legend">
   <span><span class="hs-badge" style="background:#6c8cff22;color:#6c8cff">○ ממתינה</span></span>
@@ -2441,6 +2442,24 @@ ${_hStep('3','לחץ "הוסף" — המשימה מופיעה ברשימה')}
 </div>
 ${_hTip('לחץ ○ כדי להשלים משימה. לחץ ✏️ לעריכה, שינוי תאריך, הוספת הערות, או מחיקה')}
 ${_hWarn('משימות עם תאריך שעבר מסומנות באדום — לטפל בהן בהקדם!')}` },
+
+  { icon: '⏰', title: 'תזכורות — התראה בשעה שקבעת', body: `
+<div class="hs-task-demo" style="margin-bottom:12px">
+  <div class="hs-task-row"><span class="hs-task-dot open">○</span><span>שיחת לקוח</span><span class="hs-badge" style="background:#6c8cff22;color:#6c8cff;font-size:.75rem">📅 היום 14:30</span></div>
+</div>
+${_hFlow(['🔔 popup + צלצול','14:30 מגיע','שמור','בחר שעה 14:30','הוסף משימה'])}
+<br>
+<strong>איך מגדירים תזכורת:</strong>
+${_hStep('1','הוסף משימה → מלא <strong>תאריך</strong> + <strong>שעה</strong> (שני השדות)')}
+${_hStep('2','לחץ "הוסף" — toast קצר "🔔 תזכורת נקבעה ל-XX:XX" מאשר שנקבעה')}
+${_hStep('3','בשעה שקבעת: צלצול + popup "⏰ שם המשימה" קופץ על המסך')}
+<br>
+<div class="hs-cards-2">
+  <div class="hs-card2"><div class="hs-c2-title">✅ הבנתי</div><div class="hs-c2-body">סוגר את הpopup — התזכורת נחשבת כטופלה</div></div>
+  <div class="hs-card2"><div class="hs-c2-title">😴 10 דקות</div><div class="hs-c2-body">Snooze — popup יחזור שוב בעוד 10 דקות</div></div>
+</div>
+${_hTip('הצלצול נשמע גם כשאתה על טאב אחר בדפדפן — לא תפספס!')}
+${_hInfo('הדף חייב להישאר פתוח בדפדפן (גם ממוזער) כדי שהתזכורת תפעל')}` },
 
   { icon: '👥', title: 'לקוחות ואירועים', body: `
 <div class="hs-tabs-demo">
