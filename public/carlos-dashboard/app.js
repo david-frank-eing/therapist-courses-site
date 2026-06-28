@@ -3411,7 +3411,7 @@ async function _googleRefreshData() {
     const d = await r.json();
     if (d.connected) {
       toast('✓ יומן ומיילים עודכנו');
-      loadState();
+      loadState().then(() => _scheduleReminders());
     } else {
       toast('שגיאה ברענון', false);
     }
@@ -4506,8 +4506,18 @@ function _scheduleReminders() {
       }
     }, delay);
     _reminderTimeouts.set(task.id, tid);
+    const minStr = new Date(due).toLocaleTimeString('he-IL', { timeZone: 'Asia/Jerusalem', hour: '2-digit', minute: '2-digit' });
+    toast('🔔 תזכורת נקבעה ל-' + minStr);
   });
 }
+
+window.reminders = () => {
+  const ids = [..._reminderTimeouts.keys()];
+  const tasks = (lastState && lastState.tasks || []).filter(t => ids.includes(t.id));
+  toast(ids.length
+    ? '🔔 ' + tasks.map(t => t.title.slice(0, 20) + ' (' + new Date(t.reminder_at).toLocaleTimeString('he-IL', { timeZone: 'Asia/Jerusalem', hour: '2-digit', minute: '2-digit' }) + ')').join(' | ')
+    : 'אין תזכורות מוגדרות כרגע');
+};
 
 // Keep _checkReminders as alias for cr() helper
 function _checkReminders() { _scheduleReminders(); }
