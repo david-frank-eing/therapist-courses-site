@@ -452,8 +452,10 @@ function openEditForm(rowEl, kind, id) {
   form.querySelector('.ef-save').addEventListener('click', async () => {
     const data = collectForm(form);
     if (kind === 'task' && data.reminder_at && !data.reminder_at.includes('T')) {
-      // Use due_date if set, otherwise today
-      data.reminder_at = (data.due_date || ilDate()) + 'T' + data.reminder_at;
+      // Include local timezone offset so Supabase (UTC) stores the correct time
+      const off = -new Date().getTimezoneOffset();
+      const tzStr = (off >= 0 ? '+' : '-') + String(Math.floor(Math.abs(off)/60)).padStart(2,'0') + ':' + String(Math.abs(off)%60).padStart(2,'0');
+      data.reminder_at = (data.due_date || ilDate()) + 'T' + data.reminder_at + tzStr;
     }
     if (kind === 'content') {
       const widget = form.querySelector('.multi-img-widget');
@@ -4472,7 +4474,13 @@ function _fireReminder(task) {
 
 window.testReminder = () => _fireReminder({ id: 'test', title: 'בדיקת תזכורת', notes: 'אם אתה רואה את זה — זה עובד!' });
 // cr() = clear reminders cache and recheck
-window.cr = () => { localStorage.removeItem('carlos_reminders_shown'); _checkReminders(); toast('🔔 תזכורות אופסו'); };
+window.cr = () => {
+  const tasks = (lastState && lastState.tasks) || [];
+  const withR = tasks.filter(t => t.reminder_at);
+  localStorage.removeItem('carlos_reminders_shown');
+  _checkReminders();
+  toast('🔔 אופס (' + withR.length + ' תזכורות)');
+};
 
 function _showReminderPopup(task) {
   const el = document.createElement('div');
