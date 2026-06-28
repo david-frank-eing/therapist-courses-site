@@ -4448,8 +4448,9 @@ function _checkReminders() {
     const due = new Date(task.reminder_at).getTime();
     if (isNaN(due)) return;
     // Window: 0-10 minutes past due (handles late page loads)
-    if (due <= now && due >= now - 600_000 && !shown[task.id]) {
-      shown[task.id] = true;
+    const shownKey = task.id + '_' + new Date(due).toDateString();
+    if (due <= now && due >= now - 600_000 && !shown[shownKey]) {
+      shown[shownKey] = true;
       changed = true;
       _fireReminder(task);
     }
@@ -4469,8 +4470,9 @@ function _fireReminder(task) {
   _showReminderPopup(task);
 }
 
-// Debug helper — call from browser console: testReminder()
 window.testReminder = () => _fireReminder({ id: 'test', title: 'בדיקת תזכורת', notes: 'אם אתה רואה את זה — זה עובד!' });
+// cr() = clear reminders cache and recheck
+window.cr = () => { localStorage.removeItem('carlos_reminders_shown'); _checkReminders(); toast('🔔 תזכורות אופסו'); };
 
 function _showReminderPopup(task) {
   const el = document.createElement('div');
