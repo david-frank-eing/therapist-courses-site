@@ -123,7 +123,6 @@ async function loadState() {
   renderBookingAlerts(s.bookingData && s.bookingData.notifications, s.bookingData && s.bookingData.appointments);
   renderPlaybookSidebar(s.userConfig && s.userConfig.domains, s.playbooks);
   renderRefreshStatus(s.lastRefresh, s.date);
-  _checkReminders();
 }
 
 function renderRefreshStatus(lastRefresh, todayDate) {
@@ -4416,6 +4415,8 @@ function _initApp() {
     if (location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
       setTimeout(_googleRefreshData, 2000);
     }
+    // First reminder check after state is loaded
+    _checkReminders();
   });
   // Auto-poll for new bookings every 30s
   setInterval(async () => {
@@ -4446,7 +4447,9 @@ function _checkReminders() {
   tasks.forEach(task => {
     if (!task.reminder_at || task.status === 'completed') return;
     const due = new Date(task.reminder_at).getTime();
-    if (due <= now && due >= now - 120_000 && !shown[task.id]) {
+    if (isNaN(due)) return;
+    // Window: 0-10 minutes past due (handles late page loads)
+    if (due <= now && due >= now - 600_000 && !shown[task.id]) {
       shown[task.id] = true;
       changed = true;
       _fireReminder(task);
@@ -4466,6 +4469,9 @@ function _fireReminder(task) {
   }
   _showReminderPopup(task);
 }
+
+// Debug helper — call from browser console: testReminder()
+window.testReminder = () => _fireReminder({ id: 'test', title: 'בדיקת תזכורת', notes: 'אם אתה רואה את זה — זה עובד!' });
 
 function _showReminderPopup(task) {
   const el = document.createElement('div');
