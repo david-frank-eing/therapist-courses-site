@@ -130,6 +130,11 @@ exports.handler = async (event) => {
       { headers: authH }
     );
     const gmailData = await gmailRes.json();
+    if (gmailData.error) {
+      const code = gmailData.error.code || '';
+      const msg = gmailData.error.message || JSON.stringify(gmailData.error);
+      emailSummary = `⚠️ שגיאת Gmail (${code}): ${msg}`;
+    } else {
     const messages = gmailData.messages || [];
     const count = gmailData.resultSizeEstimate || messages.length;
 
@@ -154,6 +159,7 @@ exports.handler = async (event) => {
     } else {
       emailSummary = '📧 אין מיילים לא נקראים חדשים';
     }
+    } // end !gmailData.error
   } catch (e) {
     console.error('Gmail fetch error:', e);
   }

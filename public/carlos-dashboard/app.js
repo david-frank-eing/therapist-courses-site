@@ -3750,6 +3750,15 @@ function renderSettings(s, bodyEl) {
       <div id="platforms-settings-list"></div>
     </div>
 
+    <div class="settings-section">
+      <div class="settings-section-title">🔔 תזכורות</div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <span id="notif-status" style="font-size:.88rem;color:var(--muted)">טוען...</span>
+        <button id="notif-req-btn" style="display:none;padding:5px 12px;background:var(--primary);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:.88rem">אפשר התראות</button>
+        <button id="notif-test-btn" style="padding:5px 12px;background:var(--card);border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:.88rem">🔔 בדיקה עכשיו</button>
+      </div>
+    </div>
+
     <div class="settings-section connections-section">
       <div class="settings-section-title">🔌 חיבורים</div>
       <div id="connections-body" class="connections-body"></div>
@@ -3793,6 +3802,26 @@ function renderSettings(s, bodyEl) {
 
   // Load diagnose immediately after rendering
   loadConnectionsDiagnose();
+
+  // Notification status in settings
+  const notifStatus = document.getElementById('notif-status');
+  const notifReqBtn = document.getElementById('notif-req-btn');
+  if (notifStatus) {
+    if (!('Notification' in window)) {
+      notifStatus.textContent = 'הדפדפן אינו תומך בהתראות';
+    } else if (Notification.permission === 'granted') {
+      notifStatus.textContent = '✅ התראות מאושרות';
+    } else if (Notification.permission === 'denied') {
+      notifStatus.textContent = '❌ התראות חסומות — פתח הגדרות דפדפן כדי לאפשר';
+    } else {
+      notifStatus.textContent = '⚠️ התראות לא אושרו עדיין';
+      if (notifReqBtn) { notifReqBtn.style.display = ''; notifReqBtn.onclick = () => Notification.requestPermission().then(p => { notifStatus.textContent = p === 'granted' ? '✅ התראות מאושרות' : '❌ חסומות'; notifReqBtn.style.display = 'none'; }); }
+    }
+  }
+  document.getElementById('notif-test-btn')?.addEventListener('click', () => {
+    window.testReminder();
+    toast('🔔 בדיקת תזכורת הושקה');
+  });
 
   // Load admin panel if admin
   if (window._userEmail === 'david1.frank@gmail.com') {
@@ -4505,7 +4534,8 @@ function _showReminderPopup(task) {
     el.remove();
     try {
       const shown = JSON.parse(localStorage.getItem('carlos_reminders_shown') || '{}');
-      delete shown[task.id];
+      const due = new Date(task.reminder_at).getTime();
+      delete shown[task.id + '_' + new Date(due).toDateString()];
       localStorage.setItem('carlos_reminders_shown', JSON.stringify(shown));
     } catch (_) {}
     setTimeout(() => _fireReminder(task), 10 * 60_000);
