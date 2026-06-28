@@ -65,6 +65,7 @@ const fmt = (s) => {
 // ---------- State & render ----------
 let lastState = null;
 let _loadingState = false;
+const _reminderTimeouts = new Map(); // taskId → timeoutId
 async function loadState() {
   if (_loadingState) return;
   _loadingState = true;
@@ -463,17 +464,7 @@ function openEditForm(rowEl, kind, id) {
     }
     await api(kind === 'task' ? '/api/task/update' : '/api/content/update', { ...data, id });
     toast('✓ עודכן');
-    loadState().then(() => {
-      _checkReminders();
-      // fire immediately if reminder_at is in the past (bypasses 10-min window)
-      if (data.reminder_at && kind === 'task') {
-        const due = new Date(data.reminder_at).getTime();
-        if (due <= Date.now()) {
-          const task = (lastState && lastState.tasks || []).find(t => t.id === id);
-          if (task) { const sk = task.id + '_' + new Date(due).toDateString(); const s = JSON.parse(localStorage.getItem('carlos_reminders_shown') || '{}'); if (!s[sk]) _fireReminder(task); }
-        }
-      }
-    });
+    loadState().then(() => _scheduleReminders());
   });
   const del = form.querySelector('.ef-del');
   if (del) del.addEventListener('click', async () => {
@@ -1077,16 +1068,7 @@ $('#add-task').addEventListener('click', async () => {
     $('#new-task').value = ''; $('#new-task-date').value = todayStr(); $('#new-task-time').value = '';
     $('#new-task-category').value = 'general'; $('#new-task-priority').value = 'normal';
     toast('✓ ' + (date ? 'משימה נקבעה ל-' + (date === todayStr() ? 'היום' : date) + (time ? ' ' + time : '') : 'המשימה נוספה'));
-    loadState().then(() => {
-      _checkReminders();
-      if (payload.reminder_at) {
-        const due = new Date(payload.reminder_at).getTime();
-        if (!isNaN(due) && due <= Date.now()) {
-          const task = (lastState && lastState.tasks || []).find(t => t.title === v && t.reminder_at);
-          if (task) { const sk = task.id + '_' + new Date(due).toDateString(); const s = JSON.parse(localStorage.getItem('carlos_reminders_shown') || '{}'); if (!s[sk]) _fireReminder(task); }
-        }
-      }
-    });
+    loadState().then(() => _scheduleReminders());
   } finally {
     btn.disabled = false;
   }
@@ -4468,49 +4450,67 @@ function _initApp() {
     if (location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
       setTimeout(_googleRefreshData, 2000);
     }
-    // First reminder check after state is loaded
-    _checkReminders();
+    // Schedule reminders with exact setTimeout for each task
+    _scheduleReminders();
   });
   // Auto-poll for new bookings every 30s
   setInterval(async () => {
     try {
       const d = await api('/api/booking/poll');
-      if (d.hasNew) loadState();
+      if (d.hasNew) loadState().then(() => _scheduleReminders());
     } catch(e) {}
   }, 30000);
   // Request notification permission after 3s (non-blocking)
   if ('Notification' in window && Notification.permission === 'default') {
     setTimeout(() => Notification.requestPermission(), 3000);
   }
-  // Start reminder polling loop
-  _startReminderLoop();
 }
 
 // ---------- Task Reminders ----------
-function _startReminderLoop() {
-  setInterval(_checkReminders, 60_000);
-}
-
-function _checkReminders() {
+function _scheduleReminders() {
   const tasks = (lastState && lastState.tasks) || [];
   const now = Date.now();
   let shown = {};
   try { shown = JSON.parse(localStorage.getItem('carlos_reminders_shown') || '{}'); } catch (_) {}
-  let changed = false;
+
   tasks.forEach(task => {
     if (!task.reminder_at || task.status === 'completed') return;
     const due = new Date(task.reminder_at).getTime();
     if (isNaN(due)) return;
-    // Window: 0-10 minutes past due (handles late page loads)
     const shownKey = task.id + '_' + new Date(due).toDateString();
-    if (due <= now && due >= now - 600_000 && !shown[shownKey]) {
-      shown[shownKey] = true;
-      changed = true;
-      _fireReminder(task);
+    if (shown[shownKey]) return;
+
+    const delay = due - now;
+
+    // Past-due within 10 minutes: fire immediately
+    if (delay <= 0) {
+      if (delay > -600_000) {
+        shown[shownKey] = true;
+        localStorage.setItem('carlos_reminders_shown', JSON.stringify(shown));
+        _fireReminder(task);
+      }
+      return;
     }
+
+    // Future: schedule exact timeout (cancel old one if task was re-saved)
+    if (_reminderTimeouts.has(task.id)) clearTimeout(_reminderTimeouts.get(task.id));
+    const tid = setTimeout(() => {
+      _reminderTimeouts.delete(task.id);
+      const s = JSON.parse(localStorage.getItem('carlos_reminders_shown') || '{}');
+      const sk = task.id + '_' + new Date(due).toDateString();
+      if (!s[sk]) {
+        s[sk] = true;
+        localStorage.setItem('carlos_reminders_shown', JSON.stringify(s));
+        const current = (lastState && lastState.tasks || []).find(t => t.id === task.id) || task;
+        _fireReminder(current);
+      }
+    }, delay);
+    _reminderTimeouts.set(task.id, tid);
   });
-  if (changed) localStorage.setItem('carlos_reminders_shown', JSON.stringify(shown));
 }
+
+// Keep _checkReminders as alias for cr() helper
+function _checkReminders() { _scheduleReminders(); }
 
 function _fireReminder(task) {
   if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
