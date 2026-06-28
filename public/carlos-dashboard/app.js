@@ -123,6 +123,7 @@ async function loadState() {
   renderBookingAlerts(s.bookingData && s.bookingData.notifications, s.bookingData && s.bookingData.appointments);
   renderPlaybookSidebar(s.userConfig && s.userConfig.domains, s.playbooks);
   renderRefreshStatus(s.lastRefresh, s.date);
+  _checkReminders();
 }
 
 function renderRefreshStatus(lastRefresh, todayDate) {
@@ -4423,6 +4424,72 @@ function _initApp() {
       if (d.hasNew) loadState();
     } catch(e) {}
   }, 30000);
+  // Request notification permission after 3s (non-blocking)
+  if ('Notification' in window && Notification.permission === 'default') {
+    setTimeout(() => Notification.requestPermission(), 3000);
+  }
+  // Start reminder polling loop
+  _startReminderLoop();
+}
+
+// ---------- Task Reminders ----------
+function _startReminderLoop() {
+  setInterval(_checkReminders, 60_000);
+}
+
+function _checkReminders() {
+  const tasks = (lastState && lastState.tasks) || [];
+  const now = Date.now();
+  let shown = {};
+  try { shown = JSON.parse(localStorage.getItem('carlos_reminders_shown') || '{}'); } catch (_) {}
+  let changed = false;
+  tasks.forEach(task => {
+    if (!task.reminder_at || task.status === 'completed') return;
+    const due = new Date(task.reminder_at).getTime();
+    if (due <= now && due >= now - 120_000 && !shown[task.id]) {
+      shown[task.id] = true;
+      changed = true;
+      _fireReminder(task);
+    }
+  });
+  if (changed) localStorage.setItem('carlos_reminders_shown', JSON.stringify(shown));
+}
+
+function _fireReminder(task) {
+  if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+    try {
+      new Notification('⏰ ' + task.title, {
+        body: task.notes || 'משימה לביצוע עכשיו',
+        tag: task.id
+      });
+    } catch (_) {}
+  }
+  _showReminderPopup(task);
+}
+
+function _showReminderPopup(task) {
+  const el = document.createElement('div');
+  el.className = 'reminder-popup';
+  el.innerHTML = `
+    <div style="font-size:1.6rem;margin-bottom:6px">⏰</div>
+    <div class="reminder-popup-title">${_esc(task.title)}</div>
+    <div class="reminder-popup-body">${_esc(task.notes || 'הגיע הזמן לבצע את המשימה')}</div>
+    <div class="reminder-popup-actions">
+      <button class="reminder-dismiss">✅ הבנתי</button>
+      <button class="reminder-snooze">😴 דחה 10 דקות</button>
+    </div>`;
+  document.body.appendChild(el);
+  el.querySelector('.reminder-dismiss').addEventListener('click', () => el.remove());
+  el.querySelector('.reminder-snooze').addEventListener('click', () => {
+    el.remove();
+    try {
+      const shown = JSON.parse(localStorage.getItem('carlos_reminders_shown') || '{}');
+      delete shown[task.id];
+      localStorage.setItem('carlos_reminders_shown', JSON.stringify(shown));
+    } catch (_) {}
+    setTimeout(() => _fireReminder(task), 10 * 60_000);
+  });
+  setTimeout(() => { if (el.isConnected) el.remove(); }, 30_000);
 }
 
 // If running locally (no Supabase auth layer) or auth already resolved → start now.
