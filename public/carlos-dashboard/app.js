@@ -451,10 +451,9 @@ function openEditForm(rowEl, kind, id) {
 
   form.querySelector('.ef-save').addEventListener('click', async () => {
     const data = collectForm(form);
-    if (kind === 'task' && data.due_date && data.reminder_at && !data.reminder_at.includes('T')) {
-      data.reminder_at = data.due_date + 'T' + data.reminder_at;
-    } else if (kind === 'task' && data.reminder_at && !data.due_date) {
-      delete data.reminder_at;
+    if (kind === 'task' && data.reminder_at && !data.reminder_at.includes('T')) {
+      // Use due_date if set, otherwise today
+      data.reminder_at = (data.due_date || ilDate()) + 'T' + data.reminder_at;
     }
     if (kind === 'content') {
       const widget = form.querySelector('.multi-img-widget');
@@ -462,7 +461,7 @@ function openEditForm(rowEl, kind, id) {
     }
     await api(kind === 'task' ? '/api/task/update' : '/api/content/update', { ...data, id });
     toast('✓ עודכן');
-    loadState();
+    loadState().then(() => _checkReminders());
   });
   const del = form.querySelector('.ef-del');
   if (del) del.addEventListener('click', async () => {
