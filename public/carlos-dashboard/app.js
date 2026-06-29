@@ -2728,7 +2728,32 @@ ${_hStep('1','לחץ 📄 בכותרת הדאשבורד')}
 ${_hStep('2','הדפדפן פותח חלון הדפסה — כל הקטעים נפתחים אוטומטית')}
 ${_hStep('3','בחר "שמור כ-PDF" ← מייצר קובץ מסודר')}
 <br>
-${_hInfo('סיידבר, טיימר, וכפתורי פעולה לא מופיעים ב-PDF — רק התוכן החשוב')}` }
+${_hInfo('סיידבר, טיימר, וכפתורי פעולה לא מופיעים ב-PDF — רק התוכן החשוב')}` },
+
+  { icon: '👑', title: 'ניהול גישה — הכנסת משתמשים לדשבורד', body: `
+<div class="hs-flow-diagram">
+  <div class="hs-flow-row">
+    <div class="hs-flow-box hs-flow-a">🔗 שלח קישור<br><small>invite</small></div>
+    <div class="hs-flow-arrow">→</div>
+    <div class="hs-flow-box hs-flow-b">📧 מקבל מייל<br><small>מגדיר סיסמה</small></div>
+    <div class="hs-flow-arrow">→</div>
+    <div class="hs-flow-box hs-flow-c">✅ גישה מיידית<br><small>premium אוטומטי</small></div>
+  </div>
+  <div class="hs-flow-divider">── או ──</div>
+  <div class="hs-flow-row">
+    <div class="hs-flow-box hs-flow-d">👤 נרשם לבד<br><small>מהאתר</small></div>
+    <div class="hs-flow-arrow">→</div>
+    <div class="hs-flow-box hs-flow-e">⏳ ממתין<br><small>free tier</small></div>
+    <div class="hs-flow-arrow">→</div>
+    <div class="hs-flow-box hs-flow-c">✅ אחרי אישור<br><small>לוחצים "אשר גישה"</small></div>
+  </div>
+</div>
+${_hStep('1','לחץ ⚙️ (פינה ימנית למעלה) ← בחר <strong>ניהול משתמשים</strong>')}
+${_hStep('2','<strong>להזמנה:</strong> הזן אימייל ושם ← לחץ "שלח מייל" או "וואטסאפ"')}
+${_hStep('3','<strong>לאישור</strong> (נרשם לבד): לחץ ✅ אשר גישה — הופך premium מיד')}
+${_hStep('4','<strong>לביטול גישה:</strong> לחץ 🚫 בטל גישה — חוזר לממתין')}
+${_hInfo('מוזמנים דרך הפאנל מקבלים גישה אוטומטית — אין צורך לאשר ידנית')}
+${_hTip('הפאנל מוצג רק לך (david1.frank@gmail.com) — משתמשים רגילים לא רואים אותו')}` }
 ];
 
 document.getElementById('help-btn')?.addEventListener('click', openHelp);
@@ -2907,6 +2932,7 @@ async function loadHistory() {
       .order('completed_at', { ascending: false });
     if (from) q = q.gte('completed_at', from + 'T00:00:00');
     if (to)   q = q.lte('completed_at', to + 'T23:59:59');
+    q = q.limit(500);
     const { data, error } = await q;
     if (error) throw new Error(error.message);
     renderHistory(data || []);
@@ -3603,7 +3629,7 @@ async function _adminGetSession() {
   let { data: { session } } = await window._supabase.auth.getSession();
   if (session && session.expires_at * 1000 < Date.now() + 60000) {
     const { data } = await window._supabase.auth.refreshSession();
-    session = data.session;
+    session = data?.session || session;
   }
   return session;
 }
