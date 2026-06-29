@@ -3600,7 +3600,11 @@ const TIER_LABELS = { free: '⏳ ממתין לאישור', basic: 'בסיסי', 
 const TIER_COLORS = { free: '#e07a00', basic: '#6ca', premium: '#4a6aee', vip: '#e59a00' };
 
 async function _adminGetSession() {
-  const { data: { session } } = await window._supabase.auth.getSession();
+  let { data: { session } } = await window._supabase.auth.getSession();
+  if (session && session.expires_at * 1000 < Date.now() + 60000) {
+    const { data } = await window._supabase.auth.refreshSession();
+    session = data.session;
+  }
   return session;
 }
 
