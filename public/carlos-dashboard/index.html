@@ -18,6 +18,7 @@
         <button id="theme-btn" class="hdr-action-btn" title="מצב בהיר/כהה">🌙</button>
         <button id="export-pdf-btn" class="hdr-action-btn" title="ייצוא PDF / הדפסה">📄</button>
         <button id="help-btn" class="hdr-action-btn" title="מדריך שימוש">❓</button>
+        <button id="admin-btn" class="hdr-action-btn" title="ניהול משתמשים" style="display:none">👑<span id="admin-badge" class="admin-hdr-badge"></span></button>
         <button id="settings-btn" class="hdr-action-btn" title="הגדרות">⚙️</button>
         <button id="logout-btn" class="hdr-action-btn" title="התנתק">🚪</button>
       </div>
@@ -26,6 +27,7 @@
     </header>
 
     <div id="booking-alert-bar"></div>
+    <div id="pending-users-bar" class="hidden"></div>
     <div id="auto-refresh-bar" class="auto-refresh-bar hidden">
       <span id="auto-refresh-msg">⏳ מעדכן נתונים...</span>
     </div>
@@ -462,6 +464,22 @@
     })();
   </script>
   <script src="supabase-api.js?v=1"></script>
-  <script src="app.js?v=118"></script>
+  <script src="app.js?v=119"></script>
+
+  <!-- Admin modal -->
+  <div id="admin-modal" class="settings-modal hidden">
+    <div class="settings-inner admin-modal-inner">
+      <div class="settings-head">
+        <span>👑 ניהול משתמשים</span>
+        <button id="admin-modal-close">✕</button>
+      </div>
+      <div class="admin-modal-tabs">
+        <button class="admin-tab active" data-tab="pending">⏳ ממתינים</button>
+        <button class="admin-tab" data-tab="all">כל המשתמשים</button>
+        <button class="admin-tab" data-tab="invite">➕ הזמן</button>
+      </div>
+      <div id="admin-modal-body"></div>
+    </div>
+  </div>
 </body>
 </html>

@@ -3754,6 +3754,11 @@ function _bindAdminRowEvents(container) {
           btn.textContent = '🚫 בטל גישה'; btn.disabled = false;
         }
         toast(tier === 'free' ? '🚫 גישה בוטלה' : '✅ גישה אושרה');
+        if (window._adminUsersCache) {
+          const cu = window._adminUsersCache.find(u => u.id === uid);
+          if (cu) cu.tier = tier;
+        }
+        _checkPendingUsers();
       } catch (e) {
         toast('שגיאה: ' + e.message, false);
         btn.disabled = false;
@@ -3787,6 +3792,136 @@ function _bindAdminRowEvents(container) {
       }
     });
   });
+}
+
+// ---------- Admin Panel (dedicated modal) ----------
+
+async function _fetchAdminUsers() {
+  const s = await _adminGetSession();
+  if (!s) return null;
+  const r = await fetch('/.netlify/functions/admin-users', {
+    headers: { Authorization: 'Bearer ' + s.access_token }
+  });
+  if (!r.ok) return null;
+  const { users } = await r.json().catch(() => ({}));
+  window._adminUsersCache = users || [];
+  return window._adminUsersCache;
+}
+
+async function _checkPendingUsers() {
+  if (window._userEmail !== 'david1.frank@gmail.com') return;
+  const users = await _fetchAdminUsers();
+  if (!users) return;
+  const pending = users.filter(u => u.tier === 'free');
+  const bar = document.getElementById('pending-users-bar');
+  const badge = document.getElementById('admin-badge');
+  if (!pending.length) {
+    bar?.classList.add('hidden');
+    if (badge) badge.textContent = '';
+    return;
+  }
+  if (badge) badge.textContent = String(pending.length);
+  if (bar) {
+    bar.classList.remove('hidden');
+    bar.innerHTML = `<div class="pending-bar-inner">
+      <span>👥 ${pending.length} ממתינ${pending.length > 1 ? 'ים' : ''} לאישור גישה</span>
+      <button class="pending-bar-btn" onclick="openAdminPanel('pending')">אשר גישה →</button>
+      <button class="pending-bar-dismiss" onclick="document.getElementById('pending-users-bar').classList.add('hidden')">✕</button>
+    </div>`;
+  }
+}
+
+async function openAdminPanel(tab = 'all') {
+  const modal = document.getElementById('admin-modal');
+  if (!modal) return;
+  modal.classList.remove('hidden');
+  document.querySelectorAll('.admin-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  await _renderAdminModalTab(tab);
+}
+
+async function _renderAdminModalTab(tab) {
+  const body = document.getElementById('admin-modal-body');
+  if (!body) return;
+  body.innerHTML = '<div class="muted-text">טוען...</div>';
+
+  let users = window._adminUsersCache;
+  if (!users) {
+    users = await _fetchAdminUsers();
+    if (!users) { body.innerHTML = '<div class="muted-text">שגיאה בטעינה</div>'; return; }
+  } else {
+    _fetchAdminUsers();
+  }
+
+  if (tab === 'pending') {
+    const pending = users.filter(u => u.tier === 'free');
+    if (!pending.length) {
+      body.innerHTML = '<div class="muted-text" style="padding:20px 0;text-align:center">🎉 אין ממתינים לאישור</div>';
+      return;
+    }
+    body.innerHTML = '<div class="admin-users-list">' + pending.map(u => `
+      <div class="pending-user-card" data-id="${_esc(u.id)}">
+        <div class="admin-user-info">
+          <div class="admin-user-name">${_esc(u.name || '—')}</div>
+          <div class="admin-user-email">${_esc(u.email)}</div>
+        </div>
+        <button class="admin-modal-approve-btn" data-uid="${_esc(u.id)}" data-tier="premium">✅ אשר גישה</button>
+      </div>`).join('') + '</div>';
+    body.querySelectorAll('.admin-modal-approve-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const uid = btn.dataset.uid;
+        btn.disabled = true; btn.textContent = '⏳';
+        try {
+          const s = await _adminGetSession();
+          const res = await fetch('/.netlify/functions/admin-users', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + s.access_token },
+            body: JSON.stringify({ action: 'set_tier', userId: uid, tier: 'premium' })
+          });
+          const rb = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(rb.error || 'שגיאת שרת');
+          if (window._adminUsersCache) {
+            const u = window._adminUsersCache.find(u => u.id === uid);
+            if (u) u.tier = 'premium';
+          }
+          const card = btn.closest('.pending-user-card');
+          card.style.transition = 'opacity .3s';
+          card.style.opacity = '0';
+          setTimeout(() => { card.remove(); _checkPendingUsers(); }, 300);
+          toast('✅ גישה אושרה');
+        } catch (e) {
+          toast('שגיאה: ' + e.message, false);
+          btn.disabled = false; btn.textContent = '✅ אשר גישה';
+        }
+      });
+    });
+  } else if (tab === 'all') {
+    if (!users.length) { body.innerHTML = '<div class="muted-text">אין משתמשים רשומים עדיין</div>'; return; }
+    body.innerHTML = '<div class="admin-users-list">' + users.map(_renderAdminUserRow).join('') + '</div>';
+    _bindAdminRowEvents(body);
+  } else if (tab === 'invite') {
+    const signupUrl = 'https://stupendous-lily-f8cd84.netlify.app/auth';
+    body.innerHTML = `<div class="admin-invite-form">
+      <div class="admin-invite-title">➕ הזמן משתמש חדש</div>
+      <div style="font-size:.82rem;color:var(--text2);margin-bottom:10px;line-height:1.6">
+        שלח קישור הרשמה. אחרי שנרשמ/ה — יופיע/תופיע בממתינים ותוכל לאשר גישה, <em>או</em> השתמש בהזמנה ישירה:
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <a href="mailto:?subject=${encodeURIComponent('הזמנה לדאשבורד קרלוס')}&body=${encodeURIComponent('שלום,\n\nהוזמנת להצטרף לדאשבורד קרלוס!\n\nלחץ על הקישור כדי להירשם:\n' + signupUrl + '\n\nלאחר ההרשמה תקבל/י גישה מלאה.')}" style="flex:1;padding:8px 4px;border-radius:8px;background:#e8f0fe;color:#1a56db;font-size:.82rem;font-weight:700;text-align:center;text-decoration:none">📧 שלח במייל</a>
+        <a href="https://wa.me/?text=${encodeURIComponent('שלום! הוזמנת לדאשבורד קרלוס 🎉\nלחץ על הקישור כדי להירשם:\n' + signupUrl)}" target="_blank" rel="noopener" style="flex:1;padding:8px 4px;border-radius:8px;background:#e8fef0;color:#16a34a;font-size:.82rem;font-weight:700;text-align:center;text-decoration:none">💬 וואטסאפ</a>
+        <button id="admin-modal-copy-btn" style="flex:1;padding:8px 4px;border-radius:8px;background:var(--primary);color:#fff;font-size:.82rem;font-weight:700;border:none;cursor:pointer">📋 העתק</button>
+      </div>
+    </div>`;
+    document.getElementById('admin-modal-copy-btn')?.addEventListener('click', () => {
+      navigator.clipboard.writeText(signupUrl)
+        .then(() => toast('✅ הקישור הועתק!'))
+        .catch(() => {
+          const ta = document.createElement('textarea');
+          ta.value = signupUrl; ta.style.position = 'fixed'; ta.style.opacity = '0';
+          document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+          toast('✅ הקישור הועתק!');
+        });
+    });
+  }
 }
 
 function renderSettings(s, bodyEl) {
@@ -3876,9 +4011,8 @@ function renderSettings(s, bodyEl) {
     ${window._userEmail === 'david1.frank@gmail.com' ? `
     <div class="settings-section" id="admin-panel-section">
       <div class="settings-section-title">👑 ניהול משתמשים</div>
-      <div id="admin-users-list" class="admin-users-list">
-        <div class="muted-text">טוען...</div>
-      </div>
+      <div style="font-size:.82rem;color:var(--text2);margin-bottom:10px">אישור גישה, הזמנות וניהול משתמשים</div>
+      <button onclick="openAdminPanel()" class="admin-open-full-btn">פתח פאנל ניהול →</button>
     </div>` : ''}
 
     <div class="settings-actions">
@@ -4544,6 +4678,31 @@ function _initApp() {
     history.replaceState({}, '', window.location.pathname);
     toast('שגיאה בחיבור Google: ' + decodeURIComponent(urlParams.get('google_error')), false);
   }
+  // Admin button — only for admin user
+  if (window._userEmail === 'david1.frank@gmail.com') {
+    const adminBtn = document.getElementById('admin-btn');
+    if (adminBtn) adminBtn.style.display = '';
+    adminBtn?.addEventListener('click', () => openAdminPanel('pending'));
+  }
+  // Admin modal close
+  document.getElementById('admin-modal-close')?.addEventListener('click', () =>
+    document.getElementById('admin-modal')?.classList.add('hidden'));
+  document.getElementById('admin-modal')?.addEventListener('click', e => {
+    if (e.target === document.getElementById('admin-modal'))
+      document.getElementById('admin-modal').classList.add('hidden');
+  });
+  document.getElementById('admin-modal')?.addEventListener('keydown', e => {
+    if (e.key === 'Escape') document.getElementById('admin-modal')?.classList.add('hidden');
+  });
+  // Admin modal tab switching
+  document.querySelectorAll('.admin-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+      btn.classList.add('active');
+      _renderAdminModalTab(btn.dataset.tab);
+    });
+  });
+
   loadState().then(() => {
     // Auto-refresh Google data on every open (cloud only)
     if (location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
@@ -4551,6 +4710,8 @@ function _initApp() {
     }
     // Schedule reminders with exact setTimeout for each task
     _scheduleReminders();
+    // Check for pending users (admin only)
+    _checkPendingUsers();
   });
   // Auto-poll for new bookings every 30s
   setInterval(async () => {
