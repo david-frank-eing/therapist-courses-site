@@ -2899,12 +2899,17 @@ async function loadHistory() {
   const to   = document.getElementById('history-to').value;
   bodyEl.innerHTML = '<div class="muted-text">טוען...</div>';
   try {
-    const qs = [];
-    if (from) qs.push('from=' + from);
-    if (to)   qs.push('to=' + to);
-    const r = await fetch('/api/tasks/history' + (qs.length ? '?' + qs.join('&') : ''));
-    const data = await r.json();
-    renderHistory(data.tasks || []);
+    let q = window._supabase
+      .from('tasks')
+      .select('id, title, category, priority, status, completed_at, due_date, notes')
+      .eq('user_id', window._userId)
+      .eq('status', 'completed')
+      .order('completed_at', { ascending: false });
+    if (from) q = q.gte('completed_at', from + 'T00:00:00');
+    if (to)   q = q.lte('completed_at', to + 'T23:59:59');
+    const { data, error } = await q;
+    if (error) throw new Error(error.message);
+    renderHistory(data || []);
   } catch (e) {
     bodyEl.innerHTML = '<div class="muted-text">שגיאה: ' + e.message + '</div>';
   }
@@ -3681,7 +3686,7 @@ async function _reloadAdminUsers() {
     const r = await fetch('/.netlify/functions/admin-users', {
       headers: { Authorization: 'Bearer ' + s.access_token }
     });
-    if (!r.ok) { rowsEl.innerHTML = '<div class="muted-text">שגיאה בטעינה</div>'; return; }
+    if (!r.ok) { const eBody = await r.json().catch(() => ({})); rowsEl.innerHTML = '<div class="muted-text">שגיאה ' + r.status + ': ' + (eBody.error || 'טעינה נכשלה') + '</div>'; return; }
     const { users } = await r.json();
     if (!users || !users.length) { rowsEl.innerHTML = '<div class="muted-text">אין משתמשים רשומים עדיין</div>'; return; }
     rowsEl.innerHTML = users.map(_renderAdminUserRow).join('');
