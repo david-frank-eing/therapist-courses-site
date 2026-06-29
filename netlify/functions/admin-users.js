@@ -86,40 +86,38 @@ exports.handler = async (event) => {
       const valid = ['free', 'basic', 'premium', 'vip'];
       if (!userId || !valid.includes(tier)) return json(400, { error: 'Invalid params' }, cors);
 
-      // Step 1: PATCH existing row
+      const h = { 'Content-Type': 'application/json', apikey: serviceKey, Authorization: 'Bearer ' + serviceKey };
+
+      // Step 1: PATCH (no return=representation — avoids format ambiguity across PostgREST versions)
       const patchRes = await fetch(`${supabaseUrl}/rest/v1/profiles?id=eq.${userId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          apikey: serviceKey, Authorization: 'Bearer ' + serviceKey,
-          Prefer: 'return=representation'
-        },
+        method: 'PATCH', headers: h,
         body: JSON.stringify({ subscription_tier: tier })
       });
       if (!patchRes.ok) {
-        const errText = await patchRes.text();
-        return json(500, { error: 'DB patch failed: ' + errText.slice(0, 200) }, cors);
+        const e = await patchRes.text();
+        return json(500, { error: 'PATCH failed ' + patchRes.status + ': ' + e.slice(0, 200) }, cors);
       }
 
-      // Step 2: if no row existed yet, INSERT
-      let patchedRows = [];
-      try { patchedRows = await patchRes.json(); } catch (_) {}
-      if (!Array.isArray(patchedRows) || patchedRows.length === 0) {
+      // Step 2: SELECT to verify what actually landed in DB
+      const checkRes = await fetch(`${supabaseUrl}/rest/v1/profiles?id=eq.${userId}&select=subscription_tier`, { headers: h });
+      const checkData = await checkRes.json().catch(() => []);
+      const currentTier = checkData[0]?.subscription_tier;
+
+      // Step 3: Row didn't exist yet — INSERT
+      if (!currentTier) {
         const insertRes = await fetch(`${supabaseUrl}/rest/v1/profiles`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            apikey: serviceKey, Authorization: 'Bearer ' + serviceKey
-          },
+          method: 'POST', headers: h,
           body: JSON.stringify({ id: userId, subscription_tier: tier })
         });
         if (!insertRes.ok) {
-          const errText = await insertRes.text();
-          return json(500, { error: 'DB insert failed: ' + errText.slice(0, 200) }, cors);
+          const e = await insertRes.text();
+          return json(500, { error: 'INSERT failed ' + insertRes.status + ': ' + e.slice(0, 200) }, cors);
         }
+      } else if (currentTier !== tier) {
+        return json(500, { error: 'PATCH silently failed: DB shows ' + currentTier + ' instead of ' + tier }, cors);
       }
 
-      return json(200, { ok: true }, cors);
+      return json(200, { ok: true, tier_set: tier }, cors);
     }
 
     // ── invite_user ──
