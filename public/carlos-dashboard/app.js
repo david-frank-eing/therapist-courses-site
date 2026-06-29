@@ -2803,13 +2803,16 @@ function openHelp() {
 
   function _renderHelp(filter, titleOnly) {
     const q = (filter || '').trim().toLowerCase();
+    const _visibleSections = window._userEmail === 'david1.frank@gmail.com'
+      ? HELP_SECTIONS
+      : HELP_SECTIONS.filter(s => s.icon !== '👑');
     const sections = q
-      ? HELP_SECTIONS.filter(s =>
+      ? _visibleSections.filter(s =>
           titleOnly
             ? s.title.toLowerCase().includes(q)
             : s.title.toLowerCase().includes(q) || s.body.toLowerCase().includes(q)
         )
-      : HELP_SECTIONS;
+      : _visibleSections;
     // When filter is active — auto-expand all results
     if (q) sections.forEach((_, i) => collapsed.delete('hs-' + i));
 
