@@ -126,7 +126,7 @@ exports.handler = async (event) => {
   let emailSummary = '';
   try {
     const gmailRes = await fetch(
-      'https://gmail.googleapis.com/gmail/v1/users/me/messages?q=is%3Aunread%20newer_than%3A7d&maxResults=20',
+      'https://gmail.googleapis.com/gmail/v1/users/me/messages?q=is%3Aunread%20newer_than%3A7d&maxResults=50',
       { headers: authH }
     );
     const gmailData = await gmailRes.json();
@@ -136,7 +136,8 @@ exports.handler = async (event) => {
       emailSummary = `⚠️ שגיאת Gmail (${code}): ${msg}`;
     } else {
     const messages = gmailData.messages || [];
-    const count = gmailData.resultSizeEstimate || messages.length;
+    const count = messages.length;
+    const countLabel = count >= 50 ? `${count}+` : String(count);
 
     if (messages.length > 0) {
       // Fetch subject lines of first 5
@@ -155,7 +156,7 @@ exports.handler = async (event) => {
         })
       );
       const today = new Date().toLocaleDateString('he-IL', { timeZone: 'Asia/Jerusalem' });
-      emailSummary = `📧 מיילים לא נקראים — עדכון ${today}\n━━━━━━━━━━━━━━━━━━━━━━\n• ${count} מיילים לא נקראים\n${subjects.join('\n')}`;
+      emailSummary = `📧 מיילים לא נקראים — עדכון ${today}\n━━━━━━━━━━━━━━━━━━━━━━\n• ${countLabel} מיילים לא נקראים (7 ימים אחרונים)\n${subjects.join('\n')}`;
     } else {
       emailSummary = '📧 אין מיילים לא נקראים חדשים';
     }
