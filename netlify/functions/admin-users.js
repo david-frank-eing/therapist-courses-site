@@ -2,7 +2,7 @@
 // GET  /.netlify/functions/admin-users         → list all users + tiers
 // POST /.netlify/functions/admin-users         → { action:'set_tier', userId, tier }
 
-const ADMIN_EMAIL = 'david1.frank@gmail.com';
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || '';
 
 exports.handler = async (event) => {
   const cors = {

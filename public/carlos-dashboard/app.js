@@ -2753,7 +2753,7 @@ ${_hStep('2','<strong>להזמנה:</strong> הזן אימייל ושם ← לח
 ${_hStep('3','<strong>לאישור</strong> (נרשם לבד): לחץ ✅ אשר גישה — הופך premium מיד')}
 ${_hStep('4','<strong>לביטול גישה:</strong> לחץ 🚫 בטל גישה — חוזר לממתין')}
 ${_hInfo('מוזמנים דרך הפאנל מקבלים גישה אוטומטית — אין צורך לאשר ידנית')}
-${_hTip('הפאנל מוצג רק לך (david1.frank@gmail.com) — משתמשים רגילים לא רואים אותו')}` }
+${_hTip('הפאנל מוצג רק למנהל המערכת — משתמשים רגילים לא רואים אותו')}` }
 ];
 
 document.getElementById('help-btn')?.addEventListener('click', openHelp);
@@ -2803,7 +2803,7 @@ function openHelp() {
 
   function _renderHelp(filter, titleOnly) {
     const q = (filter || '').trim().toLowerCase();
-    const _visibleSections = window._userEmail === 'david1.frank@gmail.com'
+    const _visibleSections = window._isAdmin
       ? HELP_SECTIONS
       : HELP_SECTIONS.filter(s => s.icon !== '👑');
     const sections = q
@@ -3642,7 +3642,7 @@ function _esc(s) {
 }
 
 function _renderAdminUserRow(u) {
-  const isAdmin = u.email === 'david1.frank@gmail.com';
+  const isAdmin = u.email === window._userEmail;
   const hasAccess = u.tier === 'premium' || u.tier === 'vip';
   return `
     <div class="admin-user-row" data-id="${_esc(u.id)}">
@@ -3812,7 +3812,7 @@ async function _fetchAdminUsers() {
 }
 
 async function _checkPendingUsers() {
-  if (window._userEmail !== 'david1.frank@gmail.com') return;
+  if (!window._isAdmin) return;
   const users = await _fetchAdminUsers();
   if (!users) return;
   const pending = users.filter(u => u.tier === 'free');
@@ -4011,7 +4011,7 @@ function renderSettings(s, bodyEl) {
       <div id="playbooks-settings-list"></div>
     </div>
 
-    ${window._userEmail === 'david1.frank@gmail.com' ? `
+    ${window._isAdmin ? `
     <div class="settings-section" id="admin-panel-section">
       <div class="settings-section-title">👑 ניהול משתמשים</div>
       <div style="font-size:.82rem;color:var(--text2);margin-bottom:10px">אישור גישה, הזמנות וניהול משתמשים</div>
@@ -4065,7 +4065,7 @@ function renderSettings(s, bodyEl) {
   });
 
   // Load admin panel if admin
-  if (window._userEmail === 'david1.frank@gmail.com') {
+  if (window._isAdmin) {
     _loadAdminPanel();
   }
 
@@ -4682,7 +4682,7 @@ function _initApp() {
     toast('שגיאה בחיבור Google: ' + decodeURIComponent(urlParams.get('google_error')), false);
   }
   // Admin button — only for admin user
-  if (window._userEmail === 'david1.frank@gmail.com') {
+  if (window._isAdmin) {
     const adminBtn = document.getElementById('admin-btn');
     if (adminBtn) adminBtn.style.display = '';
     adminBtn?.addEventListener('click', () => openAdminPanel('pending'));

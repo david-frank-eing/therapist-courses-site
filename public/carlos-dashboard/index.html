@@ -440,7 +440,7 @@
         return;
       }
       const { data: profile } = await window._supabase
-        .from('profiles').select('subscription_tier, full_name').eq('id', session.user.id).single();
+        .from('profiles').select('subscription_tier, full_name, is_admin').eq('id', session.user.id).single();
       if (!profile || !['premium','vip'].includes(profile.subscription_tier)) {
         document.body.innerHTML = `
           <div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;direction:rtl;background:#f5f5f5">
@@ -458,6 +458,7 @@
       window._userId = session.user.id;
       window._userEmail = session.user.email;
       window._userName = profile.full_name || session.user.email;
+      window._isAdmin = profile.is_admin === true;
       window._isPremium = true;
       // Trigger app startup now that auth is confirmed
       if (window._startApp) window._startApp();
