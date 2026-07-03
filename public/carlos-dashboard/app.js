@@ -1024,10 +1024,10 @@ function renderOpenLoops(state) {
     return;
   }
 
-  const olItem = (label, id, age) => `<div class="ol-item">
+  const olItem = (label, id, age, type) => `<div class="ol-item">
     <span>${_esc(label)}</span>
     <span class="ol-age">${age} ימים</span>
-    <button class="ol-dismiss" data-id="${_esc(String(id))}" title="הסתר ל-30 יום">✕</button>
+    <button class="ol-dismiss" data-id="${_esc(String(id))}" data-type="${type}" title="${type === 'task' ? 'סמן כהושלם → יעבור להיסטוריה' : 'הסתר ל-30 יום'}">✕</button>
   </div>`;
 
   const group = (title, items) => items.length ? `<div class="ol-group">
@@ -1040,14 +1040,26 @@ function renderOpenLoops(state) {
     : '';
 
   el.innerHTML =
-    group('⏰ משימות ישנות', tasks.map(t => olItem(t.title, t.id, ageOf(t.created_at)))) +
-    group('🟡 לידים תקועים', leads.map(e => olItem([e.date, e.contact].filter(Boolean).join(' · ') || '(אירוע)', e.id, ageOf(e.updated_at || e.created_at)))) +
-    group('💡 רעיונות לא קודמו', ideas.map(c => olItem(c.title || '(ללא כותרת)', c.id || c.title, ageOf(c.created_at)))) +
+    group('⏰ משימות ישנות', tasks.map(t => olItem(t.title, t.id, ageOf(t.created_at), 'task'))) +
+    group('🟡 לידים תקועים', leads.map(e => olItem([e.date, e.contact].filter(Boolean).join(' · ') || '(אירוע)', e.id, ageOf(e.updated_at || e.created_at), 'lead'))) +
+    group('💡 רעיונות לא קודמו', ideas.map(c => olItem(c.title || '(ללא כותרת)', c.id || c.title, ageOf(c.created_at), 'idea'))) +
     footer;
 
-  el.addEventListener('click', e => {
+  el.addEventListener('click', async e => {
     const btn = e.target.closest('.ol-dismiss');
-    if (btn) { dismiss(btn.dataset.id); return; }
+    if (btn) {
+      const type = btn.dataset.type;
+      const id = btn.dataset.id;
+      if (type === 'task') {
+        // סמן כהושלם → יעבור להיסטוריה
+        await api('/api/task', { action: 'toggle', id });
+        toast('✓ הועבר להיסטוריה');
+        loadState();
+      } else {
+        dismiss(id);
+      }
+      return;
+    }
     if (e.target.classList.contains('ol-show-all')) {
       localStorage.removeItem('carlos_ol_dismissed');
       renderOpenLoops(state);
@@ -1613,7 +1625,7 @@ function clientCard(c) {
   const photo = c.photo_url
     ? `<img src="${c.photo_url}" class="ct-avatar" alt="">`
     : `<span class="ct-avatar ct-avatar-empty">👤</span>`;
-  const statusLabel = { lead: '🟡 ליד', booked: '🟢 סגור', done: '⚪ בוצע' }[c.status] || '';
+  const statusLabel = { lead: '🟡 ליד', booked: '🟢 מטופל', done: '⚪ בוצע' }[c.status] || '';
   const archCls = c.archived ? ' ct-card-archived' : '';
   return `<div class="ct-card${archCls}" data-id="${c.id}" data-type="client">
     <div class="ct-summary">
@@ -1686,7 +1698,7 @@ function clientForm(c) {
     <label>סטטוס
       <select name="status">
         <option value="lead" ${(c.status||'lead')==='lead'?'selected':''}>🟡 ליד</option>
-        <option value="booked" ${c.status==='booked'?'selected':''}>🟢 סגור</option>
+        <option value="booked" ${c.status==='booked'?'selected':''}>🟢 מטופל</option>
         <option value="done" ${c.status==='done'?'selected':''}>⚪ בוצע</option>
       </select>
     </label>
