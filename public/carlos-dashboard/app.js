@@ -700,21 +700,58 @@ function renderHabits(habits, date) {
           <span class="habit-streak">🔥 ${streakOf(h.id)}</span>
         </span>
       </label>`).join('')
-    : '<div class="muted-text" style="font-size:.85rem;padding:6px 0">אין הרגלים — הוסף דרך ⚙️ הגדרות</div>';
+    : '<div class="muted-text" style="font-size:.85rem;padding:6px 0">אין הרגלים — הוסף כאן או דרך ⚙️ הגדרות</div>';
 
-  $('#habit-list').innerHTML = habitHtml;
+  $('#habit-list').innerHTML = habitHtml + `
+    <div id="habit-inline-add" style="margin-top:10px">
+      <button class="habit-add-inline-btn" id="habit-add-inline-btn">+ הוסף הרגל</button>
+      <div id="habit-add-form" class="hidden" style="margin-top:8px;display:flex;flex-direction:column;gap:6px">
+        <div style="display:flex;gap:6px">
+          <input id="habit-new-emoji" type="text" placeholder="😊" maxlength="2" style="width:44px;text-align:center;font-size:1.2rem;border:1px solid var(--border);border-radius:7px;padding:4px;background:var(--input-bg);color:var(--text)">
+          <input id="habit-new-label" type="text" placeholder="שם ההרגל" style="flex:1;border:1px solid var(--border);border-radius:7px;padding:5px 8px;background:var(--input-bg);color:var(--text);font-size:.9rem">
+        </div>
+        <div style="display:flex;gap:6px;justify-content:flex-end">
+          <button id="habit-add-confirm-btn" style="background:var(--primary);color:#fff;border:none;border-radius:7px;padding:5px 14px;cursor:pointer;font-size:.9rem">הוסף</button>
+          <button id="habit-add-cancel-btn" style="background:none;border:1px solid var(--border);border-radius:7px;padding:5px 10px;cursor:pointer;font-size:.9rem">ביטול</button>
+        </div>
+      </div>
+    </div>`;
 
   document.querySelectorAll('#habit-list input[type=checkbox]').forEach(cb =>
     cb.addEventListener('change', async () => {
       await api('/api/habit', { id: cb.dataset.id });
       loadState();
     }));
+
+  document.getElementById('habit-add-inline-btn')?.addEventListener('click', () => {
+    document.getElementById('habit-add-form').classList.remove('hidden');
+    document.getElementById('habit-add-inline-btn').classList.add('hidden');
+    document.getElementById('habit-new-label').focus();
+  });
+  document.getElementById('habit-add-cancel-btn')?.addEventListener('click', () => {
+    document.getElementById('habit-add-form').classList.add('hidden');
+    document.getElementById('habit-add-inline-btn').classList.remove('hidden');
+  });
+  document.getElementById('habit-add-confirm-btn')?.addEventListener('click', async () => {
+    const label = document.getElementById('habit-new-label').value.trim();
+    const emoji = document.getElementById('habit-new-emoji').value.trim() || '✅';
+    if (!label) { toast('כתוב שם להרגל', false); return; }
+    const btn = document.getElementById('habit-add-confirm-btn');
+    btn.disabled = true;
+    await api('/api/habit/add', { label, emoji });
+    toast(`✓ הרגל "${label}" נוסף`);
+    loadState();
+  });
 }
 
 function renderTimeToday(timeLog, date) {
   const sessions = ((timeLog && timeLog.entries) || []).filter(s => (s.ended_at || '').slice(0, 10) === date);
   const el = $('#time-list');
-  if (!sessions.length) { el.innerHTML = '<span class="muted-text">עדיין לא נרשם זמן היום</span>'; return; }
+  if (!sessions.length) {
+    el.innerHTML = '<span class="muted-text">עדיין לא נרשם זמן היום</span>' +
+      '<div class="timer-shortcut">⏱️ הטיימר נמצא בפינה השמאלית התחתונה — <button class="timer-shortcut-btn" onclick="document.getElementById(\'timer-widget\')?.scrollIntoView({behavior:\'smooth\'})">↓ עבור לטיימר</button></div>';
+    return;
+  }
   const total = sessions.reduce((sum, x) => sum + (x.seconds || 0), 0);
   el.innerHTML = sessions.map(s =>
     `<div class="time-row">
@@ -948,23 +985,61 @@ $('#add-content').addEventListener('click', async () => {
 });
 $('#new-content-title').addEventListener('keydown', e => { if (e.key === 'Enter') $('#add-content').click(); });
 
-function renderQuotaBars(containerSel, quotas, scope) {
-  $(containerSel).innerHTML = Object.entries(quotas).map(([key, q]) => {
+function renderQuotaBars(containerSel, quotas, scope, append) {
+  const rows = Object.entries(quotas).map(([key, q]) => {
     const pct = Math.min(100, q.target ? (q.done / q.target * 100) : 0);
+    const fillCls = pct >= 75 ? ' quota-fill-good' : pct >= 40 ? ' quota-fill-warn' : pct > 0 ? ' quota-fill-low' : '';
     return `<div class="quota" data-key="${key}" data-scope="${scope}">
       <div class="quota-label">
         <span>${q.emoji} ${q.label}</span>
         <span class="quota-nums">${q.done} / <span class="quota-target">${q.target}</span>
           <button class="quota-edit" title="ערוך יעד">✏️</button></span>
       </div>
-      <div class="quota-track"><div class="quota-fill" style="width:${pct}%"></div></div>
+      <div class="quota-track"><div class="quota-fill${fillCls}" style="width:${pct}%"></div></div>
     </div>`;
   }).join('');
+  if (append) $(containerSel).innerHTML += rows;
+  else $(containerSel).innerHTML = rows;
   $(containerSel).querySelectorAll('.quota-edit').forEach(b =>
     b.addEventListener('click', () => editQuota(b)));
 }
-function renderQuotas(quotas) { renderQuotaBars('#quota-bars', quotas, 'weekly'); }
-function renderDaily(quotas) { renderQuotaBars('#daily-bars', quotas, 'daily'); }
+
+function renderQuotas(quotas) {
+  const entries = Object.entries(quotas || {});
+  if (!entries.length) {
+    $('#quota-bars').innerHTML = `<div class="quota-empty">
+      <div class="muted-text">עוד לא הגדרת יעדים שבועיים</div>
+      <div class="muted-text" style="font-size:.82rem">לדוגמה: 3 פוסטים, 5 לקוחות חדשים, 2 שיחות מכירה</div>
+      <button class="quota-add-cta" onclick="document.getElementById('settings-btn').click()">⚙️ הגדר יעדים</button>
+    </div>`;
+    return;
+  }
+  const now = new Date();
+  const sun = new Date(now); sun.setDate(now.getDate() - now.getDay());
+  const sat = new Date(sun); sat.setDate(sun.getDate() + 6);
+  const fmt = d => `${d.getDate()}/${d.getMonth() + 1}`;
+  const weekRange = `${fmt(sun)}–${fmt(sat)}`;
+  const totalDone = entries.reduce((s, [, q]) => s + (q.done || 0), 0);
+  const totalTarget = entries.reduce((s, [, q]) => s + (q.target || 0), 0);
+  const pct = totalTarget ? Math.round(totalDone / totalTarget * 100) : 0;
+  const pctCls = pct >= 75 ? 'quota-pct-good' : pct >= 40 ? 'quota-pct-warn' : 'quota-pct-low';
+  $('#quota-bars').innerHTML = `<div class="quota-week-header">
+    <span class="quota-week-range">📅 ${weekRange}</span>
+    <span class="quota-week-pct ${pctCls}">${pct}% הושלם</span>
+  </div>`;
+  renderQuotaBars('#quota-bars', quotas, 'weekly', true);
+}
+
+function renderDaily(quotas) {
+  if (!quotas || !Object.keys(quotas).length) {
+    $('#daily-bars').innerHTML = `<div class="quota-empty">
+      <div class="muted-text">עוד לא הגדרת יעדים יומיים</div>
+      <button class="quota-add-cta" onclick="document.getElementById('settings-btn').click()">⚙️ הגדר יעדים</button>
+    </div>`;
+    return;
+  }
+  renderQuotaBars('#daily-bars', quotas, 'daily');
+}
 
 function renderTaskStats(s) {
   if (!s) return;
@@ -986,7 +1061,8 @@ function renderConsistency(stats) {
       <span class="cs-week-vals">🎬 ${w.reels} · 📝 ${w.posts}</span>
     </div>`).join('');
   const avgLine = `<div class="cs-avg muted-text">ממוצע 4 שבועות: 🎬 ${stats.avgReels} · 📝 ${stats.avgPosts} בשבוע</div>`;
-  $('#consistency-content').innerHTML = streakLine + '<div class="cs-weeks">' + weeklyRows + '</div>' + avgLine;
+  const targetLine = `<div class="cs-target muted-text">🎯 מטרה מומלצת: 3 פוסטים + 2 Reels בשבוע</div>`;
+  $('#consistency-content').innerHTML = streakLine + '<div class="cs-weeks">' + weeklyRows + '</div>' + avgLine + targetLine;
 }
 
 function renderOpenLoops(state) {
@@ -2253,71 +2329,90 @@ document.getElementById('booking-cal-link')?.addEventListener('click', (e) => {
 
 // ---------- Playbook viewer ----------
 const PB_DEFAULTS = {
-  'treatments': `# 💆 מדריך תחום הטיפולים
+  'treatments': `# 💆 מדריך — תחום הטיפולים
 
-## אסטרטגיית שיווק
-- פרסם עדות של מטופל (עם אישורו) פעם בשבוע
-- צור תוכן חינוכי: "5 סימנים שכדאי לפנות לעזרה"
-- הצע שיחת היכרות חינם של 20 דקות
+## הסקריפט לשיחה ראשונה
+- שאל: "מה הכאב/האתגר הכי גדול שלך כרגע?"
+- שאל: "ניסית פתרונות אחרים? מה לא עבד?"
+- הסבר את הגישה שלך ב-2 משפטים
+- הצע מפגש היכרות ב-_____ ₪
 
-## צ'קליסט שבועי
-- פוסט אחד ברשתות חברתיות
-- מענה לכל הפניות תוך 24 שעות
-- עדכון לוח זמנים לשבוע הבא
+## התמחור שלי
+- שיחת היכרות: _____ ₪
+- פגישה בודדת: _____ ₪
+- חבילת X פגישות: _____ ₪
 
-## רעיונות לתוכן
-- "מה קורה בפגישה הראשונה?"
-- "איך בוחרים מטפל מתאים?"
-- שאלות נפוצות שמטופלים שואלים`,
+## שאלות שמטופלים שואלים (והתשובות שלי)
+- "כמה פגישות צריך?" —
+- "האם זה מתאים לי?" —
+- "האם יש ביטוח?" —
 
-  'music': `# 🎵 מדריך תחום המוזיקה
+## מה עובד לי הכי טוב לגיוס לקוחות
+-
 
-## אסטרטגיית שיווק
-- שתף קטעי מוזיקה מאירועים (Reels / Stories)
-- בנה נוכחות ב-SoundCloud / Mixcloud
-- קשר עם מארגני אירועים ואולמות
+## דגלים אדומים — מטופלים שלא מתאימים לי
+-`,
 
-## צ'קליסט שבועי
-- הוסף לפחות Mix אחד חדש לפרופיל
-- תגיב על פוסטים של DJים אחרים
-- בדוק הזדמנויות אירועים
+  'music': `# 🎵 מדריך — אירועים ו-DJ
 
-## רעיונות לתוכן
-- Behind the scenes מהכנות לאירוע
-- "הטכניקה שאני משתמש בה ל..."
-- Playlist המלצות לסגנונות שונים`,
+## הצעת מחיר סטנדרטית
+- אירוע עד 3 שעות: _____ ₪
+- כל שעה נוספת: _____ ₪
+- ציוד: כלול / לא כלול
 
-  'product': `# 🚀 מדריך תחום הכלים / המוצר
+## מה אני שואל לפני כל אירוע
+- סגנון מוזיקלי מבוקש?
+- גיל הקהל?
+- מה שיא האירוע?
+- האם יש נאומים / ריקוד חתן-כלה?
 
-## אסטרטגיית שיווק
-- הצג Use Cases אמיתיים מלקוחות
-- בנה רשימת המתנה לפני השקה
-- הצע גרסת ניסיון / Demo
+## צ'קליסט לפני כל אירוע
+- [ ] אישור פרטי הזמנה
+- [ ] בדיקת ציוד
+- [ ] Playlist רזרבי מוכן
+- [ ] הגעה _____ דקות לפני
 
-## צ'קליסט שבועי
-- עדכון Feature אחד קטן
-- מענה לפידבקים מלקוחות
-- פוסט עם Tip שימוש במוצר
+## מי מפנה אלי לקוחות (ומי אני מפנה)
+-
 
-## רעיונות לתוכן
-- "מה פתרנו ב-Version זה"
-- השוואה לפני/אחרי השימוש
-- שאלות נפוצות על המוצר`,
+## סגנונות שאני מתמחה בהם
+-`,
+
+  'product': `# 🚀 מדריך — כלים ומוצרים
+
+## מה אני מציע ובכמה
+- מוצר / שירות 1: _____ ₪
+- מוצר / שירות 2: _____ ₪
+
+## התהליך עם לקוח חדש
+1. שיחת היכרות ← הבנת הצורך
+2. הצעת מחיר מותאמת
+3. Onboarding ← הדרכה ראשונית
+4. מעקב שבועי
+
+## שאלות נפוצות מלקוחות
+- "מה ההבדל בינך לבין X?" —
+- "כמה זמן לוקח?" —
+
+## מה מבדל אותי מהמתחרים
+-`,
 
   'default': `# 📖 מדריך לתחום זה
 
-## אסטרטגיה
-- הגדר את קהל היעד שלך
-- בנה נוכחות עקבית ברשת
-- שים דגש על ערך אמיתי ללקוח
+## מה אני מציע ובכמה
+- שירות 1: _____ ₪
+- שירות 2: _____ ₪
 
-## צ'קליסט שבועי
-- פוסט אחד לפחות ברשתות
-- מעקב אחרי הזדמנויות חדשות
-- עדכון מטרות ויעדים
+## התהליך שלי עם לקוח חדש
+1.
+2.
+3.
 
-## הערות אישיות
-ערוך מדריך זה לפי הצרכים שלך.`
+## מה עובד לי הכי טוב
+-
+
+## מה אני רוצה לשפר
+-`
 };
 
 function _pbDefault(domainId) {
@@ -2344,6 +2439,7 @@ function renderPlaybookSidebar(domains, playbooks) {
 function openPlaybook(domainId, domains, playbooks) {
   const modal = document.getElementById('playbook-modal');
   const titleEl = document.getElementById('pb-modal-title');
+  const subtitleEl = document.getElementById('pb-modal-subtitle');
   const bodyEl = document.getElementById('pb-modal-body');
   if (!modal) return;
 
@@ -2352,16 +2448,50 @@ function openPlaybook(domainId, domains, playbooks) {
   const content = (saved && saved.content) ? saved.content : _pbDefault(domainId);
 
   titleEl.textContent = `${domain.emoji} ${domain.label}`;
-  _renderPbView(bodyEl, content);
+  if (subtitleEl) subtitleEl.textContent = 'המדריך האישי שלך — ערוך לפי הניסיון שלך';
+  _renderPbView(bodyEl, content, domainId, domains);
   modal.classList.remove('hidden');
 }
 
-function _renderPbView(bodyEl, content) {
+function _renderPbView(bodyEl, content, domainId, domains) {
   bodyEl.innerHTML = `
     <div id="pb-view-content">${mdToHtml(content)}</div>
-    <div style="margin-top:14px;text-align:left">
-      <span class="muted-text" style="font-size:.78rem">לעריכה — פתח ⚙️ הגדרות ← פלייבוקים</span>
+    <div style="margin-top:14px;text-align:right">
+      <button class="pb-edit-btn" id="pb-edit-trigger">✏️ ערוך מדריך</button>
     </div>`;
+  bodyEl.querySelector('#pb-edit-trigger')?.addEventListener('click', () =>
+    _renderPbEdit(bodyEl, content, domainId, domains));
+}
+
+async function _renderPbEdit(bodyEl, content, domainId, domains) {
+  bodyEl.innerHTML = `
+    <textarea class="pb-textarea" id="pb-edit-area">${_esc(content)}</textarea>
+    <div style="margin-top:10px;display:flex;gap:8px;justify-content:flex-end">
+      <button class="pb-cancel-btn" id="pb-edit-cancel">ביטול</button>
+      <button class="pb-save-btn" id="pb-edit-save">💾 שמור</button>
+    </div>`;
+  bodyEl.querySelector('#pb-edit-cancel')?.addEventListener('click', () =>
+    _renderPbView(bodyEl, content, domainId, domains));
+  bodyEl.querySelector('#pb-edit-save')?.addEventListener('click', async () => {
+    const newContent = bodyEl.querySelector('#pb-edit-area').value;
+    const btn = bodyEl.querySelector('#pb-edit-save');
+    btn.disabled = true;
+    btn.textContent = '...שומר';
+    const res = await api('/api/playbook/save', { domain_id: domainId, content: newContent });
+    if (res && !res.error) {
+      if (lastState && lastState.playbooks) {
+        const idx = lastState.playbooks.findIndex(p => p.domain_id === domainId);
+        if (idx >= 0) lastState.playbooks[idx].content = newContent;
+        else lastState.playbooks.push({ domain_id: domainId, content: newContent });
+      }
+      toast('✓ המדריך נשמר');
+      _renderPbView(bodyEl, newContent, domainId, domains);
+    } else {
+      toast('שגיאה בשמירה — נסה שוב', false);
+      btn.disabled = false;
+      btn.textContent = '💾 שמור';
+    }
+  });
 }
 
 function mdToHtml(md) {
@@ -2558,10 +2688,10 @@ ${_hTip('חיפוש 🔍 מסנן לפי שם, טלפון, או עיר בזמן 
 <br>
 <div class="hs-info-box">לחץ <strong>○</strong> כדי לסמן הרגל כהושלם היום · לחץ שוב לביטול</div>
 <br>
-<strong>הוספת הרגל חדש:</strong>
-${_hStep('1','פתח ⚙️ הגדרות')}
-${_hStep('2','גלול לקטע "הרגלים"')}
-${_hStep('3','בחר אמוג\'י ← כתוב שם ← לחץ "+ הוסף"')}
+<strong>הוספת הרגל חדש — ישירות מהקטע:</strong>
+${_hStep('1','לחץ <strong>+ הוסף הרגל</strong> בתחתית קטע ההרגלים — בלי ללכת להגדרות')}
+${_hStep('2','בחר אמוג\'י, כתוב שם ← לחץ "הוסף"')}
+${_hInfo('ניתן לנהל ולמחוק הרגלים גם מ-⚙️ הגדרות ← "הרגלים"')}
 ${_hTip('🌟 = שבוע מושלם! 🔥 = מספר הימים ברצף ללא הפסקה')}` },
 
   { icon: '⏱️', title: 'טיימר — מדידת זמן עבודה', body: `
@@ -2581,6 +2711,7 @@ ${_hFlow(['💾 שמור','בחר תחום','■ עצור','עבוד','▶ הת�
   <div class="hs-card2"><div class="hs-c2-title">⏱ סטופר</div><div class="hs-c2-body">מודד זמן שהפעלת — מתחיל ועוצר לפי הצורך</div></div>
   <div class="hs-card2"><div class="hs-c2-title">⏲ טיימר</div><div class="hs-c2-body">ספירה לאחור — צלצול כשנגמר הזמן</div></div>
 </div>
+${_hInfo('בקטע "⏱️ זמן שנרשם היום" תמצא קישור מהיר לטיימר אם עוד לא התחלת')}
 ${_hTip('➕ ידני — הכנס דקות שעבדת בלי שהטיימר רץ, והן יתווספו לסיכום היומי')}` },
 
   { icon: '📲', title: 'תוכן שבועי — פוסטים ורילסים', body: `
@@ -2605,22 +2736,26 @@ ${_hTip('הסטטיסטיקות מתעדכנות בזמן אמת לפי מה ש�
 
   { icon: '📊', title: 'מכסות — יעדים שבועיים ויומיים', body: `
 <div class="hs-quota-demo">
-  <div class="hs-quota-row"><span>🎬 רילסים</span><div class="hs-qbar"><div class="hs-qfill" style="width:60%"></div></div><span class="hs-qlabel">3/5</span></div>
-  <div class="hs-quota-row"><span>📝 פוסטים</span><div class="hs-qbar"><div class="hs-qfill" style="width:100%;background:#44cc88"></div></div><span class="hs-qlabel">3/3 ✓</span></div>
-  <div class="hs-quota-row"><span>⏱️ שעות</span><div class="hs-qbar"><div class="hs-qfill" style="width:30%;background:#ff9944"></div></div><span class="hs-qlabel">6/20</span></div>
+  <div class="hs-quota-row"><span>🎬 רילסים</span><div class="hs-qbar"><div class="hs-qfill" style="width:60%;background:#f59e0b"></div></div><span class="hs-qlabel">3/5</span></div>
+  <div class="hs-quota-row"><span>📝 פוסטים</span><div class="hs-qbar"><div class="hs-qfill" style="width:100%;background:#22c55e"></div></div><span class="hs-qlabel">3/3 ✓</span></div>
+  <div class="hs-quota-row"><span>⏱️ שעות</span><div class="hs-qbar"><div class="hs-qfill" style="width:30%;background:#ef4444"></div></div><span class="hs-qlabel">6/20</span></div>
 </div>
-<br>
+<div style="font-size:.8rem;color:var(--text-muted);margin:6px 0 10px;display:flex;gap:12px">
+  <span>🟢 75%+ מצוין</span>
+  <span>🟡 40–74% בדרך</span>
+  <span>🔴 0–39% צריך לזרז</span>
+</div>
 <div class="hs-cards-2">
-  <div class="hs-card2"><div class="hs-c2-title">📈 שבועי</div><div class="hs-c2-body">יעדים לשבוע כולו · מתאפסים כל יום ראשון</div></div>
+  <div class="hs-card2"><div class="hs-c2-title">🎯 שבועי</div><div class="hs-c2-body">מציג טווח תאריכים + % כולל בראש · מתאפס כל יום ראשון</div></div>
   <div class="hs-card2"><div class="hs-c2-title">📊 יומי</div><div class="hs-c2-body">יעדים ליום הנוכחי · מתאפסים כל בוקר</div></div>
 </div>
-${_hTip('לחץ ✏️ ליד כל שורה כדי לשנות את מספר היעד')}` },
+${_hTip('לחץ ✏️ ליד כל שורה כדי לשנות את מספר היעד · הצבע מסמן כמה אתה קרוב ליעד')}` },
 
   { icon: '📖', title: 'פלייבוקים — מדריכי תחום אישיים', body: `
 <div class="hs-cards-2">
   <div class="hs-card2">
     <div class="hs-c2-title">📋 מה זה?</div>
-    <div class="hs-c2-body">מדריך אסטרטגי שאתה כותב לעצמך לכל תחום עסקי — שיווק, צ'קליסטים, רעיונות</div>
+    <div class="hs-c2-body">מדריך שאתה כותב לעצמך לכל תחום — סקריפט מכירה, תמחור, צ'קליסטים, שאלות נפוצות</div>
   </div>
   <div class="hs-card2">
     <div class="hs-c2-title">🔒 פרטי לך</div>
@@ -2628,10 +2763,10 @@ ${_hTip('לחץ ✏️ ליד כל שורה כדי לשנות את מספר הי
   </div>
 </div>
 <br>
-${_hStep('1','לחץ על כפתור תחום בסיידבר השמאלי (💆 / 🎵 / 🚀) לקריאת המדריך')}
-${_hStep('2','לעריכת תוכן: ⚙️ הגדרות ← "פלייבוקים" ← ערוך textarea ← 💾 שמור מדריך')}
+${_hStep('1','לחץ על כפתור תחום בסיידבר השמאלי (💆 / 🎵 / 🚀) לפתיחת המדריך')}
+${_hStep('2','לחץ <strong>✏️ ערוך מדריך</strong> ישירות בחלון — ערוך ← 💾 שמור — ללא צורך ללכת להגדרות')}
 ${_hStep('3','לשינוי שמות התחומים: ⚙️ הגדרות ← לחץ על האמוג\'י לבחירה ← ערוך שם ← 💾 שמור תחומים')}
-${_hTip('ניתן להוסיף תחומים חדשים לגמרי בהתאם לעסק שלך')}` },
+${_hTip('כל מדריך מגיע עם תבנית ממולאת — מחק מה שלא רלוונטי, מלא את השאר')}` },
 
   { icon: '🌅', title: 'בריפינג בוקר', body: `
 <div class="hs-briefing-demo">
@@ -2643,7 +2778,8 @@ ${_hTip('ניתן להוסיף תחומים חדשים לגמרי בהתאם ל�
 <br>
 הבריפינג מסכם את כל מה שחשוב ליום שלך — מה יש ביומן, מה דחוף, ומה כדאי להתמקד בו.
 <br><br>
-${_hTip('לחץ "🔄 עדכן" בכותרת הקטע כדי לרענן את הבריפינג')}` },
+${_hInfo('אם הבריפינג מאתמול — יופיע ⚠️ עם כפתור "עדכן עכשיו 🔄" בראש הקטע')}
+${_hTip('לחץ "🔄" בשורת הסטטוס (מתחת לכותרת הדאשבורד) כדי לרענן ידנית')}` },
 
   { icon: '📧', title: 'מייל ויומן Google', body: `
 <div class="hs-connect-flow">
@@ -2712,8 +2848,11 @@ ${_hTip('מה שכתבת היום מוצג אוטומטית מעל תיבת הט
   <span class="hs-eq">"כמה השלמתי השבוע?"</span>
   <span class="hs-eq">"בדוק מיילים"</span>
   <span class="hs-eq">"תן לי בריפינג"</span>
+  <span class="hs-eq">"מה הלידים שלי?"</span>
+  <span class="hs-eq">"מה יש לי מחר?"</span>
+  <span class="hs-eq">"הוסף לקוח: שם, טלפון"</span>
 </div>
-${_hInfo('הצ\'אט פועל דרך Claude Code כשהוא מחובר — שאלות בשפה חופשית בעברית')}` },
+${_hInfo('כתוב בחופשיות בעברית — מיילים, יומן, משימות, לקוחות, בריפינג. הכל מובן')}` },
 
   { icon: '🔔', title: 'זימונים — קבלת תורים אונליין', body: `
 <div class="hs-booking-flow">
