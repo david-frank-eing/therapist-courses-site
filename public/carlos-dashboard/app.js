@@ -466,7 +466,8 @@ function openEditForm(rowEl, kind, id) {
     form.querySelector('.ef-actions').insertAdjacentElement('beforebegin', widget);
   }
 
-  form.querySelector('.ef-save').addEventListener('click', async () => {
+  form.querySelector('.ef-save').addEventListener('click', async (e) => {
+    const btn = e.currentTarget; btn.disabled = true;
     const data = collectForm(form);
     const timeInput = form.querySelector('input[name="reminder_at"]');
     if (timeInput && timeInput.dataset.cleared) data.reminder_at = null;
@@ -662,6 +663,7 @@ function renderTomorrow(tasks, upcomingEvents) {
 
 
 function renderHabits(habits, date) {
+  if (!habits) return;
   const completions = habits.completions || {};
   const done = completions[date] || [];
   const todayUtc = new Date(date + 'T12:00:00Z');
@@ -1634,8 +1636,8 @@ function eventCard(e) {
 
 function expandCard(card, type, id) {
   const item = (type === 'client'
-    ? (lastState.clients || []).find(c => c.id === id)
-    : (lastState.events || []).find(e => e.id === id)) || {};
+    ? ((lastState && lastState.clients) || []).find(c => c.id === id)
+    : ((lastState && lastState.events) || []).find(e => e.id === id)) || {};
   card.classList.add('expanded');
   card.innerHTML = type === 'client' ? clientForm(item) : eventForm(item);
   bindFormButtons(card, type, id);
@@ -3499,7 +3501,8 @@ async function _googleRefreshData() {
   const btn = document.getElementById('conn-google-refresh');
   if (btn) { btn.disabled = true; btn.textContent = '⏳ מרענן...'; }
   try {
-    const { data: { session } } = await window._supabase.auth.getSession();
+    const { data } = await window._supabase.auth.getSession();
+    const session = data?.session;
     if (!session) { toast('נדרשת כניסה מחדש', false); return; }
     const r = await fetch('/.netlify/functions/google-data', {
       headers: { Authorization: 'Bearer ' + session.access_token }
