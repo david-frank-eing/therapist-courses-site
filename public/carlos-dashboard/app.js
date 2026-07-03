@@ -1703,7 +1703,7 @@ function eventForm(e) {
     ${fld('attendees', 'כמות אנשים', e.attendees, 'number')}
     ${fld('style', 'סגנון מוזיקלי', e.style)}
     ${fld('hours', 'שעות', e.hours)}
-    ${fld('payment', 'תשלום (₪)', e.payment, 'number')}
+    ${fld('price', 'תשלום (₪)', e.price, 'number')}
     <label>סטטוס
       <select name="status">
         <option value="lead" ${s==='lead'?'selected':''}>🟡 ליד</option>

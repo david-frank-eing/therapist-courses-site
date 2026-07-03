@@ -463,15 +463,22 @@ window._sbApi = async function(url, body) {
 
   // ── Events ────────────────────────────────────────────────────────────────
   if (url === '/api/event/add') {
-    const { title, date, price, status, notes, client_id } = body || {};
+    const { title, date, price, status, notes, client_id, contact, phone, source, location, attendees, style, hours } = body || {};
     const { error } = await sb.from('events').insert({
       user_id: uid,
       title: title || '',
       date: date || null,
-      price: price || 0,
+      price: price || null,
       status: status || 'lead',
       notes: notes || '',
       client_id: client_id || null,
+      contact: contact || null,
+      phone: phone || null,
+      source: source || null,
+      location: location || null,
+      attendees: attendees || null,
+      style: style || null,
+      hours: hours || null,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     });
@@ -482,7 +489,7 @@ window._sbApi = async function(url, body) {
   if (url === '/api/event/update') {
     const { id, ...rest } = body || {};
     const update = { updated_at: new Date().toISOString() };
-    const allowed = ['title', 'date', 'price', 'status', 'notes', 'client_id', 'archived'];
+    const allowed = ['title', 'date', 'price', 'status', 'notes', 'client_id', 'archived', 'contact', 'phone', 'source', 'location', 'attendees', 'style', 'hours'];
     for (const k of allowed) if (k in rest) update[k] = rest[k];
     const { error } = await sb.from('events').update(update).eq('id', id).eq('user_id', uid);
     if (error) throw error;
