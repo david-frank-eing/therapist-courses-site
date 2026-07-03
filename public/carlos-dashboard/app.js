@@ -1613,12 +1613,13 @@ function clientCard(c) {
   const photo = c.photo_url
     ? `<img src="${c.photo_url}" class="ct-avatar" alt="">`
     : `<span class="ct-avatar ct-avatar-empty">👤</span>`;
+  const statusLabel = { lead: '🟡 ליד', booked: '🟢 סגור', done: '⚪ בוצע' }[c.status] || '';
   const archCls = c.archived ? ' ct-card-archived' : '';
   return `<div class="ct-card${archCls}" data-id="${c.id}" data-type="client">
     <div class="ct-summary">
       ${photo}
       <div><strong>${c.name || '(ללא שם)'}</strong>
-      <span class="muted-text">${sub || ' '}</span></div>
+      <span class="muted-text">${[sub, statusLabel].filter(Boolean).join(' · ')}</span></div>
     </div>
   </div>`;
 }
@@ -1682,6 +1683,13 @@ function clientForm(c) {
     ${fld('email', 'מייל', c.email)}
     ${fld('source', 'מקור הפניה', c.source)}
     ${fld('treatment_type', 'סוג טיפול / כאב', c.treatment_type)}
+    <label>סטטוס
+      <select name="status">
+        <option value="lead" ${(c.status||'lead')==='lead'?'selected':''}>🟡 ליד</option>
+        <option value="booked" ${c.status==='booked'?'selected':''}>🟢 סגור</option>
+        <option value="done" ${c.status==='done'?'selected':''}>⚪ בוצע</option>
+      </select>
+    </label>
     ${fld('notes', 'הערות', c.notes, 'textarea')}
     ${c.id ? contactTasksSection(c.id, 'client') : ''}
     <div class="ct-actions">

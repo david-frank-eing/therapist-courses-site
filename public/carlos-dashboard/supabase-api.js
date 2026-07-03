@@ -425,7 +425,7 @@ window._sbApi = async function(url, body) {
 
   // ── Clients ───────────────────────────────────────────────────────────────
   if (url === '/api/client/add') {
-    const { name, full_name, phone, email, city, notes, photo_url, contact, source, treatment_type } = body || {};
+    const { name, full_name, phone, email, city, notes, photo_url, contact, source, treatment_type, status } = body || {};
     const { error } = await sb.from('clients').insert({
       user_id: uid,
       full_name: full_name || name || '',
@@ -437,7 +437,7 @@ window._sbApi = async function(url, body) {
       contact: contact || null,
       source: source || null,
       treatment_type: treatment_type || null,
-      status: 'active',
+      status: status || 'lead',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     });
@@ -451,7 +451,7 @@ window._sbApi = async function(url, body) {
       updated_at: new Date().toISOString(),
       ...(full_name !== undefined ? { full_name } : name !== undefined ? { full_name: name } : {})
     };
-    const allowed = ['phone', 'email', 'city', 'notes', 'photo_url', 'archived', 'contact', 'source', 'treatment_type'];
+    const allowed = ['phone', 'email', 'city', 'notes', 'photo_url', 'archived', 'contact', 'source', 'treatment_type', 'status'];
     for (const k of allowed) if (k in rest) update[k] = rest[k];
     const { error } = await sb.from('clients').update(update).eq('id', id).eq('user_id', uid);
     if (error) throw error;
