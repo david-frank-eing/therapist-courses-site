@@ -4734,6 +4734,24 @@ document.getElementById('copy-booking-link')?.addEventListener('click', () => {
     .catch(() => toast(url));
 });
 
+document.getElementById('copy-lead-therapy')?.addEventListener('click', () => {
+  const slug = lastState && lastState.bookingData && lastState.bookingData.publicSlug;
+  if (!slug) { toast('הגדר slug בפרופיל הזימון קודם', false); return; }
+  const url = `https://stupendous-lily-fc8d84.netlify.app/carlos-dashboard/lead-form.html?slug=${slug}&type=therapy`;
+  navigator.clipboard.writeText(url)
+    .then(() => toast('💆 קישור טופס מטופלים הועתק ✓'))
+    .catch(() => toast(url));
+});
+
+document.getElementById('copy-lead-event')?.addEventListener('click', () => {
+  const slug = lastState && lastState.bookingData && lastState.bookingData.publicSlug;
+  if (!slug) { toast('הגדר slug בפרופיל הזימון קודם', false); return; }
+  const url = `https://stupendous-lily-fc8d84.netlify.app/carlos-dashboard/lead-form.html?slug=${slug}&type=event`;
+  navigator.clipboard.writeText(url)
+    .then(() => toast('🎵 קישור טופס אירועים הועתק ✓'))
+    .catch(() => toast(url));
+});
+
 document.getElementById('booking-edit-profile-btn')?.addEventListener('click', openBookingProfileModal);
 
 // ---------- Welcome Screen (first run) ----------
