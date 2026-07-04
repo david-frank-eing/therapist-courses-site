@@ -4914,9 +4914,15 @@ function openBookingProfileModal() {
     const modal = document.getElementById('settings-modal');
     const body = document.getElementById('settings-body');
     if (!modal || !body) return;
+    const currentSlug = prof.slug || '';
+    const origin = 'https://stupendous-lily-f8cd84.netlify.app';
     body.innerHTML = `
       <h3 style="margin:0 0 14px;color:var(--text)">✏️ ערוך דף ציבורי</h3>
       <div style="display:flex;flex-direction:column;gap:10px">
+        <label style="color:var(--text-muted);font-size:.85rem">🔗 כתובת URL ציבורית (slug) <span style="color:#e44">*</span></label>
+        <div style="display:flex;align-items:center;gap:6px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:.85rem;color:var(--text-muted)">${origin}/book/<input id="bkp-slug" style="background:none;border:none;outline:none;color:var(--text);font-size:.92rem;width:120px;direction:ltr" placeholder="your-name" value="${_esc(currentSlug)}" maxlength="40"></div>
+        <span style="font-size:.75rem;color:var(--text-muted)">אותיות קטנות, מספרים ומקפים בלבד. לדוגמה: <code>david-frank</code></span>
+        ${currentSlug ? `<div style="font-size:.8rem;color:#5fd6a0">✓ דף פעיל: ${origin}/book/${currentSlug}</div>` : '<div style="font-size:.8rem;color:#e8a020">⚠️ הגדרת slug תפעיל את הקישור הציבורי</div>'}
         <label style="color:var(--text-muted);font-size:.85rem">שם</label>
         <input id="bkp-name" class="settings-input" value="${_esc(prof.name || '')}">
         <label style="color:var(--text-muted);font-size:.85rem">תפקיד</label>
@@ -4963,7 +4969,15 @@ function openBookingProfileModal() {
     });
 
     document.getElementById('bkp-save')?.addEventListener('click', async () => {
+      const slugRaw = (document.getElementById('bkp-slug').value || '').trim().toLowerCase();
+      const slugClean = slugRaw.replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+      if (!slugClean) {
+        toast('נא להזין slug (כתובת URL) לדף הציבורי', false);
+        document.getElementById('bkp-slug').focus();
+        return;
+      }
       const updated = {
+        slug: slugClean,
         name: document.getElementById('bkp-name').value.trim(),
         title: document.getElementById('bkp-title').value.trim(),
         bio: document.getElementById('bkp-bio').value.trim(),
@@ -4974,6 +4988,7 @@ function openBookingProfileModal() {
       await api('/api/booking/profile/update', updated);
       modal.classList.add('hidden');
       toast('פרופיל עודכן ✓');
+      loadState();
     });
   });
 }
