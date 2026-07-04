@@ -1649,6 +1649,21 @@ function renderContactsHeader(labels) {
 }
 
 function renderContacts(state) {
+  // Update header summary badge
+  const summaryEl = document.getElementById('contacts-summary');
+  if (summaryEl) {
+    const allC = (state.clients || []).filter(c => !c.archived);
+    const allE = (state.events  || []).filter(e => !e.archived);
+    const leads  = allC.filter(c => c.status === 'lead').length;
+    const booked = allC.filter(c => c.status === 'booked').length;
+    const eLead  = allE.filter(e => e.status === 'lead').length;
+    const parts = [];
+    if (leads)  parts.push(`🟡 ${leads}`);
+    if (booked) parts.push(`🟢 ${booked}`);
+    if (eLead)  parts.push(`🎵 ${eLead}`);
+    summaryEl.textContent = parts.join(' · ');
+  }
+
   let allItems = activeTab === 'clients' ? (state.clients || []) : (state.events || []);
   if (contactSearchQ) {
     const q = contactSearchQ;
