@@ -134,11 +134,23 @@
         <section id="contacts" class="card collapsible">
           <h2><span>👥 מטופלים ואירועים <a id="cal-link" href="#" class="cal-inline">📅 פתח יומן</a></span><button class="section-toggle" type="button">▾</button></h2>
           <div class="section-body">
-            <div class="ct-tabs">
-              <button class="ct-tab active" data-tab="clients">💆 מטופלים</button>
-              <button class="ct-tab" data-tab="events">🎵 אירועים</button>
+            <div class="ct-tabs-row">
+              <div class="ct-tabs">
+                <button class="ct-tab active" data-tab="clients">💆 מטופלים</button>
+                <button class="ct-tab" data-tab="events">🎵 אירועים</button>
+              </div>
+              <div class="ct-view-toggle">
+                <button class="ct-vbtn active" id="view-cards-btn" title="תצוגת קלפים">⊞</button>
+                <button class="ct-vbtn" id="view-table-btn" title="תצוגת טבלה">☰</button>
+              </div>
             </div>
             <div class="search-row"><input type="text" id="contact-search" class="search-input" placeholder="🔍 חפש שם / טלפון..."></div>
+            <div class="ct-filter-bar">
+              <button class="ct-filter-btn active" data-status="">הכל</button>
+              <button class="ct-filter-btn" data-status="lead">🟡 לידים</button>
+              <button class="ct-filter-btn" data-status="booked">🟢 מטופלים</button>
+              <button class="ct-filter-btn" data-status="done">⚪ בוצע</button>
+            </div>
             <div id="contacts-list"></div>
             <div class="capture-row">
               <button id="add-contact">+ הוסף ידנית</button>

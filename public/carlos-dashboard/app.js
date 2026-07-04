@@ -1628,6 +1628,10 @@ $('#tw-manual').addEventListener('click', (e) => {
 // ---------- Contacts (clients + events) ----------
 let activeTab = 'clients';
 let showArchive = false;
+let contactsViewMode = localStorage.getItem('carlos_contacts_view') || 'cards';
+let contactsStatusFilter = '';
+let contactsSortCol = '';
+let contactsSortDir = 1;
 
 const DEFAULT_CONTACTS_LABELS = { sectionTitle: 'אנשי קשר ואירועים', tab1Emoji: '👤', tab1Label: 'אנשי קשר', tab2Emoji: '📅', tab2Label: 'אירועים' };
 
@@ -1654,46 +1658,213 @@ function renderContacts(state) {
       return hay.includes(q);
     });
   }
+  if (contactsStatusFilter) {
+    allItems = allItems.filter(it => it.status === contactsStatusFilter);
+  }
+
+  // Sort
+  if (contactsSortCol) {
+    allItems = [...allItems].sort((a, b) => {
+      const av = (a[contactsSortCol] ?? '').toString().toLowerCase();
+      const bv = (b[contactsSortCol] ?? '').toString().toLowerCase();
+      return av < bv ? -contactsSortDir : av > bv ? contactsSortDir : 0;
+    });
+  }
+
   const active   = allItems.filter(it => !it.archived);
   const archived = allItems.filter(it =>  it.archived);
 
   document.querySelectorAll('.ct-tab').forEach(t =>
     t.classList.toggle('active', t.dataset.tab === activeTab));
 
-  const renderItem = (it) => activeTab === 'clients' ? clientCard(it) : eventCard(it);
+  // Sync view toggle buttons
+  document.getElementById('view-cards-btn')?.classList.toggle('active', contactsViewMode === 'cards');
+  document.getElementById('view-table-btn')?.classList.toggle('active', contactsViewMode === 'table');
 
-  let html = active.length
-    ? active.map(renderItem).join('')
-    : '<div class="muted-text" style="padding:8px 0">אין עדיין — לחץ "+ הוסף"</div>';
+  // Sync filter buttons
+  document.querySelectorAll('.ct-filter-btn').forEach(b =>
+    b.classList.toggle('active', b.dataset.status === contactsStatusFilter));
 
-  // Archive section
-  if (archived.length > 0) {
-    if (showArchive) {
-      html += `<div class="ct-archive-divider">
-        <span class="ct-archive-label">📦 ארכיון (${archived.length})</span>
-        <button class="ct-archive-toggle" id="ct-hide-archive">✕ הסתר ארכיון</button>
-      </div>`;
-      html += '<div class="ct-archive-list">' + archived.map(renderItem).join('') + '</div>';
-    } else {
-      html += `<div class="ct-archive-divider">
-        <button class="ct-archive-toggle" id="ct-show-archive">📦 הצג ארכיון (${archived.length})</button>
-      </div>`;
+  // Update filter label for events tab (booked = סגור not מטופלים)
+  const bookedBtn = document.querySelector('.ct-filter-btn[data-status="booked"]');
+  if (bookedBtn) bookedBtn.textContent = activeTab === 'clients' ? '🟢 מטופלים' : '🟢 סגורים';
+
+  let html;
+  if (contactsViewMode === 'table') {
+    html = activeTab === 'clients'
+      ? renderClientsTable(active, archived)
+      : renderEventsTable(active, archived);
+  } else {
+    const renderItem = (it) => activeTab === 'clients' ? clientCard(it) : eventCard(it);
+    html = active.length
+      ? active.map(renderItem).join('')
+      : '<div class="muted-text" style="padding:8px 0">אין עדיין — לחץ "+ הוסף"</div>';
+
+    // Archive section (cards mode)
+    if (archived.length > 0) {
+      if (showArchive) {
+        html += `<div class="ct-archive-divider">
+          <span class="ct-archive-label">📦 ארכיון (${archived.length})</span>
+          <button class="ct-archive-toggle" id="ct-hide-archive">✕ הסתר ארכיון</button>
+        </div>`;
+        html += '<div class="ct-archive-list">' + archived.map(renderItem).join('') + '</div>';
+      } else {
+        html += `<div class="ct-archive-divider">
+          <button class="ct-archive-toggle" id="ct-show-archive">📦 הצג ארכיון (${archived.length})</button>
+        </div>`;
+      }
     }
   }
 
   $('#contacts-list').innerHTML = html;
 
-  document.querySelectorAll('#contacts-list .ct-card').forEach(card =>
-    card.addEventListener('click', () => {
-      if (card.classList.contains('expanded')) return;
-      expandCard(card, card.dataset.type, card.dataset.id);
-    }));
+  if (contactsViewMode === 'table') {
+    // Row click → switch to cards mode and expand that item
+    document.querySelectorAll('#contacts-list .ct-row').forEach(row => {
+      row.addEventListener('click', () => {
+        const id = row.dataset.id;
+        const type = row.dataset.type;
+        contactsViewMode = 'cards';
+        localStorage.setItem('carlos_contacts_view', 'cards');
+        renderContacts(state);
+        const card = document.querySelector(`#contacts-list .ct-card[data-id="${id}"]`);
+        if (card) card.click();
+      });
+    });
+    // Sort by column header click
+    document.querySelectorAll('#contacts-list .ct-table th[data-col]').forEach(th => {
+      th.addEventListener('click', () => {
+        const col = th.dataset.col;
+        if (contactsSortCol === col) {
+          contactsSortDir = -contactsSortDir;
+        } else {
+          contactsSortCol = col;
+          contactsSortDir = 1;
+        }
+        renderContacts(state);
+      });
+    });
+  } else {
+    document.querySelectorAll('#contacts-list .ct-card').forEach(card =>
+      card.addEventListener('click', () => {
+        if (card.classList.contains('expanded')) return;
+        expandCard(card, card.dataset.type, card.dataset.id);
+      }));
+  }
+
+  // Archive toggle handlers — work in both view modes
   document.getElementById('ct-show-archive')?.addEventListener('click', () => {
     showArchive = true; renderContacts(state);
   });
   document.getElementById('ct-hide-archive')?.addEventListener('click', () => {
     showArchive = false; renderContacts(state);
   });
+}
+
+function renderClientsTable(active, archived) {
+  const rows = (items, isArchived) => items.map(c => {
+    const STATUS = { lead: '🟡 ליד', booked: '🟢 מטופל', done: '⚪ בוצע' };
+    const date = c.created_at ? new Date(c.created_at).toLocaleDateString('he-IL') : '';
+    const archCls = isArchived ? ' archived-row' : '';
+    return `<tr class="ct-row${archCls}" data-id="${_esc(c.id)}" data-type="client">
+      <td><strong>${_esc(c.name || '(ללא שם)')}</strong></td>
+      <td dir="ltr">${_esc(c.phone || '')}</td>
+      <td>${STATUS[c.status] || ''}</td>
+      <td>${_esc(c.city || '')}</td>
+      <td>${_esc(c.source || '')}</td>
+      <td class="muted-text">${date}</td>
+    </tr>`;
+  }).join('');
+
+  const sortIndicator = (col) => {
+    if (contactsSortCol !== col) return '';
+    return contactsSortDir === 1 ? ' sort-asc' : ' sort-desc';
+  };
+
+  const archiveSection = archived.length
+    ? (showArchive
+        ? `<tr><td colspan="6" style="padding:6px 10px">
+            <span class="muted-text">📦 ארכיון (${archived.length})</span>
+            <button class="ct-archive-toggle" id="ct-hide-archive" style="margin-right:8px">✕ הסתר</button>
+          </td></tr>${rows(archived, true)}`
+        : `<tr><td colspan="6" style="padding:6px 10px">
+            <button class="ct-archive-toggle" id="ct-show-archive">📦 הצג ארכיון (${archived.length})</button>
+          </td></tr>`)
+    : '';
+
+  const emptyRow = !active.length
+    ? `<tr><td colspan="6" class="muted-text ct-empty">אין עדיין — לחץ "+ הוסף"</td></tr>`
+    : '';
+
+  return `<div class="ct-table-wrap">
+    <table class="ct-table">
+      <thead><tr>
+        <th data-col="name" class="${sortIndicator('name')}">שם</th>
+        <th data-col="phone" class="${sortIndicator('phone')}">טלפון</th>
+        <th data-col="status" class="${sortIndicator('status')}">סטטוס</th>
+        <th data-col="city" class="${sortIndicator('city')}">עיר</th>
+        <th data-col="source" class="${sortIndicator('source')}">מקור</th>
+        <th data-col="created_at" class="${sortIndicator('created_at')}">נוסף</th>
+      </tr></thead>
+      <tbody>
+        ${emptyRow}${rows(active, false)}${archiveSection}
+      </tbody>
+    </table>
+  </div>`;
+}
+
+function renderEventsTable(active, archived) {
+  const rows = (items, isArchived) => items.map(e => {
+    const STATUS = { lead: '🟡 ליד', booked: '🟢 סגור', done: '⚪ בוצע' };
+    const date = e.date ? new Date(e.date + 'T12:00:00').toLocaleDateString('he-IL') : '—';
+    const archCls = isArchived ? ' archived-row' : '';
+    return `<tr class="ct-row${archCls}" data-id="${_esc(e.id)}" data-type="event">
+      <td>${date}</td>
+      <td><strong>${_esc(e.contact || '')}</strong></td>
+      <td dir="ltr">${_esc(e.phone || '')}</td>
+      <td>${_esc(e.style || '')}</td>
+      <td>${e.attendees || ''}</td>
+      <td>${STATUS[e.status] || ''}</td>
+      <td>${e.price ? e.price + '₪' : ''}</td>
+    </tr>`;
+  }).join('');
+
+  const sortIndicator = (col) => {
+    if (contactsSortCol !== col) return '';
+    return contactsSortDir === 1 ? ' sort-asc' : ' sort-desc';
+  };
+
+  const archiveSection = archived.length
+    ? (showArchive
+        ? `<tr><td colspan="7" style="padding:6px 10px">
+            <span class="muted-text">📦 ארכיון (${archived.length})</span>
+            <button class="ct-archive-toggle" id="ct-hide-archive" style="margin-right:8px">✕ הסתר</button>
+          </td></tr>${rows(archived, true)}`
+        : `<tr><td colspan="7" style="padding:6px 10px">
+            <button class="ct-archive-toggle" id="ct-show-archive">📦 הצג ארכיון (${archived.length})</button>
+          </td></tr>`)
+    : '';
+
+  const emptyRow = !active.length
+    ? `<tr><td colspan="7" class="muted-text ct-empty">אין עדיין — לחץ "+ הוסף"</td></tr>`
+    : '';
+
+  return `<div class="ct-table-wrap">
+    <table class="ct-table">
+      <thead><tr>
+        <th data-col="date" class="${sortIndicator('date')}">תאריך</th>
+        <th data-col="contact" class="${sortIndicator('contact')}">איש קשר</th>
+        <th data-col="phone" class="${sortIndicator('phone')}">טלפון</th>
+        <th data-col="style" class="${sortIndicator('style')}">סגנון</th>
+        <th data-col="attendees" class="${sortIndicator('attendees')}">אורחים</th>
+        <th data-col="status" class="${sortIndicator('status')}">סטטוס</th>
+        <th data-col="price" class="${sortIndicator('price')}">מחיר</th>
+      </tr></thead>
+      <tbody>
+        ${emptyRow}${rows(active, false)}${archiveSection}
+      </tbody>
+    </table>
+  </div>`;
 }
 
 function clientCard(c) {
@@ -1964,6 +2135,24 @@ function bindFormButtons(card, type, id) {
 document.querySelectorAll('.ct-tab').forEach(t =>
   t.addEventListener('click', () => {
     activeTab = t.dataset.tab;
+    contactsStatusFilter = '';
+    if (lastState) renderContacts(lastState);
+  }));
+
+document.getElementById('view-cards-btn')?.addEventListener('click', () => {
+  contactsViewMode = 'cards';
+  localStorage.setItem('carlos_contacts_view', 'cards');
+  if (lastState) renderContacts(lastState);
+});
+document.getElementById('view-table-btn')?.addEventListener('click', () => {
+  contactsViewMode = 'table';
+  localStorage.setItem('carlos_contacts_view', 'table');
+  if (lastState) renderContacts(lastState);
+});
+
+document.querySelectorAll('.ct-filter-btn').forEach(btn =>
+  btn.addEventListener('click', () => {
+    contactsStatusFilter = btn.dataset.status;
     if (lastState) renderContacts(lastState);
   }));
 
