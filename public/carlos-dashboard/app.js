@@ -1632,6 +1632,7 @@ let contactsViewMode = localStorage.getItem('carlos_contacts_view') || 'cards';
 let contactsStatusFilter = '';
 let contactsSortCol = '';
 let contactsSortDir = 1;
+let crmOpen = false;
 
 const DEFAULT_CONTACTS_LABELS = { sectionTitle: 'אנשי קשר ואירועים', tab1Emoji: '👤', tab1Label: 'אנשי קשר', tab2Emoji: '📅', tab2Label: 'אירועים' };
 
@@ -1648,21 +1649,27 @@ function renderContactsHeader(labels) {
   if (tabs[1]) tabs[1].textContent = `${L.tab2Emoji} ${L.tab2Label}`;
 }
 
+function renderContactsSummary(state) {
+  const allC = (state.clients || []).filter(c => !c.archived);
+  const allE = (state.events  || []).filter(e => !e.archived);
+  const leads  = allC.filter(c => c.status === 'lead').length;
+  const booked = allC.filter(c => c.status === 'booked').length;
+  const eLead  = allE.filter(e => e.status === 'lead').length;
+  const parts = [];
+  if (leads)  parts.push(`🟡 ${leads} לידים`);
+  if (booked) parts.push(`🟢 ${booked} מטופלים`);
+  if (eLead)  parts.push(`🎵 ${eLead} אירועים פתוחים`);
+  const text = parts.join(' · ') || 'אין עדיין';
+  ['contacts-summary', 'contacts-summary-crm'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = text;
+  });
+  const mini = document.getElementById('contacts-mini-stats');
+  if (mini) mini.textContent = text;
+}
+
 function renderContacts(state) {
-  // Update header summary badge
-  const summaryEl = document.getElementById('contacts-summary');
-  if (summaryEl) {
-    const allC = (state.clients || []).filter(c => !c.archived);
-    const allE = (state.events  || []).filter(e => !e.archived);
-    const leads  = allC.filter(c => c.status === 'lead').length;
-    const booked = allC.filter(c => c.status === 'booked').length;
-    const eLead  = allE.filter(e => e.status === 'lead').length;
-    const parts = [];
-    if (leads)  parts.push(`🟡 ${leads}`);
-    if (booked) parts.push(`🟢 ${booked}`);
-    if (eLead)  parts.push(`🎵 ${eLead}`);
-    summaryEl.textContent = parts.join(' · ');
-  }
+  renderContactsSummary(state);
 
   let allItems = activeTab === 'clients' ? (state.clients || []) : (state.events || []);
   if (contactSearchQ) {
@@ -1774,12 +1781,34 @@ function renderContacts(state) {
   document.getElementById('ct-hide-archive')?.addEventListener('click', () => {
     showArchive = false; renderContacts(state);
   });
+
+  // Status chip — inline status change without opening the form
+  document.querySelectorAll('#contacts-list .ct-status-chip').forEach(chip => {
+    chip.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const CYCLE = { lead: 'booked', booked: 'done', done: 'lead' };
+      const { id, type, status } = chip.dataset;
+      const next = CYCLE[status] || 'lead';
+      const arr = type === 'client' ? lastState.clients : lastState.events;
+      const item = arr && arr.find(x => x.id === id);
+      if (!item) return;
+      item.status = next;
+      chip.dataset.status = next;
+      chip.className = `ct-status-chip ct-status-${next}`;
+      const STATUS_C = { lead: '🟡 ליד', booked: '🟢 מטופל', done: '⚪ בוצע' };
+      const STATUS_E = { lead: '🟡 ליד', booked: '🟢 סגור',   done: '⚪ בוצע' };
+      chip.textContent = (type === 'client' ? STATUS_C : STATUS_E)[next] || '';
+      renderContactsSummary(lastState);
+      await api(type === 'client' ? '/api/client/update' : '/api/event/update',
+        { id, status: next, updated_at: new Date().toISOString() });
+    });
+  });
 }
 
 function renderClientsTable(active, archived) {
   const rows = (items, isArchived) => items.map(c => {
     const STATUS = { lead: '🟡 ליד', booked: '🟢 מטופל', done: '⚪ בוצע' };
-    const date = c.created_at ? new Date(c.created_at).toLocaleDateString('he-IL') : '';
+    const date = c.created_at ? new Date(c.created_at.includes('T') ? c.created_at : c.created_at + 'T12:00:00').toLocaleDateString('he-IL') : '';
     const archCls = isArchived ? ' archived-row' : '';
     return `<tr class="ct-row${archCls}" data-id="${_esc(c.id)}" data-type="client">
       <td><strong>${_esc(c.name || '(ללא שם)')}</strong></td>
@@ -1887,24 +1916,34 @@ function clientCard(c) {
   const photo = c.photo_url
     ? `<img src="${c.photo_url}" class="ct-avatar" alt="">`
     : `<span class="ct-avatar ct-avatar-empty">👤</span>`;
-  const statusLabel = { lead: '🟡 ליד', booked: '🟢 מטופל', done: '⚪ בוצע' }[c.status] || '';
+  const STATUS = { lead: '🟡 ליד', booked: '🟢 מטופל', done: '⚪ בוצע' };
   const archCls = c.archived ? ' ct-card-archived' : '';
   return `<div class="ct-card${archCls}" data-id="${c.id}" data-type="client">
     <div class="ct-summary">
-      ${photo}
-      <div><strong>${c.name || '(ללא שם)'}</strong>
-      <span class="muted-text">${[sub, statusLabel].filter(Boolean).join(' · ')}</span></div>
+      <div style="display:flex;align-items:center;gap:10px;min-width:0">
+        ${photo}
+        <div style="min-width:0">
+          <strong>${_esc(c.name || '(ללא שם)')}</strong>
+          <span class="muted-text" style="display:block;font-size:.82rem">${_esc(sub)}</span>
+        </div>
+      </div>
+      <button class="ct-status-chip ct-status-${c.status}" data-id="${c.id}" data-type="client" data-status="${c.status}">${STATUS[c.status] || ''}</button>
     </div>
   </div>`;
 }
 
 function eventCard(e) {
-  const statusLabel = { lead: '🟡 ליד', booked: '🟢 סגור', done: '⚪ בוצע' }[e.status] || '';
+  const STATUS = { lead: '🟡 ליד', booked: '🟢 סגור', done: '⚪ בוצע' };
   const archCls = e.archived ? ' ct-card-archived' : '';
+  const date = e.date ? new Date(e.date + 'T12:00:00').toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit' }) : '—';
+  const sub = [e.style, e.attendees ? e.attendees + ' אורחים' : ''].filter(Boolean).join(' · ');
   return `<div class="ct-card${archCls}" data-id="${e.id}" data-type="event">
     <div class="ct-summary">
-      <strong>${e.date || '(ללא תאריך)'} · ${e.contact || ''}</strong>
-      <span class="muted-text">${statusLabel}</span>
+      <div style="min-width:0">
+        <strong>${_esc(date)} · ${_esc(e.contact || '')}</strong>
+        <span class="muted-text" style="display:block;font-size:.82rem">${_esc(sub)}</span>
+      </div>
+      <button class="ct-status-chip ct-status-${e.status}" data-id="${e.id}" data-type="event" data-status="${e.status}">${STATUS[e.status] || ''}</button>
     </div>
   </div>`;
 }
@@ -2031,13 +2070,11 @@ function contactTasksSection(contactId, type) {
 function collectForm(card) {
   const data = {};
   card.querySelectorAll('[name]').forEach(el => {
-    if (el.value !== '') {
-      if (el.type === 'number') {
-        const n = parseFloat(el.value);
-        if (!isNaN(n)) data[el.name] = n;
-      } else {
-        data[el.name] = el.value;
-      }
+    if (el.type === 'number') {
+      const n = parseFloat(el.value);
+      data[el.name] = isNaN(n) ? null : n;
+    } else {
+      data[el.name] = el.value === '' ? null : el.value;
     }
   });
   return data;
@@ -2170,6 +2207,19 @@ document.querySelectorAll('.ct-filter-btn').forEach(btn =>
     contactsStatusFilter = btn.dataset.status;
     if (lastState) renderContacts(lastState);
   }));
+
+// ---------- CRM Open/Close ----------
+document.getElementById('open-crm-btn')?.addEventListener('click', () => {
+  crmOpen = true;
+  document.getElementById('crm-overlay').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+  if (lastState) renderContacts(lastState);
+});
+document.getElementById('close-crm-btn')?.addEventListener('click', () => {
+  crmOpen = false;
+  document.getElementById('crm-overlay').classList.add('hidden');
+  document.body.style.overflow = '';
+});
 
 // ---------- Capture (שיחה חופשית) ----------
 document.getElementById('capture-btn')?.addEventListener('click', () => {

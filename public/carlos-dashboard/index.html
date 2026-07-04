@@ -132,43 +132,15 @@
         </section>
 
         <section id="contacts" class="card collapsible">
-          <h2><span>👥 מטופלים ואירועים <a id="cal-link" href="#" class="cal-inline">📅 פתח יומן</a></span><span id="contacts-summary" class="contacts-summary-badge"></span><button class="section-toggle" type="button">▾</button></h2>
+          <h2>
+            <span>👥 לקוחות ואירועים</span>
+            <span id="contacts-summary" class="contacts-summary-badge"></span>
+            <button class="section-toggle" type="button">▾</button>
+          </h2>
           <div class="section-body">
-            <div class="ct-tabs-row">
-              <div class="ct-tabs">
-                <button class="ct-tab active" data-tab="clients">💆 מטופלים</button>
-                <button class="ct-tab" data-tab="events">🎵 אירועים</button>
-              </div>
-              <div class="ct-view-toggle">
-                <button class="ct-vbtn active" id="view-cards-btn" title="תצוגת קלפים">⊞</button>
-                <button class="ct-vbtn" id="view-table-btn" title="תצוגת טבלה">☰</button>
-              </div>
-            </div>
-            <div class="search-row"><input type="text" id="contact-search" class="search-input" placeholder="🔍 חפש שם / טלפון..."></div>
-            <div class="ct-filter-bar">
-              <button class="ct-filter-btn active" data-status="">הכל</button>
-              <button class="ct-filter-btn" data-status="lead">🟡 לידים</button>
-              <button class="ct-filter-btn" data-status="booked">🟢 מטופלים</button>
-              <button class="ct-filter-btn" data-status="done">⚪ בוצע</button>
-            </div>
-            <div id="contacts-list"></div>
-            <div class="capture-row">
-              <button id="add-contact">+ הוסף ידנית</button>
-              <button id="capture-btn" class="capture-open-btn">🗣️ לכידת שיחה</button>
-            </div>
-            <!-- לכידת שיחה חופשית -->
-            <div id="capture-box" class="capture-box hidden">
-              <div class="capture-hint">כתוב בחופשיות על השיחה — קרלוס ישאב את הפרטים</div>
-              <textarea id="capture-text" placeholder="לדוגמה: דיברתי עם דנה, היא רוצה טיפול גב בתל אביב, חיפשה דרך אינסטגרם, מתעניינת ביום חמישי הקרוב. הטלפון שלה 052-1234567..."></textarea>
-              <div class="capture-type-row">
-                <label><input type="radio" name="capture-type" value="client" checked> 💆 מטופל</label>
-                <label><input type="radio" name="capture-type" value="event"> 🎵 אירוע</label>
-              </div>
-              <div class="capture-actions">
-                <button id="capture-save">💾 שמור שיחה</button>
-                <button id="capture-cancel" class="capture-cancel-btn">ביטול</button>
-              </div>
-              <div id="capture-result" class="capture-result hidden"></div>
+            <div class="crm-mini-body">
+              <div id="contacts-mini-stats" class="crm-mini-stats">טוען...</div>
+              <button id="open-crm-btn" class="crm-open-btn">📋 פתח CRM ←</button>
             </div>
           </div>
         </section>
@@ -438,6 +410,54 @@
         <button id="settings-close">✕</button>
       </div>
       <div id="settings-body"></div>
+    </div>
+  </div>
+
+  <!-- CRM Full-Screen Overlay -->
+  <div id="crm-overlay" class="crm-overlay hidden">
+    <div class="crm-overlay-inner">
+      <div class="crm-header">
+        <button id="close-crm-btn" class="crm-back-btn">← חזור לדשבורד</button>
+        <h2>👥 לקוחות ואירועים <a id="cal-link" href="#" class="cal-inline">📅 פתח יומן</a></h2>
+        <span id="contacts-summary-crm" class="contacts-summary-badge"></span>
+      </div>
+      <div class="ct-tabs-row">
+        <div class="ct-tabs">
+          <button class="ct-tab active" data-tab="clients">💆 מטופלים</button>
+          <button class="ct-tab" data-tab="events">🎵 אירועים</button>
+        </div>
+        <div class="ct-view-toggle">
+          <button class="ct-vbtn active" id="view-cards-btn" title="תצוגת קלפים">⊞</button>
+          <button class="ct-vbtn" id="view-table-btn" title="תצוגת טבלה">☰</button>
+        </div>
+      </div>
+      <div class="search-row">
+        <input type="text" id="contact-search" class="search-input" placeholder="🔍 חפש שם / טלפון...">
+      </div>
+      <div class="ct-filter-bar">
+        <button class="ct-filter-btn active" data-status="">הכל</button>
+        <button class="ct-filter-btn" data-status="lead">🟡 לידים</button>
+        <button class="ct-filter-btn" data-status="booked">🟢 מטופלים</button>
+        <button class="ct-filter-btn" data-status="done">⚪ בוצע</button>
+      </div>
+      <div id="contacts-list"></div>
+      <div class="capture-row">
+        <button id="add-contact">+ הוסף ידנית</button>
+        <button id="capture-btn" class="capture-open-btn">🗣️ לכידת שיחה</button>
+      </div>
+      <div id="capture-box" class="capture-box hidden">
+        <div class="capture-hint">כתוב בחופשיות על השיחה — קרלוס ישאב את הפרטים</div>
+        <textarea id="capture-text" placeholder="לדוגמה: דיברתי עם דנה, היא רוצה טיפול גב בתל אביב, חיפשה דרך אינסטגרם, מתעניינת ביום חמישי הקרוב. הטלפון שלה 052-1234567..."></textarea>
+        <div class="capture-type-row">
+          <label><input type="radio" name="capture-type" value="client" checked> 💆 מטופל</label>
+          <label><input type="radio" name="capture-type" value="event"> 🎵 אירוע</label>
+        </div>
+        <div class="capture-actions">
+          <button id="capture-save">💾 שמור שיחה</button>
+          <button id="capture-cancel" class="capture-cancel-btn">ביטול</button>
+        </div>
+        <div id="capture-result" class="capture-result hidden"></div>
+      </div>
     </div>
   </div>
 
