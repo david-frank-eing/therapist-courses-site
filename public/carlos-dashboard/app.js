@@ -2208,14 +2208,22 @@ document.querySelectorAll('.ct-filter-btn').forEach(btn =>
     if (lastState) renderContacts(lastState);
   }));
 
-// ---------- CRM Open/Close ----------
+// ---------- CRM Open/Close (DOM transplant) ----------
 document.getElementById('open-crm-btn')?.addEventListener('click', () => {
+  const sectionBody = document.querySelector('#contacts .section-body');
+  const slot = document.getElementById('crm-content-slot');
+  if (!sectionBody || !slot) return;
   crmOpen = true;
+  slot.appendChild(sectionBody); // move DOM into overlay
   document.getElementById('crm-overlay').classList.remove('hidden');
   document.body.style.overflow = 'hidden';
-  if (lastState) renderContacts(lastState);
 });
 document.getElementById('close-crm-btn')?.addEventListener('click', () => {
+  const contactsSection = document.getElementById('contacts');
+  const slot = document.getElementById('crm-content-slot');
+  if (slot && contactsSection && slot.firstChild) {
+    contactsSection.appendChild(slot.firstChild); // move DOM back
+  }
   crmOpen = false;
   document.getElementById('crm-overlay').classList.add('hidden');
   document.body.style.overflow = '';

@@ -444,6 +444,8 @@ input[type=checkbox] { width: 18px; height: 18px; cursor: pointer; accent-color:
 .crm-mini-stats { font-size: .92rem; color: var(--text2); flex: 1; line-height: 1.6; }
 .crm-open-btn { background: var(--accent); color: #fff; border: none; border-radius: 9px; padding: 9px 20px; cursor: pointer; font-size: .9rem; font-family: inherit; font-weight: 600; white-space: nowrap; }
 .crm-open-btn:hover { opacity: .88; }
+.crm-open-btn-hdr { background: none; border: 1px solid var(--border); border-radius: 6px; padding: 2px 7px; cursor: pointer; font-size: .9rem; color: var(--text2); margin-left: 4px; }
+.crm-open-btn-hdr:hover { background: var(--hover); color: var(--text); }
 
 /* === Status Chip (badge צבעוני) === */
 .ct-status-chip { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: .76rem; font-weight: 600; cursor: pointer; flex-shrink: 0; transition: opacity .15s; border: none; font-family: inherit; background: none; }
