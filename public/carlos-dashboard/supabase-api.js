@@ -9,10 +9,9 @@ function _ilDate(offsetDays = 0) {
 }
 
 function _getWeekStart(dateStr) {
-  const d = new Date(dateStr + 'T12:00:00Z');
-  const day = d.getUTCDay();
-  const diff = (day === 0) ? -6 : 1 - day; // Monday = week start
-  d.setUTCDate(d.getUTCDate() + diff);
+  const d = new Date(dateStr + 'T12:00:00+03:00'); // Israel timezone
+  const day = d.getDay(); // 0=Sunday (first work day in Israel)
+  d.setDate(d.getDate() - day); // go back to Sunday
   return d.toISOString().slice(0, 10);
 }
 
@@ -29,8 +28,8 @@ async function _sbGetState(sb, uid) {
     configRes, slotsRes, apptsRes, notifsRes, pubLogRes, bookingProfileRes, playbooksRes
   ] = await Promise.all([
     sb.from('tasks').select('*').eq('user_id', uid).eq('status', 'pending').order('created_at'),
-    sb.from('tasks').select('*').eq('user_id', uid).eq('status', 'completed').gte('completed_at', today + 'T00:00:00+00:00'),
-    sb.from('tasks').select('*').eq('user_id', uid).eq('status', 'completed').gte('completed_at', _getWeekStart(today) + 'T00:00:00+00:00'),
+    sb.from('tasks').select('*').eq('user_id', uid).eq('status', 'completed').gte('completed_at', today + 'T00:00:00+03:00'),
+    sb.from('tasks').select('*').eq('user_id', uid).eq('status', 'completed').gte('completed_at', _getWeekStart(today) + 'T00:00:00+03:00'),
     sb.from('habit_definitions').select('*').eq('user_id', uid).eq('active', true).order('sort_order'),
     sb.from('habits_log').select('*').eq('user_id', uid).gte('date', monthAgo),
     sb.from('weekly_plan').select('*').eq('user_id', uid).order('week_of', { ascending: false }).limit(1),

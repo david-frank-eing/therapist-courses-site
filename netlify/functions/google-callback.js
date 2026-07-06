@@ -36,7 +36,7 @@ exports.handler = async (event) => {
     const info = await infoRes.json();
 
     // Store tokens in Supabase
-    const upsertRes = await fetch(`${supabaseUrl}/rest/v1/google_tokens`, {
+    const upsertRes = await fetch(`${supabaseUrl}/rest/v1/google_tokens?on_conflict=user_id`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

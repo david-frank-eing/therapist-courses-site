@@ -35,8 +35,8 @@ exports.handler = async (event) => {
     return json(401, { error: 'Auth failed: ' + e.message }, corsHeaders);
   }
 
-  // Fetch tokens from Supabase
-  const tokRes = await fetch(`${supabaseUrl}/rest/v1/google_tokens?user_id=eq.${userId}`, {
+  // Fetch tokens from Supabase — order by updated_at desc to get the freshest row
+  const tokRes = await fetch(`${supabaseUrl}/rest/v1/google_tokens?user_id=eq.${userId}&order=updated_at.desc&limit=1`, {
     headers: { 'apikey': supabaseKey, 'Authorization': 'Bearer ' + supabaseKey }
   });
   const toks = await tokRes.json();
@@ -67,6 +67,20 @@ exports.handler = async (event) => {
           },
           body: JSON.stringify({ access_token, expires_at: newExpiry, updated_at: new Date().toISOString() })
         });
+      } else {
+        // Refresh failed (token revoked or expired) — return clear error instead of continuing with dead token
+        const errMsg = '⚠️ חיבור Google פג — יש להתחבר מחדש';
+        const now = new Date().toISOString();
+        const _upsert = (body) => fetch(`${supabaseUrl}/rest/v1/sync_data?on_conflict=user_id,key`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'apikey': supabaseKey, 'Authorization': 'Bearer ' + supabaseKey, 'Prefer': 'resolution=merge-duplicates' },
+          body: JSON.stringify(body)
+        });
+        await Promise.all([
+          _upsert({ user_id: userId, key: 'email-summary', text_value: errMsg, updated_at: now }),
+          _upsert({ user_id: userId, key: 'morning-briefing', text_value: errMsg, updated_at: now })
+        ]);
+        return json(200, { connected: true, needsReauth: true, emailSummary: errMsg }, corsHeaders);
       }
     } catch (e) {
       console.error('Token refresh error:', e);
