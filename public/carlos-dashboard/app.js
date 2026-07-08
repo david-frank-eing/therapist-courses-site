@@ -118,6 +118,7 @@ async function loadState() {
   renderConsistency(s.publishingStats);
   renderTaskStats(s.taskStats);
   renderHabitsHistory(s.habits, s.date);
+  renderTrackingMini(s);
   renderSbFocus(s.weekly && s.weekly.focus_today ? s.weekly.focus_today : [], s.date);
   renderSbCalendar(s.calendar, s.date);
   renderBooking(s.bookingData);
@@ -469,6 +470,23 @@ function openEditForm(rowEl, kind, id) {
   form.querySelector('.ef-save').addEventListener('click', async (e) => {
     const btn = e.currentTarget; btn.disabled = true;
     const data = collectForm(form);
+    // Add date timestamp to notes when content changes
+    if (kind === 'task' && data.notes !== undefined) {
+      const original = (item.notes || '').trimEnd();
+      const newNotes = (data.notes || '').trimEnd();
+      if (newNotes && newNotes !== original) {
+        const dateStr = new Date().toLocaleDateString('he-IL', { day:'2-digit', month:'2-digit', year:'numeric', timeZone:'Asia/Jerusalem' });
+        if (original && newNotes.startsWith(original)) {
+          // User appended content — tag the appended part
+          const appended = newNotes.slice(original.length).trim();
+          if (appended) data.notes = original + '\n\n📅 ' + dateStr + '\n' + appended;
+        } else if (!original) {
+          // First note ever
+          data.notes = '📅 ' + dateStr + '\n' + newNotes;
+        }
+        // If user rewrote everything, save as-is (don't force a date on complete rewrites)
+      }
+    }
     const timeInput = form.querySelector('input[name="reminder_at"]');
     if (timeInput && timeInput.dataset.cleared) data.reminder_at = null;
     if (kind === 'task' && data.reminder_at && !data.reminder_at.includes('T')) {
@@ -702,20 +720,7 @@ function renderHabits(habits, date) {
       </label>`).join('')
     : '<div class="muted-text" style="font-size:.85rem;padding:6px 0">אין הרגלים — הוסף כאן או דרך ⚙️ הגדרות</div>';
 
-  $('#habit-list').innerHTML = habitHtml + `
-    <div id="habit-inline-add" style="margin-top:10px">
-      <button class="habit-add-inline-btn" id="habit-add-inline-btn">+ הוסף הרגל</button>
-      <div id="habit-add-form" class="hidden" style="margin-top:8px;display:flex;flex-direction:column;gap:6px">
-        <div style="display:flex;gap:6px">
-          <input id="habit-new-emoji" type="text" placeholder="😊" maxlength="2" style="width:44px;text-align:center;font-size:1.2rem;border:1px solid var(--border);border-radius:7px;padding:4px;background:var(--input-bg);color:var(--text)">
-          <input id="habit-new-label" type="text" placeholder="שם ההרגל" style="flex:1;border:1px solid var(--border);border-radius:7px;padding:5px 8px;background:var(--input-bg);color:var(--text);font-size:.9rem">
-        </div>
-        <div style="display:flex;gap:6px;justify-content:flex-end">
-          <button id="habit-add-confirm-btn" style="background:var(--primary);color:#fff;border:none;border-radius:7px;padding:5px 14px;cursor:pointer;font-size:.9rem">הוסף</button>
-          <button id="habit-add-cancel-btn" style="background:none;border:1px solid var(--border);border-radius:7px;padding:5px 10px;cursor:pointer;font-size:.9rem">ביטול</button>
-        </div>
-      </div>
-    </div>`;
+  $('#habit-list').innerHTML = habitHtml;
 
   document.querySelectorAll('#habit-list input[type=checkbox]').forEach(cb =>
     cb.addEventListener('change', async () => {
@@ -723,26 +728,8 @@ function renderHabits(habits, date) {
       loadState();
     }));
 
-  document.getElementById('habit-add-inline-btn')?.addEventListener('click', () => {
-    document.getElementById('habit-add-form').classList.remove('hidden');
-    document.getElementById('habit-add-inline-btn').classList.add('hidden');
-    document.getElementById('habit-new-label').focus();
-  });
-  document.getElementById('habit-add-cancel-btn')?.addEventListener('click', () => {
-    document.getElementById('habit-add-form').classList.add('hidden');
-    document.getElementById('habit-add-inline-btn').classList.remove('hidden');
-  });
-  document.getElementById('habit-add-confirm-btn')?.addEventListener('click', async () => {
-    const label = document.getElementById('habit-new-label').value.trim();
-    const emoji = document.getElementById('habit-new-emoji').value.trim() || '✅';
-    if (!label) { toast('כתוב שם להרגל', false); return; }
-    const btn = document.getElementById('habit-add-confirm-btn');
-    btn.disabled = true;
-    await api('/api/habit/add', { label, emoji });
-    toast(`✓ הרגל "${label}" נוסף`);
-    loadState();
-  });
 }
+// Habit add lives in Settings only — see _renderHabitsSettings()
 
 function renderTimeToday(timeLog, date) {
   const sessions = ((timeLog && timeLog.entries) || []).filter(s => (s.ended_at || '').slice(0, 10) === date);
@@ -1141,6 +1128,35 @@ function renderOpenLoops(state) {
       renderOpenLoops(state);
     }
   }, { once: true });
+}
+
+function renderTrackingMini(s) {
+  const el = document.getElementById('tracking-mini-stats');
+  if (!el) return;
+  const quotas = s.daily && s.daily.quotas ? s.daily.quotas : {};
+  const done = Object.values(quotas).filter(v => (v.logged || 0) >= (v.target || 1)).length;
+  const total = Object.keys(quotas).length;
+  const streak = s.habits && s.habits.habits && s.habits.habits.length
+    ? Math.max(...s.habits.habits.map(h => {
+        const completions = s.habits.completions || {};
+        const todayUtc = new Date((s.date || ilDate()) + 'T12:00:00Z');
+        let str = 0;
+        const donedToday = (completions[s.date] || []).includes(h.id);
+        for (let i = donedToday ? 0 : 1; i < 60; i++) {
+          const d = new Date(todayUtc); d.setUTCDate(d.getUTCDate() - i);
+          const key = d.toISOString().slice(0, 10);
+          if ((completions[key] || []).includes(h.id)) str++;
+          else break;
+        }
+        return str;
+      }), 0)
+    : 0;
+  const pubs = s.publishingStats && s.publishingStats.thisWeek ? s.publishingStats.thisWeek : 0;
+  const parts = [];
+  if (total) parts.push(`${done}/${total} יעדי יום ✓`);
+  if (streak > 1) parts.push(`🔥 רצף ${streak} ימים`);
+  if (pubs) parts.push(`${pubs} פריסות השבוע`);
+  el.textContent = parts.join(' · ') || 'לחץ ⛶ לפתיחת מעקב מלא';
 }
 
 function editQuota(btn) {
@@ -5160,6 +5176,51 @@ function _initApp() {
       document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
       btn.classList.add('active');
       _renderAdminModalTab(btn.dataset.tab);
+    });
+  });
+
+  // Tracking overlay open/close
+  const _openTracking = () => {
+    document.getElementById('tracking-overlay')?.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+  };
+  const _closeTracking = () => {
+    document.getElementById('tracking-overlay')?.classList.add('hidden');
+    document.body.style.overflow = '';
+  };
+  document.getElementById('open-tracking-btn')?.addEventListener('click', _openTracking);
+  document.getElementById('open-tracking-rail-btn')?.addEventListener('click', _openTracking);
+  document.getElementById('close-tracking-btn')?.addEventListener('click', _closeTracking);
+  document.getElementById('tracking-overlay')?.addEventListener('click', e => {
+    if (e.target === document.getElementById('tracking-overlay')) _closeTracking();
+  });
+  document.getElementById('tracking-overlay')?.addEventListener('keydown', e => {
+    if (e.key === 'Escape') _closeTracking();
+  });
+
+  // Tracking overlay tab switching
+  document.querySelectorAll('#tracking-overlay .trk-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      const card = tab.closest('.trk-tabs-card');
+      if (!card) return;
+      card.querySelectorAll('.trk-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      const target = tab.dataset.trkTab;
+      card.querySelectorAll('.trk-tab-body').forEach(b => {
+        b.classList.toggle('hidden', b.dataset.trkBody !== target);
+      });
+    });
+  });
+
+  // Task vtab switching (משימות / פתוחות)
+  document.querySelectorAll('.task-vtab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.task-vtab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      const isLoops = tab.dataset.vtab === 'loops';
+      document.getElementById('tasks-view')?.classList.toggle('hidden', isLoops);
+      document.getElementById('loops-view')?.classList.toggle('hidden', !isLoops);
+      if (isLoops && lastState) renderOpenLoops(lastState);
     });
   });
 

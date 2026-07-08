@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title id="page-title">קרלוס · דאשבורד</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
-  <link rel="stylesheet" href="style.css?v=87">
+  <link rel="stylesheet" href="style.css?v=88">
 </head>
 <body>
   <div id="toast-area"></div>
@@ -13,15 +13,6 @@
 
   <div class="page-wrap">
     <header>
-      <div class="header-btns">
-        <button id="collapse-all-btn" class="hdr-action-btn" title="כווץ את כל החלונות">⊟</button>
-        <button id="theme-btn" class="hdr-action-btn" title="מצב בהיר/כהה">🌙</button>
-        <button id="export-pdf-btn" class="hdr-action-btn" title="ייצוא PDF / הדפסה">📄</button>
-        <button id="help-btn" class="hdr-action-btn" title="מדריך שימוש">❓</button>
-        <button id="admin-btn" class="hdr-action-btn" title="ניהול משתמשים" style="display:none">👑<span id="admin-badge" class="admin-hdr-badge"></span></button>
-        <button id="settings-btn" class="hdr-action-btn" title="הגדרות">⚙️</button>
-        <button id="logout-btn" class="hdr-action-btn" title="התנתק">🚪</button>
-      </div>
       <h1 id="greeting">בוקר טוב</h1>
       <p id="date" class="date"></p>
     </header>
@@ -58,37 +49,46 @@
         <section id="tasks" class="card collapsible">
           <h2><span>📌 משימות</span><button class="section-toggle" type="button">▾</button></h2>
           <div class="section-body">
-            <div class="add-row">
-              <input type="text" id="new-task" placeholder="משימה חדשה..." maxlength="300">
-              <button id="add-task">הוסף</button>
+            <div class="task-vtab-bar">
+              <button class="task-vtab active" data-vtab="tasks">📌 משימות</button>
+              <button class="task-vtab" data-vtab="loops">🔍 פתוחות מהעבר</button>
             </div>
-            <div class="add-when">
-              <label>תאריך: <input type="date" id="new-task-date"></label>
-              <label>שעה: <input type="time" id="new-task-time"></label>
-              <span class="muted-text">(ריק = היום)</span>
+            <div id="tasks-view">
+              <div class="add-row">
+                <input type="text" id="new-task" placeholder="משימה חדשה..." maxlength="300">
+                <button id="add-task">הוסף</button>
+              </div>
+              <div class="add-when">
+                <label>תאריך: <input type="date" id="new-task-date"></label>
+                <label>שעה: <input type="time" id="new-task-time"></label>
+                <span class="muted-text">(ריק = היום)</span>
+              </div>
+              <div class="add-when">
+                <label>קטגוריה:
+                  <select id="new-task-category">
+                    <option value="general">📌 כללי</option>
+                    <option value="health">💊 בריאות / טיפולים</option>
+                    <option value="marketing">📢 שיווק</option>
+                    <option value="music">🎵 מוזיקה / DJ</option>
+                    <option value="learning">📚 לימוד</option>
+                  </select>
+                </label>
+                <label>עדיפות:
+                  <select id="new-task-priority">
+                    <option value="normal">🔵 רגיל</option>
+                    <option value="urgent">⚠️ דחוף</option>
+                    <option value="low">⚪ נמוך</option>
+                  </select>
+                </label>
+              </div>
+              <ul id="task-list"></ul>
+              <div class="task-stats-row">
+                <div id="task-stats" class="task-stats muted-text"></div>
+                <button id="open-history" class="history-btn" title="היסטוריית משימות שהושלמו">📜 היסטוריה</button>
+              </div>
             </div>
-            <div class="add-when">
-              <label>קטגוריה:
-                <select id="new-task-category">
-                  <option value="general">📌 כללי</option>
-                  <option value="health">💊 בריאות / טיפולים</option>
-                  <option value="marketing">📢 שיווק</option>
-                  <option value="music">🎵 מוזיקה / DJ</option>
-                  <option value="learning">📚 לימוד</option>
-                </select>
-              </label>
-              <label>עדיפות:
-                <select id="new-task-priority">
-                  <option value="normal">🔵 רגיל</option>
-                  <option value="urgent">⚠️ דחוף</option>
-                  <option value="low">⚪ נמוך</option>
-                </select>
-              </label>
-            </div>
-            <ul id="task-list"></ul>
-            <div class="task-stats-row">
-              <div id="task-stats" class="task-stats muted-text"></div>
-              <button id="open-history" class="history-btn" title="היסטוריית משימות שהושלמו">📜 היסטוריה</button>
+            <div id="loops-view" class="hidden">
+              <div id="open-loops-content"></div>
             </div>
           </div>
         </section>
@@ -184,10 +184,13 @@
           </div>
         </section>
 
-        <section id="timetoday" class="card collapsible">
-          <h2><span>⏱️ זמן שנרשם היום</span><button class="section-toggle" type="button">▾</button></h2>
+        <section id="tracking-mini" class="card">
+          <h2>
+            <span>📊 מעקב</span>
+            <button id="open-tracking-btn" class="crm-open-btn-hdr" title="פתח מעקב מלא">⛶</button>
+          </h2>
           <div class="section-body">
-            <div id="time-list"></div>
+            <div id="tracking-mini-stats" class="tracking-mini-body">טוען...</div>
           </div>
         </section>
 
@@ -213,42 +216,6 @@
             <div id="journal-modal-body" class="jnl-modal-body"></div>
           </div>
         </div>
-
-        <section id="daily" class="card collapsible">
-          <h2><span>📊 היום</span><button class="section-toggle" type="button">▾</button></h2>
-          <div class="section-body">
-            <div id="daily-bars"></div>
-          </div>
-        </section>
-
-        <section id="weekly" class="card collapsible">
-          <h2><span>🎯 יעדי השבוע</span><button class="section-toggle" type="button">▾</button></h2>
-          <div class="section-body">
-            <div id="quota-bars"></div>
-          </div>
-        </section>
-
-        <section id="open-loops" class="card collapsible">
-          <h2><span>🔍 פתוחים מהעבר</span><button class="section-toggle" type="button">▾</button></h2>
-          <div class="section-body">
-            <div id="open-loops-content"></div>
-          </div>
-        </section>
-
-        <section id="consistency" class="card collapsible">
-          <h2><span>📊 עקביות הפרסום</span><button class="section-toggle" type="button">▾</button></h2>
-          <div class="section-body">
-            <div id="consistency-content"></div>
-          </div>
-        </section>
-
-        <!-- מעקב הרגלים — שבוע שעבר -->
-        <section id="habits-history" class="card collapsible">
-          <h2><span>📆 הרגלים — שבוע שעבר</span><button class="section-toggle" type="button">▾</button></h2>
-          <div class="section-body">
-            <div id="habits-history-grid"></div>
-          </div>
-        </section>
 
         <section id="booking-mgmt" class="card collapsible">
           <h2>
@@ -445,6 +412,61 @@
     </div>
   </div>
 
+  <!-- Icon Rail (fixed left) -->
+  <div id="icon-rail">
+    <div class="ic-wrap"><button class="ic ic-expand" id="open-tracking-rail-btn">⊞</button><span class="ic-tip">מעקב ויעדים</span></div>
+    <div class="ic-sep"></div>
+    <div class="ic-wrap"><button class="ic" id="collapse-all-btn" title="">⊟</button><span class="ic-tip">כווץ הכל</span></div>
+    <div class="ic-wrap"><button class="ic" id="theme-btn" title="">🌙</button><span class="ic-tip">מצב בהיר/כהה</span></div>
+    <div class="ic-wrap"><button class="ic" id="export-pdf-btn" title="">📄</button><span class="ic-tip">ייצוא PDF</span></div>
+    <div class="ic-wrap"><button class="ic" id="help-btn" title="">❓</button><span class="ic-tip">עזרה ומדריך</span></div>
+    <div class="ic-wrap"><button class="ic" id="admin-btn" title="" style="display:none">👑<span id="admin-badge" class="admin-hdr-badge"></span></button><span class="ic-tip">ניהול משתמשים</span></div>
+    <div class="ic-wrap"><button class="ic" id="settings-btn" title="">⚙️</button><span class="ic-tip">הגדרות</span></div>
+    <div class="ic-sep" style="margin-top:auto"></div>
+    <div class="ic-wrap"><button class="ic" id="logout-btn" title="">🚪</button><span class="ic-tip">התנתק</span></div>
+  </div>
+
+  <!-- Tracking Full-Screen Overlay -->
+  <div id="tracking-overlay" class="crm-overlay hidden">
+    <div class="crm-overlay-inner">
+      <div class="crm-header">
+        <button id="close-tracking-btn" class="crm-back-btn">← חזור לדשבורד</button>
+        <h2>📊 מעקב ויעדים</h2>
+      </div>
+      <!-- Tabbed: היום + יעדי השבוע -->
+      <div class="trk-tabs-card card">
+        <div class="trk-tab-bar">
+          <button class="trk-tab active" data-trk-tab="daily">📊 היום</button>
+          <button class="trk-tab" data-trk-tab="weekly">🎯 יעדי השבוע</button>
+        </div>
+        <div class="trk-tab-body" data-trk-body="daily">
+          <section id="daily"><div class="section-body"><div id="daily-bars"></div></div></section>
+        </div>
+        <div class="trk-tab-body hidden" data-trk-body="weekly">
+          <section id="weekly"><div class="section-body"><div id="quota-bars"></div></div></section>
+        </div>
+      </div>
+      <!-- Tabbed: עקביות + הרגלים שבוע שעבר -->
+      <div class="trk-tabs-card card">
+        <div class="trk-tab-bar">
+          <button class="trk-tab active" data-trk-tab="consistency">📊 עקביות פרסום</button>
+          <button class="trk-tab" data-trk-tab="habits-history">📆 הרגלים שבוע שעבר</button>
+        </div>
+        <div class="trk-tab-body" data-trk-body="consistency">
+          <section id="consistency"><div class="section-body"><div id="consistency-content"></div></div></section>
+        </div>
+        <div class="trk-tab-body hidden" data-trk-body="habits-history">
+          <section id="habits-history"><div class="section-body"><div id="habits-history-grid"></div></div></section>
+        </div>
+      </div>
+      <!-- Solo: זמן היום -->
+      <section id="timetoday" class="card">
+        <h2><span>⏱️ זמן שנרשם היום</span></h2>
+        <div class="section-body"><div id="time-list"></div></div>
+      </section>
+    </div>
+  </div>
+
   <!-- CRM Full-Screen Overlay — wraps the #contacts section when open -->
   <div id="crm-overlay" class="crm-overlay hidden">
     <div class="crm-overlay-inner">
@@ -498,7 +520,7 @@
     })();
   </script>
   <script src="supabase-api.js?v=1"></script>
-  <script src="app.js?v=120"></script>
+  <script src="app.js?v=121"></script>
 
   <!-- Admin modal -->
   <div id="admin-modal" class="settings-modal hidden">
