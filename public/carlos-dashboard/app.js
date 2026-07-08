@@ -5177,7 +5177,7 @@ function _initApp() {
   setInterval(async () => {
     try {
       const d = await api('/api/booking/poll');
-      if (d.hasNew) loadState().then(() => _scheduleReminders());
+      if (d.hasNew && !document.querySelector('.inline-edit-form')) loadState().then(() => _scheduleReminders());
     } catch(e) {}
   }, 30000);
   // Reminder safety net: recheck every 60s in case setTimeout was lost
