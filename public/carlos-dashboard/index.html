@@ -412,18 +412,21 @@
     </div>
   </div>
 
-  <!-- Icon Rail (fixed left) -->
+  <!-- Icon Rail (fixed left) — panel with visible labels -->
   <div id="icon-rail">
-    <div class="ic-wrap"><button class="ic ic-expand" id="open-tracking-rail-btn">⊞</button><span class="ic-tip">מעקב ויעדים</span></div>
+    <button class="ic ic-expand" id="open-tracking-rail-btn"><span class="ic-icon">⊞</span><span class="ic-lbl">מעקב ויעדים</span></button>
     <div class="ic-sep"></div>
-    <div class="ic-wrap"><button class="ic" id="collapse-all-btn" title="">⊟</button><span class="ic-tip">כווץ הכל</span></div>
-    <div class="ic-wrap"><button class="ic" id="theme-btn" title="">🌙</button><span class="ic-tip">מצב בהיר/כהה</span></div>
-    <div class="ic-wrap"><button class="ic" id="export-pdf-btn" title="">📄</button><span class="ic-tip">ייצוא PDF</span></div>
-    <div class="ic-wrap"><button class="ic" id="help-btn" title="">❓</button><span class="ic-tip">עזרה ומדריך</span></div>
-    <div class="ic-wrap"><button class="ic" id="admin-btn" title="" style="display:none">👑<span id="admin-badge" class="admin-hdr-badge"></span></button><span class="ic-tip">ניהול משתמשים</span></div>
-    <div class="ic-wrap"><button class="ic" id="settings-btn" title="">⚙️</button><span class="ic-tip">הגדרות</span></div>
+    <div class="rail-label">כלים</div>
+    <button class="ic" id="collapse-all-btn"><span class="ic-icon">⊟</span><span class="ic-lbl">כווץ הכל</span></button>
+    <button class="ic" id="theme-btn"><span class="ic-icon">🌙</span><span class="ic-lbl">מצב כהה/בהיר</span></button>
+    <button class="ic" id="export-pdf-btn"><span class="ic-icon">📄</span><span class="ic-lbl">ייצוא PDF</span></button>
+    <div class="ic-sep"></div>
+    <div class="rail-label">כללי</div>
+    <button class="ic" id="help-btn"><span class="ic-icon">❓</span><span class="ic-lbl">עזרה ומדריך</span></button>
+    <button class="ic" id="admin-btn" style="display:none"><span class="ic-icon">👑</span><span id="admin-badge" class="admin-hdr-badge"></span><span class="ic-lbl">ניהול</span></button>
+    <button class="ic" id="settings-btn"><span class="ic-icon">⚙️</span><span class="ic-lbl">הגדרות</span></button>
     <div class="ic-sep" style="margin-top:auto"></div>
-    <div class="ic-wrap"><button class="ic" id="logout-btn" title="">🚪</button><span class="ic-tip">התנתק</span></div>
+    <button class="ic" id="logout-btn" style="color:#e07070"><span class="ic-icon">🚪</span><span class="ic-lbl">התנתק</span></button>
   </div>
 
   <!-- Tracking Full-Screen Overlay -->

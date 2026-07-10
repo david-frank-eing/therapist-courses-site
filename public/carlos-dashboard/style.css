@@ -44,7 +44,7 @@ body {
   color: var(--text);
   font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
   direction: rtl;
-  padding: 20px 16px 60px 62px;
+  padding: 20px 16px 60px 196px;
   line-height: 1.5;
 }
 
@@ -332,7 +332,7 @@ input[type=checkbox] { width: 18px; height: 18px; cursor: pointer; accent-color:
 
 /* timer widget — small, fixed, side */
 #timer-widget {
-  position: fixed; bottom: 16px; left: 16px; width: 200px;
+  position: fixed; bottom: 16px; right: 16px; width: 200px;
   background: var(--card); border: 1px solid #6c8cff44; border-radius: 14px;
   padding: 12px 14px; z-index: 60; box-shadow: 0 8px 28px #0007;
 }
@@ -1415,7 +1415,7 @@ input[type=checkbox] { width: 18px; height: 18px; cursor: pointer; accent-color:
     max-height: none; overflow-y: visible;
   }
 
-  #timer-widget { left: 8px; bottom: 12px; min-width: 140px; }
+  #timer-widget { right: 8px; bottom: 12px; min-width: 140px; }
   #tw-display   { font-size: 1.2rem; }
 
   .pb-modal-inner { width: 95vw; max-height: 85vh; }
@@ -1604,58 +1604,41 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .hs-jd-btn { background: #6c8cff33; color: #6c8cff; border-radius: 6px; padding: 5px 10px; font-size: .8rem; }
 .hs-jd-hist { background: #1e2d3d; color: #8899aa; border-radius: 6px; padding: 5px 10px; font-size: .8rem; }
 
-/* ── Icon Rail (fixed, left side) ── */
+/* ── Icon Rail (fixed, left side) — panel with visible labels ── */
 #icon-rail {
   position: fixed;
   left: 0; top: 0; bottom: 0;
-  width: 46px;
+  width: 180px;
   background: var(--card);
   border-left: 1px solid var(--border);
   display: flex; flex-direction: column;
-  align-items: center;
-  padding: 12px 0 12px;
-  gap: 2px;
+  align-items: stretch;
+  padding: 10px 0;
+  gap: 1px;
   z-index: 100;
-  overflow: visible;
+  overflow: hidden;
 }
-.ic-wrap { position: relative; width: 100%; }
 .ic {
-  display: flex; align-items: center; justify-content: center;
+  display: flex; align-items: center; justify-content: flex-start;
+  gap: 9px; padding: 0 14px;
   width: 100%; height: 40px;
   background: none; border: none; cursor: pointer;
-  color: var(--text2); font-size: 1.1rem;
+  color: var(--text2); font-size: .82rem;
   transition: background .15s, color .15s;
-  font-family: inherit;
+  font-family: inherit; text-align: right;
 }
 .ic:hover { background: var(--hover); color: var(--text); }
-.ic.ic-expand { color: var(--accent); font-size: 1.25rem; }
-.ic.ic-expand:hover { background: var(--accent-dim, rgba(108,140,255,.15)); }
-.ic-sep { width: 24px; height: 1px; background: var(--border); margin: 4px auto; flex-shrink: 0; }
-.ic-tip {
-  position: absolute;
-  top: 50%; transform: translateY(-50%);
-  left: 52px;
-  background: var(--input-bg, #14142a);
-  border: 1px solid var(--border);
-  color: var(--text);
-  font-size: .8rem;
-  padding: 5px 11px;
-  border-radius: 7px;
-  white-space: nowrap;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity .15s;
-  z-index: 999;
-  box-shadow: 0 4px 14px rgba(0,0,0,.4);
+.ic.ic-expand {
+  color: var(--accent); font-weight: 600;
+  background: var(--accent-dim, rgba(108,140,255,.15));
+  border-right: 3px solid var(--accent);
+  margin-bottom: 2px;
 }
-.ic-tip::before {
-  content: '';
-  position: absolute;
-  right: 100%; top: 50%; transform: translateY(-50%);
-  border: 5px solid transparent;
-  border-right-color: var(--border);
-}
-.ic-wrap:hover .ic-tip { opacity: 1; }
+.ic.ic-expand:hover { background: rgba(108,140,255,.25); }
+.ic-icon { font-size: 1.05rem; width: 20px; text-align: center; flex-shrink: 0; }
+.ic-lbl { flex: 1; font-size: .82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ic-sep { height: 1px; background: var(--border); margin: 4px 12px; flex-shrink: 0; }
+.rail-label { font-size: .62rem; font-weight: 700; letter-spacing: .06em; color: var(--text2); text-transform: uppercase; padding: 8px 14px 3px; opacity: .55; }
 
 /* ── Tracking Mini Card ── */
 .tracking-mini-body {

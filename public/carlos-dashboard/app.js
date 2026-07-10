@@ -5257,6 +5257,12 @@ function _scheduleReminders() {
   const now = Date.now();
   let shown = {};
   try { shown = JSON.parse(localStorage.getItem('carlos_reminders_shown') || '{}'); } catch (_) {}
+  let sessionShown = {};
+  try { sessionShown = JSON.parse(sessionStorage.getItem('carlos_session_reminders') || '{}'); } catch (_) {}
+
+  // Group past-due tasks by minute (to show one popup per time slot)
+  const pastByMinute = {}; // epochMinute -> { tasks, timeStr, shownKeys }
+  const toastedMinutes = new Set(); // deduplicate scheduling toasts
 
   tasks.forEach(task => {
     if (!task.reminder_at || task.status === 'completed') return;
@@ -5266,13 +5272,15 @@ function _scheduleReminders() {
     if (shown[shownKey]) return;
 
     const delay = due - now;
+    const minStr = new Date(due).toLocaleTimeString('he-IL', { timeZone: 'Asia/Jerusalem', hour: '2-digit', minute: '2-digit' });
 
-    // Past-due within 10 minutes: fire immediately
+    // Past-due within 10 minutes: collect for grouped popup
     if (delay <= 0) {
       if (delay > -600_000) {
-        shown[shownKey] = true;
-        localStorage.setItem('carlos_reminders_shown', JSON.stringify(shown));
-        _fireReminder(task);
+        const groupKey = '' + Math.floor(due / 60000);
+        if (!pastByMinute[groupKey]) pastByMinute[groupKey] = { tasks: [], timeStr: minStr, shownKeys: [] };
+        pastByMinute[groupKey].tasks.push(task);
+        pastByMinute[groupKey].shownKeys.push(shownKey);
       }
       return;
     }
@@ -5291,8 +5299,21 @@ function _scheduleReminders() {
       }
     }, delay);
     _reminderTimeouts.set(task.id, tid);
-    const minStr = new Date(due).toLocaleTimeString('he-IL', { timeZone: 'Asia/Jerusalem', hour: '2-digit', minute: '2-digit' });
-    toast('🔔 תזכורת נקבעה ל-' + minStr);
+    // One toast per unique minute (not one per task)
+    if (!toastedMinutes.has(minStr)) {
+      toastedMinutes.add(minStr);
+      toast('🔔 תזכורת נקבעה ל-' + minStr);
+    }
+  });
+
+  // Fire grouped past-due reminders — one popup per minute slot per session
+  Object.entries(pastByMinute).forEach(([groupKey, g]) => {
+    if (sessionShown[groupKey]) return; // already shown this browser session
+    g.shownKeys.forEach(k => { shown[k] = true; });
+    localStorage.setItem('carlos_reminders_shown', JSON.stringify(shown));
+    sessionShown[groupKey] = true;
+    sessionStorage.setItem('carlos_session_reminders', JSON.stringify(sessionShown));
+    _fireGroupedReminder(g.tasks, g.timeStr);
   });
 }
 
@@ -5318,6 +5339,24 @@ function _fireReminder(task) {
     } catch (_) {}
   }
   _showReminderPopup(task);
+}
+
+function _fireGroupedReminder(tasks, timeStr) {
+  try { playSound(false); } catch (_) {}
+  if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+    try {
+      const title = tasks.length === 1 ? '⏰ ' + tasks[0].title : '⏰ ' + tasks.length + ' תזכורות ל-' + timeStr;
+      const body = tasks.length === 1 ? (tasks[0].notes || 'משימה לביצוע עכשיו') : tasks.map(t => '• ' + t.title).join('\n');
+      new Notification(title, { body, tag: 'grp_' + timeStr.replace(':', '') });
+    } catch (_) {}
+  }
+  if (tasks.length === 1) { _showReminderPopup(tasks[0]); return; }
+  const el = document.createElement('div');
+  el.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:99999;background:#1e1d38;border:2px solid #4a6aee;border-radius:14px;padding:18px 20px;box-shadow:0 8px 32px rgba(0,0,0,.4);max-width:calc(100vw - 48px);min-width:240px;direction:rtl;font-family:inherit;color:#e8e8f0';
+  el.innerHTML = `<div style="font-size:1.4rem;margin-bottom:6px">⏰</div><div style="font-weight:700;font-size:.95rem;margin-bottom:8px">${tasks.length} תזכורות ל-${_esc(timeStr)}</div>${tasks.map(t => `<div style="font-size:.84rem;color:#c0c4f0;margin:3px 0;line-height:1.4">• ${_esc(t.title)}</div>`).join('')}<div style="display:flex;gap:8px;margin-top:14px"><button style="flex:1;padding:8px;border-radius:8px;background:#4a6aee;color:#fff;border:none;cursor:pointer;font-weight:700;font-size:.85rem">✅ הבנתי</button></div>`;
+  document.body.appendChild(el);
+  el.querySelector('button').addEventListener('click', () => el.remove());
+  setTimeout(() => { if (el.isConnected) el.remove(); }, 300_000);
 }
 
 window.testReminder = () => _fireReminder({ id: 'test', title: 'בדיקת תזכורת', notes: 'אם אתה רואה את זה — זה עובד!' });
