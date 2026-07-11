@@ -297,6 +297,7 @@ async function _generateByokBriefing() {
     const j = await r.json();
     if (!r.ok) throw new Error(j.message || j.error || 'שגיאה');
     toast('✓ בריפינג נוצר');
+    _track('briefing_refreshed');
     loadState();
   } catch (e) {
     toast('שגיאה ביצירת בריפינג: ' + e.message, false);
@@ -368,6 +369,7 @@ function renderTasks(tasks, date, completedToday) {
     cb.addEventListener('change', async () => {
       await api('/api/task', { action: 'toggle', id: cb.dataset.id });
       toast('✓ משימה הושלמה');
+      _track('task_completed');
       loadState();
     }));
 
@@ -501,6 +503,7 @@ function openEditForm(rowEl, kind, id) {
     }
     await api(kind === 'task' ? '/api/task/update' : '/api/content/update', { ...data, id });
     toast('✓ עודכן');
+    _track('task_edited', { kind, category: data.category });
     loadState().then(() => _scheduleReminders());
   });
   const del = form.querySelector('.ef-del');
@@ -725,6 +728,7 @@ function renderHabits(habits, date) {
   document.querySelectorAll('#habit-list input[type=checkbox]').forEach(cb =>
     cb.addEventListener('change', async () => {
       await api('/api/habit', { id: cb.dataset.id });
+      _track('habit_checked');
       loadState();
     }));
 
@@ -968,6 +972,7 @@ $('#add-content').addEventListener('click', async () => {
   $('#new-content-title').value = '';
   document.querySelectorAll('#new-content-platforms input[name="plat"]').forEach(c => c.checked = false);
   toast('✓ נוסף לבנק כרעיון · ' + domainLabel(domain));
+  _track('content_post_added', { domain });
   loadState();
 });
 $('#new-content-title').addEventListener('keydown', e => { if (e.key === 'Enter') $('#add-content').click(); });
@@ -1117,6 +1122,7 @@ function renderOpenLoops(state) {
         // סמן כהושלם → יעבור להיסטוריה
         await api('/api/task', { action: 'toggle', id });
         toast('✓ הועבר להיסטוריה');
+        _track('task_completed');
         loadState();
       } else {
         dismiss(id);
@@ -1217,6 +1223,7 @@ $('#add-task').addEventListener('click', async () => {
     $('#new-task').value = ''; $('#new-task-date').value = todayStr(); $('#new-task-time').value = '';
     $('#new-task-category').value = 'general'; $('#new-task-priority').value = 'normal';
     toast('✓ ' + (date ? 'משימה נקבעה ל-' + (date === todayStr() ? 'היום' : date) + (time ? ' ' + time : '') : 'המשימה נוספה'));
+    _track('task_added', { category, priority });
     loadState().then(() => _scheduleReminders());
   } finally {
     btn.disabled = false;
@@ -1532,6 +1539,7 @@ $('#tw-start').addEventListener('click', () => {
   $('#tw-start').classList.add('hidden');
   $('#tw-stop').classList.remove('hidden');
   interval = setInterval(tick, 1000);
+  _track('timer_started', { mode: timerMode });
   if (timerMode === 'timer') endTimeout = setTimeout(triggerFinish, plannedTotal * 1000);
   if ('Notification' in window && Notification.permission === 'default') {
     try { Notification.requestPermission(); } catch (e) {}
@@ -3496,7 +3504,7 @@ document.getElementById('logout-btn')?.addEventListener('click', async () => {
 });
 
 // ---------- Settings Modal ----------
-document.getElementById('settings-btn')?.addEventListener('click', openSettings);
+document.getElementById('settings-btn')?.addEventListener('click', () => { _track('settings_opened'); openSettings(); });
 document.getElementById('settings-close')?.addEventListener('click', () =>
   document.getElementById('settings-modal')?.classList.add('hidden'));
 document.getElementById('settings-modal')?.addEventListener('click', (e) => {
@@ -4556,6 +4564,7 @@ function renderSettings(s, bodyEl) {
 
 // ---------- PDF Export ----------
 document.getElementById('export-pdf-btn')?.addEventListener('click', () => {
+  _track('export_pdf_clicked');
   // Expand all collapsed sections before print
   const collapsed = [];
   document.querySelectorAll('.card.collapsible .section-body').forEach(b => {
@@ -4601,6 +4610,7 @@ document.getElementById('theme-btn')?.addEventListener('click', () => {
   _darkMode = !_darkMode;
   localStorage.setItem('carlos-theme', _darkMode ? 'dark' : 'light');
   applyTheme();
+  _track('theme_toggled', { new_theme: _darkMode ? 'dark' : 'light' });
 });
 
 // ---------- Booking ----------
@@ -5181,6 +5191,7 @@ function _initApp() {
 
   // Tracking overlay open/close
   const _openTracking = () => {
+    _track('tracking_overlay_opened');
     document.getElementById('tracking-overlay')?.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
   };
@@ -5220,7 +5231,7 @@ function _initApp() {
       const isLoops = tab.dataset.vtab === 'loops';
       document.getElementById('tasks-view')?.classList.toggle('hidden', isLoops);
       document.getElementById('loops-view')?.classList.toggle('hidden', !isLoops);
-      if (isLoops && lastState) renderOpenLoops(lastState);
+      if (isLoops) { _track('open_loops_viewed'); if (lastState) renderOpenLoops(lastState); }
     });
   });
 
@@ -5251,6 +5262,16 @@ function _initApp() {
   }
 }
 
+// ---------- Analytics ----------
+async function _track(name, props = {}) {
+  try {
+    const sb = window._supabase;
+    const uid = window._userId;
+    if (!sb || !uid) return;
+    sb.from('events').insert({ user_id: uid, event_name: name, properties: props }).then(() => {});
+  } catch (_) {}
+}
+
 // ---------- Task Reminders ----------
 function _scheduleReminders() {
   const tasks = (lastState && lastState.tasks) || [];
@@ -5259,6 +5280,15 @@ function _scheduleReminders() {
   try { shown = JSON.parse(localStorage.getItem('carlos_reminders_shown') || '{}'); } catch (_) {}
   let sessionShown = {};
   try { sessionShown = JSON.parse(sessionStorage.getItem('carlos_session_reminders') || '{}'); } catch (_) {}
+
+  // Pre-compute which future minutes contain urgent tasks (for toast prefix)
+  const urgentMinutes = new Set();
+  tasks.forEach(t => {
+    if (!t.reminder_at || t.status === 'completed' || t.priority !== 'urgent') return;
+    const due = new Date(t.reminder_at).getTime();
+    if (isNaN(due) || due - now <= 0 || shown[t.id + '_' + due]) return;
+    urgentMinutes.add(new Date(due).toLocaleTimeString('he-IL', { timeZone: 'Asia/Jerusalem', hour: '2-digit', minute: '2-digit' }));
+  });
 
   // Group past-due tasks by minute (to show one popup per time slot)
   const pastByMinute = {}; // epochMinute -> { tasks, timeStr, shownKeys }
@@ -5302,7 +5332,7 @@ function _scheduleReminders() {
     // One toast per unique minute (not one per task)
     if (!toastedMinutes.has(minStr)) {
       toastedMinutes.add(minStr);
-      toast('🔔 תזכורת נקבעה ל-' + minStr);
+      toast((urgentMinutes.has(minStr) ? '⚠️ תזכורת דחופה ל-' : '🔔 תזכורת ל-') + minStr);
     }
   });
 
@@ -5350,12 +5380,15 @@ function _fireGroupedReminder(tasks, timeStr) {
       new Notification(title, { body, tag: 'grp_' + timeStr.replace(':', '') });
     } catch (_) {}
   }
-  if (tasks.length === 1) { _showReminderPopup(tasks[0]); return; }
+  if (tasks.length === 1) { _showReminderPopup(tasks[0], true); return; }
   const el = document.createElement('div');
-  el.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:99999;background:#1e1d38;border:2px solid #4a6aee;border-radius:14px;padding:18px 20px;box-shadow:0 8px 32px rgba(0,0,0,.4);max-width:calc(100vw - 48px);min-width:240px;direction:rtl;font-family:inherit;color:#e8e8f0';
-  el.innerHTML = `<div style="font-size:1.4rem;margin-bottom:6px">⏰</div><div style="font-weight:700;font-size:.95rem;margin-bottom:8px">${tasks.length} תזכורות ל-${_esc(timeStr)}</div>${tasks.map(t => `<div style="font-size:.84rem;color:#c0c4f0;margin:3px 0;line-height:1.4">• ${_esc(t.title)}</div>`).join('')}<div style="display:flex;gap:8px;margin-top:14px"><button style="flex:1;padding:8px;border-radius:8px;background:#4a6aee;color:#fff;border:none;cursor:pointer;font-weight:700;font-size:.85rem">✅ הבנתי</button></div>`;
+  el.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:99999;background:#221515;border:2px solid #e07060;border-radius:14px;padding:18px 20px;box-shadow:0 8px 32px rgba(0,0,0,.4);max-width:calc(100vw - 48px);min-width:240px;direction:rtl;font-family:inherit;color:#e8e8f0';
+  el.innerHTML = `<div style="font-size:1.4rem;margin-bottom:6px">⏰</div><div style="font-weight:700;font-size:.95rem;margin-bottom:8px">${tasks.length} תזכורות ל-${_esc(timeStr)}</div>${tasks.map(t => `<div style="font-size:.84rem;color:#c0c4f0;margin:3px 0;line-height:1.4">• ${_esc(t.title)}</div>`).join('')}<div style="display:flex;gap:8px;margin-top:14px"><button style="flex:1;padding:8px;border-radius:8px;background:#c0504a;color:#fff;border:none;cursor:pointer;font-weight:700;font-size:.85rem">✅ הבנתי</button></div>`;
   document.body.appendChild(el);
-  el.querySelector('button').addEventListener('click', () => el.remove());
+  el.querySelector('button').addEventListener('click', () => {
+    _track('reminder_dismissed', { overdue: true, count: tasks.length });
+    el.remove();
+  });
   setTimeout(() => { if (el.isConnected) el.remove(); }, 300_000);
 }
 
@@ -5369,26 +5402,38 @@ window.cr = () => {
   toast('🔔 אופס (' + withR.length + ' תזכורות)');
 };
 
-function _showReminderPopup(task) {
+function _showReminderPopup(task, overdue = false) {
+  const isUrgent = !overdue && task.priority === 'urgent';
+  const isRed    = isUrgent || overdue;
+  const borderColor = isRed ? '#e07060' : '#4a6aee';
+  const bg          = isRed ? '#221515' : '#1e1d38';
+  const btnBg       = isRed ? '#c0504a' : '#4a6aee';
+  const badge = isUrgent
+    ? '<span style="font-size:.72rem;background:#c0504a;color:#fff;padding:1px 7px;border-radius:10px;margin-right:6px;font-weight:700">דחוף!</span>'
+    : '';
   const el = document.createElement('div');
   el.style.cssText = [
     'position:fixed','bottom:24px','right:24px','z-index:99999',
-    'background:#1e1d38','border:2px solid #4a6aee','border-radius:14px',
+    `background:${bg}`,`border:2px solid ${borderColor}`,'border-radius:14px',
     'padding:18px 20px','box-shadow:0 8px 32px rgba(0,0,0,.4)',
     'max-width:300px','min-width:240px','direction:rtl','font-family:inherit',
     'color:#e8e8f0','animation:none'
   ].join(';');
   el.innerHTML = `
     <div style="font-size:1.6rem;margin-bottom:6px">⏰</div>
-    <div style="font-weight:700;font-size:1rem;margin-bottom:4px">${_esc(task.title)}</div>
+    <div style="font-weight:700;font-size:1rem;margin-bottom:4px">${badge}${_esc(task.title)}</div>
     <div style="font-size:.82rem;color:#aaa;margin-bottom:14px;line-height:1.5">${_esc(task.notes || 'הגיע הזמן לבצע את המשימה')}</div>
     <div style="display:flex;gap:8px">
-      <button class="reminder-dismiss" style="flex:1;padding:8px;border-radius:8px;background:#4a6aee;color:#fff;border:none;cursor:pointer;font-weight:700;font-size:.85rem">✅ הבנתי</button>
+      <button class="reminder-dismiss" style="flex:1;padding:8px;border-radius:8px;background:${btnBg};color:#fff;border:none;cursor:pointer;font-weight:700;font-size:.85rem">✅ הבנתי</button>
       <button class="reminder-snooze" style="flex:1;padding:8px;border-radius:8px;background:transparent;border:1px solid #444;color:#aaa;cursor:pointer;font-size:.85rem">😴 10 דקות</button>
     </div>`;
   document.body.appendChild(el);
-  el.querySelector('.reminder-dismiss').addEventListener('click', () => el.remove());
+  el.querySelector('.reminder-dismiss').addEventListener('click', () => {
+    _track('reminder_dismissed', { overdue });
+    el.remove();
+  });
   el.querySelector('.reminder-snooze').addEventListener('click', () => {
+    _track('reminder_snoozed');
     el.remove();
     try {
       const shown = JSON.parse(localStorage.getItem('carlos_reminders_shown') || '{}');
