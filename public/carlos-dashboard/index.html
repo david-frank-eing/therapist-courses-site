@@ -540,5 +540,21 @@
       <div id="admin-modal-body"></div>
     </div>
   </div>
+
+  <!-- Mobile bottom navigation (hidden on desktop via CSS) -->
+  <nav id="mobile-nav" aria-label="ניווט מהיר">
+    <button class="mnav-btn" onclick="document.getElementById('tasks')?.scrollIntoView({behavior:'smooth',block:'start'})">
+      <span class="mnav-icon">📋</span><span>משימות</span>
+    </button>
+    <button class="mnav-btn" onclick="document.getElementById('open-tracking-rail-btn')?.click()">
+      <span class="mnav-icon">🎯</span><span>מעקב</span>
+    </button>
+    <button class="mnav-btn" onclick="document.getElementById('theme-btn')?.click()">
+      <span class="mnav-icon">🌙</span><span>ערכה</span>
+    </button>
+    <button class="mnav-btn" onclick="document.getElementById('settings-btn')?.click()">
+      <span class="mnav-icon">⚙️</span><span>הגדרות</span>
+    </button>
+  </nav>
 </body>
 </html>

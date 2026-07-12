@@ -1403,10 +1403,56 @@ input[type=checkbox] { width: 18px; height: 18px; cursor: pointer; accent-color:
 .bk-link-btn, .bk-profile-btn { background: var(--bg); color: var(--text2); border: 1px solid var(--border); padding: 7px 14px; font-size: .88rem; border-radius: 9px; cursor: pointer; }
 .bk-link-btn:hover, .bk-profile-btn:hover { border-color: var(--accent); color: var(--accent); }
 
+/* ── Icon rail — hide on any non-desktop screen ── */
+@media (max-width: 1024px) {
+  #icon-rail { display: none !important; }
+  body { padding-left: 16px !important; }
+}
+
+/* ── Mobile bottom nav (replaces icon rail) ── */
+#mobile-nav { display: none; }
+
 /* ── Mobile — מסך קטן ── */
 @media (max-width: 768px) {
-  body { padding: 12px 10px 100px 10px; }
-  #icon-rail { display: none; }
+  body { padding: 12px 10px 80px 10px; }
+  #icon-rail { display: none !important; }
+
+  /* Bottom nav */
+  #mobile-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 58px;
+    background: var(--card);
+    border-top: 1px solid var(--border);
+    z-index: 200;
+    justify-content: space-around;
+    align-items: center;
+    padding: 0 4px;
+    padding-bottom: env(safe-area-inset-bottom, 0);
+    box-shadow: 0 -2px 16px rgba(0,0,0,.35);
+  }
+  .mnav-btn {
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+    background: none; border: none; color: var(--text-muted);
+    font-family: inherit; font-size: .62rem; font-weight: 500;
+    padding: 6px 10px; cursor: pointer; border-radius: 10px;
+    min-height: 48px; justify-content: center; transition: color .15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .mnav-btn:active { color: var(--accent); background: var(--hover); }
+  .mnav-icon { font-size: 1.25rem; line-height: 1; }
+
+  /* Toast — bottom of screen above nav */
+  #toast-area {
+    top: auto !important;
+    bottom: 66px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  /* Timer — don't overlap bottom nav */
+  #timer-widget { bottom: 68px !important; right: 8px; }
 
   .layout { grid-template-columns: 1fr; }
   .main-col { order: 1; }
