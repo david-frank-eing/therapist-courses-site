@@ -269,6 +269,17 @@
           <div id="ask-response" class="hidden"></div>
         </div>
 
+        <div class="sb-card" id="analytics-card">
+          <div class="sb-title">📊 שימוש בפיצ'רים</div>
+          <div id="analytics-body" class="analytics-body">
+            <div class="muted-text" style="font-size:.85rem">טוען...</div>
+          </div>
+          <div id="analytics-range" class="analytics-range">
+            <button class="anl-range-btn active" data-days="7">7 ימים</button>
+            <button class="anl-range-btn" data-days="30">30 ימים</button>
+          </div>
+        </div>
+
       </aside>
 
       <!-- Playbook Modal -->
@@ -549,12 +560,24 @@
     <button class="mnav-btn" onclick="document.getElementById('open-tracking-rail-btn')?.click()">
       <span class="mnav-icon">🎯</span><span>מעקב</span>
     </button>
-    <button class="mnav-btn" onclick="document.getElementById('theme-btn')?.click()">
-      <span class="mnav-icon">🌙</span><span>ערכה</span>
-    </button>
     <button class="mnav-btn" onclick="document.getElementById('settings-btn')?.click()">
       <span class="mnav-icon">⚙️</span><span>הגדרות</span>
     </button>
+    <button class="mnav-btn" id="mnav-more-btn" onclick="_mnavMore()">
+      <span class="mnav-icon">⋯</span><span>עוד</span>
+    </button>
   </nav>
+
+  <!-- Mobile bottom drawer (slide-up menu for extra actions) -->
+  <div id="mnav-drawer" style="display:none">
+    <div id="mnav-drawer-backdrop" onclick="_mnavClose()"></div>
+    <div id="mnav-drawer-panel">
+      <button class="mnav-drawer-btn" onclick="_mnavClose();document.getElementById('theme-btn')?.click()">🌙 מצב כהה/בהיר</button>
+      <button class="mnav-drawer-btn" onclick="_mnavClose();document.getElementById('collapse-all-btn')?.click()">⊟ כווץ הכל</button>
+      <button class="mnav-drawer-btn" onclick="_mnavClose();document.getElementById('export-pdf-btn')?.click()">📄 ייצוא PDF</button>
+      <button class="mnav-drawer-btn" onclick="_mnavClose();document.getElementById('help-btn')?.click()">❓ עזרה ומדריך</button>
+      <button class="mnav-drawer-btn" style="color:#e07070" onclick="_mnavClose();document.getElementById('logout-btn')?.click()">🚪 התנתק</button>
+    </div>
+  </div>
 </body>
 </html>

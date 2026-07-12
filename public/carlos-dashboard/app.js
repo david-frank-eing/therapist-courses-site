@@ -125,6 +125,7 @@ async function loadState() {
   renderBookingAlerts(s.bookingData && s.bookingData.notifications, s.bookingData && s.bookingData.appointments);
   renderPlaybookSidebar(s.userConfig && s.userConfig.domains, s.playbooks);
   renderRefreshStatus(s.lastRefresh, s.date);
+  renderAnalytics(7);
 }
 
 function renderRefreshStatus(lastRefresh, todayDate) {
@@ -5262,7 +5263,56 @@ function _initApp() {
   }
 }
 
+// ---------- Mobile nav drawer ----------
+function _mnavMore() { document.getElementById('mnav-drawer').style.display = 'block'; }
+function _mnavClose() { document.getElementById('mnav-drawer').style.display = 'none'; }
+
 // ---------- Analytics ----------
+async function renderAnalytics(days = 7) {
+  const body = document.getElementById('analytics-body');
+  if (!body) return;
+  const sb = window._supabase;
+  const uid = window._userId;
+  if (!sb || !uid) { body.innerHTML = '<div class="muted-text" style="font-size:.85rem">זמין לאחר התחברות</div>'; return; }
+  body.innerHTML = '<div class="muted-text" style="font-size:.85rem">טוען...</div>';
+  try {
+    const since = new Date(Date.now() - days * 86400_000).toISOString();
+    const { data, error } = await sb.from('events')
+      .select('event_name')
+      .eq('user_id', uid)
+      .gte('created_at', since);
+    if (error) throw error;
+    if (!data || !data.length) { body.innerHTML = '<div class="muted-text" style="font-size:.85rem">אין נתונים עדיין</div>'; return; }
+    const counts = {};
+    data.forEach(r => { counts[r.event_name] = (counts[r.event_name] || 0) + 1; });
+    const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 10);
+    const max = sorted[0][1];
+    const labels = {
+      task_added: 'משימה נוספה', task_completed: 'משימה הושלמה', task_edited: 'משימה נערכה',
+      habit_checked: 'הרגל סומן', timer_started: 'טיימר הופעל', tracking_overlay_opened: 'מעקב ויעדים',
+      open_loops_viewed: 'לולאות פתוחות', theme_toggled: 'ערכת צבעים', export_pdf_clicked: 'ייצוא PDF',
+      settings_opened: 'הגדרות', briefing_refreshed: 'בריפינג', content_post_added: 'תוכן נוסף',
+      reminder_dismissed: 'תזכורת אושרה', reminder_snoozed: 'תזכורת נדחתה'
+    };
+    body.innerHTML = sorted.map(([name, n]) => `
+      <div class="anl-row">
+        <span class="anl-label">${labels[name] || name}</span>
+        <div class="anl-bar-wrap"><div class="anl-bar" style="width:${Math.round(n/max*100)}%"></div></div>
+        <span class="anl-count">${n}</span>
+      </div>`).join('');
+  } catch (e) {
+    body.innerHTML = '<div class="muted-text" style="font-size:.82rem">שגיאה בטעינה — צור טבלת events ב-Supabase</div>';
+  }
+}
+
+document.getElementById('analytics-range')?.querySelectorAll('.anl-range-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.anl-range-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderAnalytics(+btn.dataset.days);
+  });
+});
+
 async function _track(name, props = {}) {
   try {
     const sb = window._supabase;
