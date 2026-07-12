@@ -5292,7 +5292,8 @@ function _scheduleReminders() {
 
   // Group past-due tasks by minute (to show one popup per time slot)
   const pastByMinute = {}; // epochMinute -> { tasks, timeStr, shownKeys }
-  const toastedMinutes = new Set(); // deduplicate scheduling toasts
+  let toastedMinutes;
+  try { toastedMinutes = new Set(JSON.parse(sessionStorage.getItem('carlos_toasted_mins') || '[]')); } catch (_) { toastedMinutes = new Set(); }
 
   tasks.forEach(task => {
     if (!task.reminder_at || task.status === 'completed') return;
@@ -5332,6 +5333,7 @@ function _scheduleReminders() {
     // One toast per unique minute (not one per task)
     if (!toastedMinutes.has(minStr)) {
       toastedMinutes.add(minStr);
+      try { sessionStorage.setItem('carlos_toasted_mins', JSON.stringify([...toastedMinutes])); } catch (_) {}
       toast((urgentMinutes.has(minStr) ? '⚠️ תזכורת דחופה ל-' : '🔔 תזכורת ל-') + minStr);
     }
   });
