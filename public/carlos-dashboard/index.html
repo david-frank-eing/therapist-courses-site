@@ -235,17 +235,6 @@
           </div>
         </section>
 
-        <section class="card" id="analytics-card">
-          <h2>📊 שימוש בפיצ'רים</h2>
-          <div id="analytics-body" class="analytics-body">
-            <div class="muted-text" style="font-size:.85rem">טוען...</div>
-          </div>
-          <div id="analytics-range" class="analytics-range" style="margin-top:8px">
-            <button class="anl-range-btn active" data-days="7">7 ימים</button>
-            <button class="anl-range-btn" data-days="30">30 ימים</button>
-          </div>
-        </section>
-
         <footer class="ver"><span id="footer-asst">קרלוס דאשבורד</span> · גרסה 3.5</footer>
       </main>
 
@@ -413,6 +402,26 @@
     </div>
   </div>
 
+  <!-- Analytics Modal -->
+  <div id="analytics-modal" class="settings-modal hidden">
+    <div class="settings-inner">
+      <div class="settings-head">
+        <span>📊 שימוש בפיצ'רים</span>
+        <button id="analytics-close">✕</button>
+      </div>
+      <div style="padding:0 20px 8px">
+        <div id="analytics-range" class="analytics-range">
+          <button class="anl-range-btn active" data-days="7">7 ימים</button>
+          <button class="anl-range-btn" data-days="30">30 ימים</button>
+          <button class="anl-range-btn" data-days="90">90 ימים</button>
+        </div>
+      </div>
+      <div id="analytics-body" class="analytics-body" style="padding:0 20px 20px">
+        <div class="muted-text" style="font-size:.85rem">טוען...</div>
+      </div>
+    </div>
+  </div>
+
   <!-- Settings Modal -->
   <div id="settings-modal" class="settings-modal hidden">
     <div class="settings-inner">
@@ -437,6 +446,7 @@
     <button class="ic" id="help-btn"><span class="ic-icon">❓</span><span class="ic-lbl">עזרה ומדריך</span></button>
     <button class="ic" id="admin-btn" style="display:none"><span class="ic-icon">👑</span><span id="admin-badge" class="admin-hdr-badge"></span><span class="ic-lbl">ניהול</span></button>
     <button class="ic" id="settings-btn"><span class="ic-icon">⚙️</span><span class="ic-lbl">הגדרות</span></button>
+    <button class="ic" id="analytics-rail-btn" style="display:none" onclick="openAnalytics()"><span class="ic-icon">📊</span><span class="ic-lbl">שימוש בפיצ'רים</span></button>
     <div class="ic-sep" style="margin-top:auto"></div>
     <button class="ic" id="logout-btn" style="color:#e07070"><span class="ic-icon">🚪</span><span class="ic-lbl">התנתק</span></button>
   </div>

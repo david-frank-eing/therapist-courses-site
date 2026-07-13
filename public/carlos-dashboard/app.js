@@ -5273,17 +5273,14 @@ function _mnavMore() { document.getElementById('mnav-drawer').style.display = 'b
 function _mnavClose() { document.getElementById('mnav-drawer').style.display = 'none'; }
 
 // ---------- Analytics ----------
+let _analyticsCurrentDays = 7;
+
 async function renderAnalytics(days = 7) {
-  const card = document.getElementById('analytics-card');
+  _analyticsCurrentDays = days;
   const railBtn = document.getElementById('analytics-rail-btn');
   const body = document.getElementById('analytics-body');
   if (!body) return;
-  // Admin only
-  if (!window._isAdmin) {
-    if (card) card.style.display = 'none';
-    return;
-  }
-  if (card) card.style.display = '';
+  if (!window._isAdmin) return;
   if (railBtn) railBtn.style.display = '';
   const sb = window._supabase;
   if (!sb) { body.innerHTML = '<div class="muted-text" style="font-size:.85rem">זמין לאחר התחברות</div>'; return; }
@@ -5294,36 +5291,56 @@ async function renderAnalytics(days = 7) {
       .select('event_name')
       .gte('created_at', since); // no user_id filter — admin sees all users
     if (error) throw error;
-    if (!data || !data.length) { body.innerHTML = '<div class="muted-text" style="font-size:.85rem">אין נתונים עדיין</div>'; return; }
+    if (!data || !data.length) {
+      body.innerHTML = '<div class="muted-text" style="font-size:.85rem">אין נתונים עדיין — פיצ\'רים ישמרו לאחר השימוש הבא</div>';
+      return;
+    }
     const counts = {};
     data.forEach(r => { counts[r.event_name] = (counts[r.event_name] || 0) + 1; });
-    const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 10);
+    const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 15);
     const max = sorted[0][1];
+    const total = data.length;
     const labels = {
-      task_added: 'משימה נוספה', task_completed: 'משימה הושלמה', task_edited: 'משימה נערכה',
-      habit_checked: 'הרגל סומן', timer_started: 'טיימר הופעל', tracking_overlay_opened: 'מעקב ויעדים',
-      open_loops_viewed: 'לולאות פתוחות', theme_toggled: 'ערכת צבעים', export_pdf_clicked: 'ייצוא PDF',
-      settings_opened: 'הגדרות', briefing_refreshed: 'בריפינג', content_post_added: 'תוכן נוסף',
-      reminder_dismissed: 'תזכורת אושרה', reminder_snoozed: 'תזכורת נדחתה'
+      task_added: '➕ משימה נוספה', task_completed: '✅ משימה הושלמה', task_edited: '✏️ משימה נערכה',
+      habit_checked: '🔁 הרגל סומן', timer_started: '⏱️ טיימר הופעל', tracking_overlay_opened: '📊 מעקב ויעדים נפתח',
+      open_loops_viewed: '🔓 לולאות פתוחות נצפו', theme_toggled: '🌙 ערכת צבעים שונתה', export_pdf_clicked: '📄 ייצוא PDF',
+      settings_opened: '⚙️ הגדרות נפתחו', briefing_refreshed: '🌅 בריפינג רועננן', content_post_added: '📝 תוכן נוסף',
+      reminder_dismissed: '🔔 תזכורת אושרה', reminder_snoozed: '⏸️ תזכורת נדחתה'
     };
-    body.innerHTML = sorted.map(([name, n]) => `
+    body.innerHTML = `
+      <div class="anl-summary">סה"כ <strong>${total}</strong> פעולות ב-${days} הימים האחרונים</div>
+      <div class="anl-header"><span class="anl-label">פיצ'ר</span><span class="anl-hdr-count">שימושים</span></div>
+      ${sorted.map(([name, n]) => `
       <div class="anl-row">
         <span class="anl-label">${labels[name] || name}</span>
         <div class="anl-bar-wrap"><div class="anl-bar" style="width:${Math.round(n/max*100)}%"></div></div>
-        <span class="anl-count">${n}</span>
-      </div>`).join('');
+        <span class="anl-count">${n}×</span>
+      </div>`).join('')}`;
   } catch (e) {
     body.innerHTML = `<div class="muted-text" style="font-size:.82rem">שגיאה: ${e.message || JSON.stringify(e)}</div>`;
   }
 }
 
-document.getElementById('analytics-range')?.querySelectorAll('.anl-range-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.anl-range-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    renderAnalytics(+btn.dataset.days);
-  });
-});
+let _analyticsListenersWired = false;
+function openAnalytics() {
+  const modal = document.getElementById('analytics-modal');
+  if (!modal) return;
+  modal.classList.remove('hidden');
+  if (!_analyticsListenersWired) {
+    _analyticsListenersWired = true;
+    document.getElementById('analytics-close')?.addEventListener('click', () => {
+      document.getElementById('analytics-modal')?.classList.add('hidden');
+    });
+    document.getElementById('analytics-range')?.querySelectorAll('.anl-range-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#analytics-range .anl-range-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderAnalytics(+btn.dataset.days);
+      });
+    });
+  }
+  renderAnalytics(_analyticsCurrentDays);
+}
 
 async function _track(name, props = {}) {
   try {
