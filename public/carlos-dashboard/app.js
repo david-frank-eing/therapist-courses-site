@@ -5274,18 +5274,25 @@ function _mnavClose() { document.getElementById('mnav-drawer').style.display = '
 
 // ---------- Analytics ----------
 async function renderAnalytics(days = 7) {
+  const card = document.getElementById('analytics-card');
+  const railBtn = document.getElementById('analytics-rail-btn');
   const body = document.getElementById('analytics-body');
   if (!body) return;
+  // Admin only
+  if (!window._isAdmin) {
+    if (card) card.style.display = 'none';
+    return;
+  }
+  if (card) card.style.display = '';
+  if (railBtn) railBtn.style.display = '';
   const sb = window._supabase;
-  const uid = window._userId;
-  if (!sb || !uid) { body.innerHTML = '<div class="muted-text" style="font-size:.85rem">זמין לאחר התחברות</div>'; return; }
+  if (!sb) { body.innerHTML = '<div class="muted-text" style="font-size:.85rem">זמין לאחר התחברות</div>'; return; }
   body.innerHTML = '<div class="muted-text" style="font-size:.85rem">טוען...</div>';
   try {
     const since = new Date(Date.now() - days * 86400_000).toISOString();
     const { data, error } = await sb.from('events')
       .select('event_name')
-      .eq('user_id', uid)
-      .gte('created_at', since);
+      .gte('created_at', since); // no user_id filter — admin sees all users
     if (error) throw error;
     if (!data || !data.length) { body.innerHTML = '<div class="muted-text" style="font-size:.85rem">אין נתונים עדיין</div>'; return; }
     const counts = {};
