@@ -2547,7 +2547,9 @@ function initSectionToggles() {
       const b = s.querySelector('.section-body');
       return b && b.style.display !== 'none';
     });
-    collapseAllBtn.textContent = anyExpanded ? '⊟' : '⊞';
+    const cIcon = collapseAllBtn.querySelector('.ic-icon');
+    const emoji = anyExpanded ? '⊟' : '⊞';
+    if (cIcon) cIcon.textContent = emoji; else collapseAllBtn.textContent = emoji;
     collapseAllBtn.title = anyExpanded ? 'כווץ את כל החלונות' : 'הרחב את כל החלונות';
   };
   collapseAllBtn.addEventListener('click', () => {
@@ -4605,7 +4607,10 @@ let _darkMode = localStorage.getItem('carlos-theme') !== 'light';
 function applyTheme() {
   document.body.classList.toggle('light-mode', !_darkMode);
   const btn = document.getElementById('theme-btn');
-  if (btn) btn.textContent = _darkMode ? '🌙' : '☀️';
+  if (!btn) return;
+  const icon = btn.querySelector('.ic-icon');
+  if (icon) icon.textContent = _darkMode ? '🌙' : '☀️';
+  else btn.textContent = _darkMode ? '🌙' : '☀️';
 }
 document.getElementById('theme-btn')?.addEventListener('click', () => {
   _darkMode = !_darkMode;
@@ -5301,7 +5306,7 @@ async function renderAnalytics(days = 7) {
         <span class="anl-count">${n}</span>
       </div>`).join('');
   } catch (e) {
-    body.innerHTML = '<div class="muted-text" style="font-size:.82rem">שגיאה בטעינה — צור טבלת events ב-Supabase</div>';
+    body.innerHTML = `<div class="muted-text" style="font-size:.82rem">שגיאה: ${e.message || JSON.stringify(e)}</div>`;
   }
 }
 
