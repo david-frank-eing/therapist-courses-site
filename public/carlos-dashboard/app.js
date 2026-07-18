@@ -3941,9 +3941,9 @@ async function _googleDisconnect() {
   loadConnectionsDiagnose();
 }
 
-async function _googleRefreshData() {
+async function _googleRefreshData(silent = false) {
   if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
-    toast('⚠️ רענון Google לא זמין בהרצה מקומית', false);
+    if (!silent) toast('⚠️ רענון Google לא זמין בהרצה מקומית', false);
     return;
   }
   const btn = document.getElementById('conn-google-refresh');
@@ -3951,19 +3951,21 @@ async function _googleRefreshData() {
   try {
     const { data } = await window._supabase.auth.getSession();
     const session = data?.session;
-    if (!session) { toast('נדרשת כניסה מחדש', false); return; }
+    if (!session) { if (!silent) toast('נדרשת כניסה מחדש', false); return; }
     const r = await fetch('/.netlify/functions/google-data', {
       headers: { Authorization: 'Bearer ' + session.access_token }
     });
     const d = await r.json();
     if (d.connected) {
-      toast('✓ יומן ומיילים עודכנו');
+      if (!silent) toast('✓ יומן ומיילים עודכנו');
       loadState().then(() => _scheduleReminders());
     } else {
-      toast('שגיאה ברענון', false);
+      if (!silent) toast('שגיאה ברענון', false);
+      else loadState(); // silent: עדכן bar בלי toast
     }
   } catch(e) {
-    toast('שגיאה: ' + e.message, false);
+    if (!silent) toast('שגיאה: ' + e.message, false);
+    else loadState();
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = '🔄 רענן'; }
   }
@@ -5252,7 +5254,7 @@ function _initApp() {
         msg.innerHTML = '🔄 מרענן יומן ומיילים...';
         bar.classList.remove('hidden');
       }
-      _googleRefreshData();
+      _googleRefreshData(true); // silent — ללא toast בטעינה אוטומטית
     }
     // Schedule reminders with exact setTimeout for each task
     _scheduleReminders();
