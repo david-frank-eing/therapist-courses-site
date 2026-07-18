@@ -3949,9 +3949,13 @@ async function _googleRefreshData(silent = false) {
   const btn = document.getElementById('conn-google-refresh');
   if (btn) { btn.disabled = true; btn.textContent = '⏳ מרענן...'; }
   try {
-    const { data } = await window._supabase.auth.getSession();
-    const session = data?.session;
+    // תיקון 1: רענון JWT אם פג תוקף לפני קריאה לפונקציה
+    let { data: { session } } = await window._supabase.auth.getSession();
     if (!session) { if (!silent) toast('נדרשת כניסה מחדש', false); return; }
+    if (!session.expires_at || session.expires_at * 1000 < Date.now() + 60000) {
+      const { data: refreshed } = await window._supabase.auth.refreshSession();
+      session = refreshed?.session || session;
+    }
     const r = await fetch('/.netlify/functions/google-data', {
       headers: { Authorization: 'Bearer ' + session.access_token }
     });
@@ -3959,9 +3963,14 @@ async function _googleRefreshData(silent = false) {
     if (d.connected) {
       if (!silent) toast('✓ יומן ומיילים עודכנו');
       loadState().then(() => _scheduleReminders());
+    } else if (d.error && d.error.includes('Auth failed')) {
+      // תיקון 2a: שגיאת JWT — הסבר ספציפי
+      if (!silent) toast('⚠️ יש להתחבר מחדש לחשבון', false);
+      else loadState();
     } else {
-      if (!silent) toast('שגיאה ברענון', false);
-      else loadState(); // silent: עדכן bar בלי toast
+      // תיקון 2b: Google לא מחובר — הסבר היכן להתחבר
+      if (!silent) toast('Google לא מחובר — התחבר ב-⚙️ הגדרות → 🔌 חיבורים', false, 5000);
+      else loadState();
     }
   } catch(e) {
     if (!silent) toast('שגיאה: ' + e.message, false);
@@ -5244,17 +5253,21 @@ function _initApp() {
   });
 
   loadState().then(() => {
-    // Auto-refresh Google data on every page load (cloud only)
+    // תיקון 3: Auto-refresh רק אם נתונים לא טריים מהיום
     if (location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
-      // Show immediate "refreshing" indicator in the bar
-      const bar = document.getElementById('auto-refresh-bar');
-      const msg = document.getElementById('auto-refresh-msg');
-      if (bar && msg && !bar.classList.contains('auto-refresh-ok')) {
-        bar.className = 'auto-refresh-bar auto-refresh-warn';
-        msg.innerHTML = '🔄 מרענן יומן ומיילים...';
-        bar.classList.remove('hidden');
+      const lr = lastState?.lastRefresh;
+      const todayDate = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' });
+      const alreadyFreshToday = lr?.date === todayDate && lr?.status === 'success';
+      if (!alreadyFreshToday) {
+        const bar = document.getElementById('auto-refresh-bar');
+        const msg = document.getElementById('auto-refresh-msg');
+        if (bar && msg) {
+          bar.className = 'auto-refresh-bar auto-refresh-warn';
+          msg.innerHTML = '🔄 מרענן יומן ומיילים...';
+          bar.classList.remove('hidden');
+        }
+        _googleRefreshData(true); // silent — ללא toast
       }
-      _googleRefreshData(true); // silent — ללא toast בטעינה אוטומטית
     }
     // Schedule reminders with exact setTimeout for each task
     _scheduleReminders();
