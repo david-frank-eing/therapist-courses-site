@@ -5242,9 +5242,17 @@ function _initApp() {
   });
 
   loadState().then(() => {
-    // Auto-refresh Google data on every open (cloud only)
+    // Auto-refresh Google data on every page load (cloud only)
     if (location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
-      setTimeout(_googleRefreshData, 2000);
+      // Show immediate "refreshing" indicator in the bar
+      const bar = document.getElementById('auto-refresh-bar');
+      const msg = document.getElementById('auto-refresh-msg');
+      if (bar && msg && !bar.classList.contains('auto-refresh-ok')) {
+        bar.className = 'auto-refresh-bar auto-refresh-warn';
+        msg.innerHTML = '🔄 מרענן יומן ומיילים...';
+        bar.classList.remove('hidden');
+      }
+      _googleRefreshData();
     }
     // Schedule reminders with exact setTimeout for each task
     _scheduleReminders();
