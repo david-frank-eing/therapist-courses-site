@@ -3882,9 +3882,14 @@ async function loadConnectionsDiagnose() {
     // Cloud mode — show Google connection status
     body.innerHTML = '<div class="muted-text">טוען...</div>';
     try {
-      const { data } = await window._supabase.from('google_tokens')
-        .select('google_email, updated_at').eq('user_id', window._userId).maybeSingle();
-      if (data) {
+      const [{ data }, { data: syncRow }] = await Promise.all([
+        window._supabase.from('google_tokens')
+          .select('google_email, updated_at').eq('user_id', window._userId).maybeSingle(),
+        window._supabase.from('sync_data')
+          .select('text_value').eq('user_id', window._userId).eq('key', 'email-summary').maybeSingle()
+      ]);
+      const needsReauth = syncRow?.text_value?.includes('פג');
+      if (data && !needsReauth) {
         const updated = data.updated_at ? new Date(data.updated_at).toLocaleString('he-IL', { timeZone: 'Asia/Jerusalem' }) : '';
         body.innerHTML = `
           <div style="display:flex;align-items:center;gap:10px;padding:8px 0">
@@ -3899,14 +3904,15 @@ async function loadConnectionsDiagnose() {
         document.getElementById('conn-google-refresh')?.addEventListener('click', _googleRefreshData);
         document.getElementById('conn-google-disconnect')?.addEventListener('click', _googleDisconnect);
       } else {
+        const isExpired = data && needsReauth;
         body.innerHTML = `
           <div style="display:flex;align-items:center;gap:10px;padding:8px 0">
-            <span style="font-size:1.4rem">⭕</span>
+            <span style="font-size:1.4rem">${isExpired ? '⚠️' : '⭕'}</span>
             <div>
-              <div style="font-weight:600">Google לא מחובר</div>
-              <div class="muted-text" style="font-size:.82rem">חבר כדי לראות יומן ומיילים בדאשבורד</div>
+              <div style="font-weight:600">${isExpired ? 'חיבור Google פג' : 'Google לא מחובר'}</div>
+              <div class="muted-text" style="font-size:.82rem">${isExpired ? 'הרשאת הגישה פגה — יש להתחבר מחדש' : 'חבר כדי לראות יומן ומיילים בדאשבורד'}</div>
             </div>
-            <button id="conn-google-connect" style="margin-right:auto;padding:6px 14px;background:#4285f4;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600">🔗 חבר Google</button>
+            <button id="conn-google-connect" style="margin-right:auto;padding:6px 14px;background:#4285f4;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600">🔗 ${isExpired ? 'התחבר מחדש ל-Google' : 'חבר Google'}</button>
           </div>`;
         document.getElementById('conn-google-connect')?.addEventListener('click', _googleConnect);
       }
@@ -3960,15 +3966,19 @@ async function _googleRefreshData(silent = false) {
       headers: { Authorization: 'Bearer ' + session.access_token }
     });
     const d = await r.json();
+    if (d.needsReauth) {
+      _showReauthBanner();
+      if (!silent) toast('חיבור Google פג — לחץ על הכפתור להתחברות מחדש', false, 6000);
+      loadState();
+      return;
+    }
     if (d.connected) {
       if (!silent) toast('✓ יומן ומיילים עודכנו');
       loadState().then(() => _scheduleReminders());
     } else if (d.error && d.error.includes('Auth failed')) {
-      // תיקון 2a: שגיאת JWT — הסבר ספציפי
       if (!silent) toast('⚠️ יש להתחבר מחדש לחשבון', false);
       else loadState();
     } else {
-      // תיקון 2b: Google לא מחובר — הסבר היכן להתחבר
       if (!silent) toast('Google לא מחובר — התחבר ב-⚙️ הגדרות → 🔌 חיבורים', false, 5000);
       else loadState();
     }
@@ -3978,6 +3988,15 @@ async function _googleRefreshData(silent = false) {
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = '🔄 רענן'; }
   }
+}
+
+function _showReauthBanner() {
+  const bar = document.getElementById('auto-refresh-bar');
+  const msg = document.getElementById('auto-refresh-msg');
+  if (!bar || !msg) return;
+  bar.className = 'auto-refresh-bar auto-refresh-error';
+  msg.innerHTML = 'חיבור Google פג — <button style="background:#4285f4;color:#fff;border:none;border-radius:6px;padding:3px 12px;cursor:pointer;font-family:inherit;font-size:.82rem" onclick="_googleConnect()">התחבר מחדש ל-Google</button>';
+  bar.classList.remove('hidden');
 }
 
 function renderConnectionChecks(checks, body) {
