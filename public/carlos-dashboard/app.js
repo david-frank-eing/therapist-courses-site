@@ -314,14 +314,45 @@ function renderEmail(summary) {
 
 // (renderFocus moved to sidebar — see renderSbFocus below)
 
+// מספר הימים בין שני תאריכי YYYY-MM-DD (חיובי = d אחרי base)
+function _dayDiff(d, base) {
+  const a = Date.UTC(+d.slice(0, 4), +d.slice(5, 7) - 1, +d.slice(8, 10));
+  const b = Date.UTC(+base.slice(0, 4), +base.slice(5, 7) - 1, +base.slice(8, 10));
+  return Math.round((a - b) / 86400000);
+}
+
 function dueLabel(task) {
   if (!task.due_date) return '';
   const tmrw = ilDate(1);
   const d = task.due_date;
-  const day = d === todayStr() ? 'היום' : d === tmrw ? 'מחר' : d.slice(8, 10) + '/' + d.slice(5, 7);
+  let day;
+  if (d === todayStr())      day = 'היום';
+  else if (d === tmrw)       day = 'מחר';
+  else if (d < todayStr()) {
+    // תאריך שעבר — כמה זמן עבר אומר יותר מהתאריך עצמו
+    const n = -_dayDiff(d, todayStr());
+    day = n === 1 ? 'אתמול' : n < 30 ? `לפני ${n} ימים` : n < 60 ? 'לפני חודש+' : `לפני ${Math.floor(n / 30)} חודשים`;
+  }
+  else day = d.slice(8, 10) + '/' + d.slice(5, 7);
   let time = '';
   if (task.reminder_at) { const _rd = new Date(task.reminder_at); if (!isNaN(_rd)) time = ' ' + _rd.toLocaleTimeString('en-GB', { timeZone: 'Asia/Jerusalem', hour: '2-digit', minute: '2-digit' }); }
   return '📅 ' + day + time;
+}
+
+// דחיית משימה לתאריך אחר. מזיז גם את התזכורת באותו מספר ימים —
+// אחרת היא נשארת בעבר ו-_scheduleReminders יירה אותה מיד כ"באיחור".
+async function _pushTaskTo(task, newDate) {
+  if (!task) return;
+  const payload = { id: task.id, due_date: newDate };
+  if (task.reminder_at) {
+    const rd = new Date(task.reminder_at);
+    const delta = _dayDiff(newDate, task.due_date || ilDate());
+    if (!isNaN(rd) && delta) {
+      rd.setDate(rd.getDate() + delta);
+      payload.reminder_at = rd.toISOString();
+    }
+  }
+  await api('/api/task/update', payload);
 }
 
 function renderTasks(tasks, date, completedToday) {
@@ -336,20 +367,43 @@ function renderTasks(tasks, date, completedToday) {
   const todayKey = ilDate();
   const isOverdue = t => t.due_date && t.due_date < todayKey;
 
-  const pendingHtml = sorted.length
-    ? sorted.map(t => {
-        const dl = dueLabel(t);
-        const cc = contactChip(t);
-        const overdueCls = isOverdue(t) ? 'overdue' : '';
-        const overdueMark = isOverdue(t) ? '⚠️ ' : '';
-        const notesChip = (t.notes && t.notes.trim()) ? `<span class="notes-chip" title="${(t.notes||'').replace(/"/g,'&quot;').slice(0,200)}">📝 בתהליך</span>` : '';
-        return `<li class="${overdueCls}" data-id="${t.id}"><input type="checkbox" data-id="${t.id}">
-          <span class="${t.priority === 'urgent' ? 'urgent' : ''}">${overdueMark}${t.priority === 'urgent' ? '⚠️ ' : ''}${_esc(t.title)}</span>
-          ${notesChip}
-          ${cc}
-          ${dl ? `<span class="due-chip">${dl}</span>` : ''}
-          <button class="row-edit-btn" data-id="${t.id}" data-kind="task" title="ערוך">✏️</button></li>`;
-      }).join('')
+  // ── קיבוץ לפי זמן — כדי שראש הרשימה יהיה מה שרלוונטי היום ──
+  const groups = [
+    { key: 'overdue',  title: '🔴 באיחור',    items: sorted.filter(isOverdue),                                    collapsible: true },
+    { key: 'today',    title: '📌 היום',       items: sorted.filter(t => t.due_date === todayKey)                                    },
+    { key: 'later',    title: '🗓️ בהמשך',     items: sorted.filter(t => t.due_date && t.due_date > todayKey)                         },
+    { key: 'nodate',   title: '⚪ ללא תאריך',  items: sorted.filter(t => !t.due_date)                                                 },
+  ].filter(g => g.items.length);
+
+  // כותרות קבוצה מיותרות כשהכל יושב בקבוצה אחת
+  const showHeads = groups.length > 1;
+  const overdueOpen = localStorage.getItem('carlos-overdue-open') === '1';
+
+  const taskRow = (t, groupKey) => {
+    const dl = dueLabel(t);
+    const cc = contactChip(t);
+    const overdueCls = isOverdue(t) ? 'overdue' : '';
+    // 🔴 = עבר התאריך, ⚠️ = דחוף. משימה יכולה להיות שניהם — כל סימן מופיע פעם אחת
+    const marks = (isOverdue(t) ? '🔴 ' : '') + (t.priority === 'urgent' ? '⚠️ ' : '');
+    const notesChip = (t.notes && t.notes.trim()) ? `<span class="notes-chip" title="${(t.notes||'').replace(/"/g,'&quot;').slice(0,200)}">📝 בתהליך</span>` : '';
+    return `<li class="${overdueCls}" data-id="${t.id}" data-group="${groupKey}"><input type="checkbox" data-id="${t.id}">
+      <span class="${t.priority === 'urgent' ? 'urgent' : ''}">${marks}${_esc(t.title)}</span>
+      ${notesChip}
+      ${cc}
+      ${dl ? `<span class="due-chip">${dl}</span>` : ''}
+      <button class="row-push-btn" data-id="${t.id}" title="דחה למחר">⏭️</button>
+      <button class="row-edit-btn" data-id="${t.id}" data-kind="task" title="ערוך">✏️</button></li>`;
+  };
+
+  const groupHead = g => {
+    const toggle  = g.collapsible ? `<button class="tg-toggle" type="button" title="פתח / סגור">${overdueOpen ? '▾' : '◂'}</button>` : '';
+    const pushAll = g.key === 'overdue' ? `<button class="tg-push-all" type="button" title="דחה את כל המשימות שבאיחור למחר">⏭️ דחה הכל למחר</button>` : '';
+    return `<li class="tg-head${g.collapsible ? ' tg-clickable' : ''}" data-group-head="${g.key}">
+      ${toggle}<span class="tg-title">${g.title}</span><span class="tg-count">${g.items.length}</span>${pushAll}</li>`;
+  };
+
+  const pendingHtml = groups.length
+    ? groups.map(g => (showHeads ? groupHead(g) : '') + g.items.map(t => taskRow(t, g.key)).join('')).join('')
     : '<li class="muted-text">אין משימות ממתינות 🎉</li>';
 
   // Completed today — shown with strikethrough
@@ -363,8 +417,54 @@ function renderTasks(tasks, date, completedToday) {
       ).join('')
     : '';
 
-  $('#task-list').innerHTML = pendingHtml +
+  const listEl = $('#task-list');
+  listEl.innerHTML = pendingHtml +
     (doneHtml ? `<li class="done-divider">הושלמו היום</li>${doneHtml}` : '');
+
+  // קבוצת "באיחור" מקופלת כברירת מחדל — המצב נשמר בין רענונים
+  listEl.classList.toggle('overdue-collapsed', !overdueOpen);
+  listEl.querySelector('.tg-head[data-group-head="overdue"]')?.addEventListener('click', e => {
+    if (e.target.closest('.tg-push-all')) return;   // הכפתור הגורף לא מקפל
+    const open = listEl.classList.toggle('overdue-collapsed') === false;
+    localStorage.setItem('carlos-overdue-open', open ? '1' : '0');
+    const tg = listEl.querySelector('.tg-head[data-group-head="overdue"] .tg-toggle');
+    if (tg) tg.textContent = open ? '▾' : '◂';
+  });
+
+  const byId = new Map(sorted.map(t => [t.id, t]));
+
+  listEl.querySelectorAll('.row-push-btn').forEach(b =>
+    b.addEventListener('click', async e => {
+      e.stopPropagation();
+      b.disabled = true;
+      try {
+        await _pushTaskTo(byId.get(b.dataset.id), tmrw);
+        toast('⏭️ נדחתה למחר');
+        _track('task_pushed', { bulk: false });
+        loadState().then(() => _scheduleReminders());
+      } catch (err) {
+        b.disabled = false;
+        toast('שגיאה בדחיית המשימה: ' + err.message, false);
+      }
+    }));
+
+  listEl.querySelector('.tg-push-all')?.addEventListener('click', async e => {
+    e.stopPropagation();
+    const overdueItems = groups.find(g => g.key === 'overdue')?.items || [];
+    if (!overdueItems.length) return;
+    if (!confirm(`לדחות ${overdueItems.length} משימות שבאיחור למחר?`)) return;
+    const btn = e.currentTarget;
+    btn.disabled = true; btn.textContent = '⏳ דוחה...';
+    try {
+      for (const t of overdueItems) await _pushTaskTo(t, tmrw);
+      toast(`⏭️ ${overdueItems.length} משימות נדחו למחר`);
+      _track('task_pushed', { bulk: true, count: overdueItems.length });
+      loadState().then(() => _scheduleReminders());
+    } catch (err) {
+      toast('שגיאה בדחייה הגורפת: ' + err.message, false);
+      loadState();
+    }
+  });
 
   document.querySelectorAll('#task-list input[type=checkbox]:not(.task-undo-cb)').forEach(cb =>
     cb.addEventListener('change', async () => {
@@ -1232,6 +1332,19 @@ $('#add-task').addEventListener('click', async () => {
 });
 $('#new-task').addEventListener('keydown', e => { if (e.key === 'Enter') $('#add-task').click(); });
 
+// שדות תאריך/קטגוריה/עדיפות מוסתרים כברירת מחדל — הרשימה חשובה יותר מהטופס
+(function _initAddDetails() {
+  const extra = $('#add-task-extra'), btn = $('#add-task-details');
+  if (!extra || !btn) return;
+  const apply = open => {
+    extra.classList.toggle('hidden', !open);
+    btn.classList.toggle('open', open);
+    localStorage.setItem('carlos-add-details', open ? '1' : '0');
+  };
+  apply(localStorage.getItem('carlos-add-details') === '1');
+  btn.addEventListener('click', () => apply(extra.classList.contains('hidden')));
+})();
+
 // ---------- Journal ----------
 function renderJournalToday(body) {
   const el = document.getElementById('journal-today');
@@ -1429,9 +1542,6 @@ function _playOscillator(pattern) {
 let _chimeInterval = null;
 function silenceChime() {
   clearInterval(_chimeInterval); _chimeInterval = null;
-  // also stop WAV fallback if playing
-  const el = document.getElementById('snd-chime');
-  if (el) { el.loop = false; el.pause(); try { el.currentTime = 0; } catch (e) {} }
   $('#attrib-silence').classList.add('hidden');
 }
 
@@ -1492,11 +1602,6 @@ function resetTimer() {
   $('#tw-display').textContent = fmt(timerMode === 'timer' ? configuredSeconds() : 0);
   $('#tw-start').classList.remove('hidden');
   $('#tw-stop').classList.add('hidden');
-}
-
-function _clearTimerState() {
-  resetTimer();
-  localStorage.removeItem('carlos-timer');
 }
 
 function tick() {
@@ -4116,10 +4221,6 @@ async function _adminGetSession() {
     session = data?.session || session;
   }
   return session;
-}
-
-function _esc(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
 function _renderAdminUserRow(u) {
