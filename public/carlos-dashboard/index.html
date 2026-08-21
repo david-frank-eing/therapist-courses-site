@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title id="page-title">קרלוס · דאשבורד</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
-  <link rel="stylesheet" href="style.css?v=88">
+  <link rel="stylesheet" href="style.css?v=89">
 </head>
 <body>
   <div id="toast-area"></div>
@@ -56,8 +56,10 @@
             <div id="tasks-view">
               <div class="add-row">
                 <input type="text" id="new-task" placeholder="משימה חדשה..." maxlength="300">
+                <button id="add-task-details" class="add-details-btn" type="button" title="תאריך, שעה, קטגוריה ועדיפות">⚙️ פרטים</button>
                 <button id="add-task">הוסף</button>
               </div>
+              <div id="add-task-extra" class="add-extra hidden">
               <div class="add-when">
                 <label>תאריך: <input type="date" id="new-task-date"></label>
                 <label>שעה: <input type="time" id="new-task-time"></label>
@@ -80,6 +82,7 @@
                     <option value="low">⚪ נמוך</option>
                   </select>
                 </label>
+              </div>
               </div>
               <ul id="task-list"></ul>
               <div class="task-stats-row">
@@ -332,8 +335,6 @@
     </div>
   </div>
 
-  <audio id="snd-beep" src="beep.wav" preload="auto"></audio>
-  <audio id="snd-chime" src="chime.wav" preload="auto"></audio>
 
   <!-- Help Modal -->
   <div id="help-modal" class="settings-modal hidden">
@@ -545,7 +546,7 @@
     })();
   </script>
   <script src="supabase-api.js?v=1"></script>
-  <script src="app.js?v=121"></script>
+  <script src="app.js?v=122"></script>
 
   <!-- Admin modal -->
   <div id="admin-modal" class="settings-modal hidden">
