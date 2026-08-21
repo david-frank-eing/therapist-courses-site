@@ -1196,6 +1196,7 @@ function renderOpenLoops(state) {
   const olItem = (label, id, age, type) => `<div class="ol-item">
     <span>${_esc(label)}</span>
     <span class="ol-age">${age} ימים</span>
+    ${type === 'task' ? `<button class="ol-edit" data-id="${_esc(String(id))}" title="ערוך משימה">✏️</button>` : ''}
     <button class="ol-dismiss" data-id="${_esc(String(id))}" data-type="${type}" title="${type === 'task' ? 'סמן כהושלם → יעבור להיסטוריה' : 'הסתר ל-30 יום'}">✕</button>
   </div>`;
 
@@ -1214,7 +1215,15 @@ function renderOpenLoops(state) {
     group('💡 רעיונות לא קודמו', ideas.map(c => olItem(c.title || '(ללא כותרת)', c.id || c.title, ageOf(c.created_at), 'idea'))) +
     footer;
 
-  el.addEventListener('click', async e => {
+  // מאזין יחיד שמוחלף בכל רינדור — לא once, אחרת לחיצה אקראית אחת
+  // בתוך האזור "צורכת" אותו וכל שאר הכפתורים מפסיקים להגיב עד הרענון הבא
+  if (el._olHandler) el.removeEventListener('click', el._olHandler);
+  el._olHandler = async e => {
+    const edit = e.target.closest('.ol-edit');
+    if (edit) {
+      openEditForm(edit.closest('.ol-item'), 'task', edit.dataset.id);
+      return;
+    }
     const btn = e.target.closest('.ol-dismiss');
     if (btn) {
       const type = btn.dataset.type;
@@ -1234,7 +1243,8 @@ function renderOpenLoops(state) {
       localStorage.removeItem('carlos_ol_dismissed');
       renderOpenLoops(state);
     }
-  }, { once: true });
+  };
+  el.addEventListener('click', el._olHandler);
 }
 
 function renderTrackingMini(s) {
