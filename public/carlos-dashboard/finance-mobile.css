@@ -4,6 +4,11 @@
 body.fm-open { overflow: hidden; }
 .fm-top { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--border); }
 .fm-top b { font-size: 1.05rem; }
+.fm-help { margin-inline-start: auto; background: var(--card2); border: 1px solid var(--border); color: var(--text); border-radius: 999px; font-size: 1rem; font-weight: 700; min-width: 40px; min-height: 40px; }
+.fm-help + .fm-x { margin-inline-start: 0; }
+.fm-help-text p, .fm-help-text li { line-height: 1.55; font-size: .92rem; }
+.fm-help-text ul { padding-inline-start: 18px; margin: 0 0 8px; }
+.fm-help-text h3 { margin-top: 14px; }
 .fm-x { margin-inline-start: auto; background: none; border: 0; color: var(--text); font-size: 1.3rem; min-width: 44px; min-height: 44px; }
 .fm-tabs { display: flex; gap: 6px; padding: 8px 16px; }
 .fm-tabs button, .fm-seg button, .fm-chip { background: var(--card2); color: var(--text2); border: 1px solid var(--border); border-radius: 999px; padding: 8px 14px; min-height: 40px; font: inherit; }

@@ -128,7 +128,7 @@
     if ($('fm')) return;
     const el = document.createElement('div');
     el.id = 'fm'; el.className = 'fm hidden'; el.dir = 'rtl';
-    el.innerHTML = `<div class="fm-top"><b>💰 כספים</b><span id="fm-period" class="dim"></span><button class="fm-x" data-fm="close" aria-label="סגור">✕</button></div>
+    el.innerHTML = `<div class="fm-top"><b>💰 כספים</b><span id="fm-period" class="dim"></span><button class="fm-help" data-fm="help" aria-label="איך משתמשים">?</button><button class="fm-x" data-fm="close" aria-label="סגור">✕</button></div>
       <div class="fm-tabs"><button data-fmtab="pkg">דברים לרואה חשבון</button><button data-fmtab="money">לאן הולך הכסף</button></div>
       <div id="fm-body" class="fm-body"></div>`;
     document.body.appendChild(el);
@@ -176,6 +176,33 @@
     stopPoll();
   }
 
+  let helpOpen = false;
+  const HELP_HTML = `<div class="fm-card fm-help-text">
+    <h3>איך משתמשים בכספים בנייד</h3>
+    <p><b>איך זה עובד:</b> המחשב הוא המקור. כל דקה הוא מעלה לכאן את המצב, ואוסף את מה שלחצת. לחיצה מקבלת "ממתין למחשב…" ואחרי עד 2 דקות "בוצע". המחשב צריך להיות דלוק. כשהוא כבוי, הלחיצה מחכה לו (עד 24 שעות).</p>
+    <h3>דברים לרואה חשבון</h3>
+    <ul>
+      <li><b>כמה ימים נשארו</b> עד ה-15 של החודש שבו שולחים.</li>
+      <li><b>קבלות מטלגרם לאישור:</b> "✓ נכון" מכניס לחבילה. "🗑 לא קבלה" מוציא (נשמרת בצד במחשב). קבלה עם "חסר" מתקנים בטלגרם.</li>
+      <li><b>חשבוניות חסרות:</b> חיובים שעוד אין להם חשבונית. רק לעיון. מטפלים בהם במחשב.</li>
+      <li><b>סמן כנשלח:</b> מופיע רק כשהחבילה בנויה. נועל את התקופה.</li>
+      <li>אחרי ששלחת, המסך עובר לתקופה הבאה. באמצע תקופה אין עדיין חסרות, עד שמורידים פירוטים מלאומי.</li>
+    </ul>
+    <h3>לאן הולך הכסף</h3>
+    <ul>
+      <li><b>סה"כ הוצאות:</b> כל מה שיצא מהעו"ש ומשני הכרטיסים בתקופה האחרונה שנגמרה. הלוואות וחיסכון בנפרד.</li>
+      <li><b>תחומים</b> (טיפולים / DJ / משותף / פרטי): לחיצה על צ'יפ או על פרוסה מסננת.</li>
+      <li><b>שינוי קטגוריה או תחום:</b> פותחים קטגוריה, ובוחרים בשורה. זה נשמר לספק, וחל על כל החיובים שלו, גם בתקופות הבאות, ובמחשב.</li>
+      <li><b>אשר את כל ההצעות:</b> נותן תחום לכל הספקים שיש להם הצעה.</li>
+      <li>שינוי כאן לא משנה את מה שנשלח לרו"ח.</li>
+    </ul>
+    <h3>מה עושים רק במחשב</h3>
+    <ul>
+      <li>"רענן", החלטות על חשבוניות, "בנה", "פתח מייל מוכן". המסך: localhost:8090/finance.html.</li>
+      <li><b>פעם בחודשיים:</b> בסוף התקופה מורידים מלאומי פירוטי כרטיסים ועו"ש ל-Downloads, ואז "רענן" ו"בנה". שולחים עד ה-15.</li>
+    </ul>
+    <button class="fm-btn" data-fm="help">חזרה</button></div>`;
+
   function render() {
     document.querySelectorAll('#fm [data-fmtab]').forEach(b => b.classList.toggle('on', b.dataset.fmtab === tab));
     const late = pcStatus(ROW);
@@ -183,7 +210,7 @@
     const waitHtml = waiting.size ? `<div class="fm-wait">⏳ ${waiting.size === 1 ? 'לחיצה אחת ממתינה' : waiting.size + ' לחיצות ממתינות'} למחשב (בדרך כלל עד 2 דקות)</div>` : '';
     if (!SNAP) { $('fm-period').textContent = ''; $('fm-body').innerHTML = lateHtml || '<div class="fm-card dim">אין נתונים עדיין.</div>'; return; }
     $('fm-period').textContent = tab === 'money' && SNAP.spending && SNAP.spending.period ? SNAP.spending.period.label : SNAP.period.label;
-    $('fm-body').innerHTML = lateHtml + waitHtml + (tab === 'money' ? moneyHtml() : packageHtml());
+    $('fm-body').innerHTML = helpOpen ? HELP_HTML : lateHtml + waitHtml + (tab === 'money' ? moneyHtml() : packageHtml());
   }
 
   function packageHtml() {
@@ -331,6 +358,8 @@
     if (!b) return;
     const d = b.dataset;
     if (d.fm === 'close') return close();
+    if (d.fm === 'help') { helpOpen = !helpOpen; return render(); }
+    if (d.fmtab) helpOpen = false;
     if (d.fmtab) { tab = d.fmtab; store.set('carlos-fm-tab', tab); return render(); }
     if (d.fmview) { view = d.fmview; store.set('carlos-fm-chart', view); return render(); }
     if (d.fmfilter) { domainFilter = d.fmfilter; return render(); }
