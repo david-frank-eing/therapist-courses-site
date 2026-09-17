@@ -115,6 +115,7 @@
   const waiting = new Map();        // request id -> {cmd, payload, since, warned}
   const openCats = new Set();
   let pollTimer = null;             // the one shared poller for everything in `waiting`
+  let renderLater = false;          // a redraw that waits until the open select list closes
 
   const sb = () => T._supabase;
   const say = (msg, ok) => (typeof T.toast === 'function' ? T.toast(msg, ok, 4000) : alert(msg));
@@ -131,6 +132,18 @@
     document.body.appendChild(el);
     el.addEventListener('click', onClick);
     el.addEventListener('change', onChange);
+    el.addEventListener('focusout', () => {
+      if (!renderLater) return;
+      renderLater = false;
+      setTimeout(() => { if (isOpen()) renderSafe(); }, 0);
+    });
+  }
+
+  // redrawing replaces the <select>, which closes its list on the phone. Wait until it loses focus.
+  function renderSafe() {
+    const a = document.activeElement;
+    if (a && a.tagName === 'SELECT' && $('fm').contains(a)) { renderLater = true; return; }
+    render();
   }
 
   async function load() {
@@ -266,6 +279,7 @@
     if (!ids.length) return;
     const { data: rows } = await sb().from('finance_requests').select('id,status,result,done_at').in('id', ids);
     const byId = new Map((rows || []).map(r => [r.id, r]));
+    const lateBefore = pcStatus(ROW), sizeBefore = waiting.size;
     let latestDone = null;
     for (const id of ids) {
       const w = waiting.get(id);
@@ -299,7 +313,8 @@
         await new Promise(r => setTimeout(r, 3000));
       } while (Date.now() - waitSnap < SNAP_WAIT_MS);
     }
-    if (isOpen()) render();
+    // redraw only when something the phone shows changed
+    if (isOpen() && (latestDone || waiting.size !== sizeBefore || pcStatus(ROW) !== lateBefore)) renderSafe();
   }
 
   const builtWarning = () => SNAP && SNAP.package && SNAP.package.state === 'built'
