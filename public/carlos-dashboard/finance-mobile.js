@@ -102,4 +102,185 @@
   if (typeof module !== 'undefined' && module.exports) { module.exports = pure; return; }
 
   // ── DOM (Task 8) ──
+  const T = window;
+  const $ = id => document.getElementById(id);
+  const store = {
+    get: (k, d) => { try { return localStorage.getItem(k) || d; } catch (e) { return d; } },
+    set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} }
+  };
+  const POLL_MS = 4000, POLL_MAX_MS = 180000, SNAP_WAIT_MS = 30000;
+  let ROW = null, SNAP = null, tab = store.get('carlos-fm-tab', 'pkg'), view = store.get('carlos-fm-chart', 'domain');
+  let domainFilter = 'הכל';
+  const waiting = new Map();        // request id -> {cmd, payload}
+  const openCats = new Set();
+
+  const sb = () => T._supabase;
+  const say = (msg, ok) => (typeof T.toast === 'function' ? T.toast(msg, ok, 4000) : alert(msg));
+  const isWaiting = (cmd, match) => [...waiting.values()].some(w => w.cmd === cmd && Object.keys(match).every(k => w.payload[k] === match[k]));
+
+  function shell() {
+    if ($('fm')) return;
+    const el = document.createElement('div');
+    el.id = 'fm'; el.className = 'fm hidden'; el.dir = 'rtl';
+    el.innerHTML = `<div class="fm-top"><b>💰 כספים</b><span id="fm-period" class="dim"></span><button class="fm-x" data-fm="close" aria-label="סגור">✕</button></div>
+      <div class="fm-tabs"><button data-fmtab="pkg">החבילה</button><button data-fmtab="money">לאן הולך הכסף</button></div>
+      <div id="fm-body" class="fm-body"></div>`;
+    document.body.appendChild(el);
+    el.addEventListener('click', onClick);
+    el.addEventListener('change', onChange);
+  }
+
+  async function load() {
+    const { data, error } = await sb().from('finance_state').select('data,made_at,pc_seen_at').eq('user_id', T._userId).maybeSingle();
+    if (error) throw error;
+    ROW = data; SNAP = data && data.data;
+    const { data: open } = await sb().from('finance_requests').select('id,cmd,payload,status')
+      .eq('user_id', T._userId).in('status', ['pending', 'running']).order('created_at');
+    (open || []).forEach(r => { if (!waiting.has(r.id)) { waiting.set(r.id, { cmd: r.cmd, payload: r.payload || {} }); follow(r.id); } });
+  }
+
+  async function open() {
+    if (!T._isAdmin || !sb()) return;
+    shell();
+    $('fm').classList.remove('hidden');
+    document.body.classList.add('fm-open');
+    $('fm-body').innerHTML = '<div class="fm-card dim">טוען…</div>';
+    try { await load(); render(); } catch (e) { $('fm-body').innerHTML = `<div class="fm-card err">לא הצלחתי לטעון: ${esc(e.message || e)}</div>`; }
+  }
+
+  function close() { $('fm').classList.add('hidden'); document.body.classList.remove('fm-open'); }
+
+  function render() {
+    document.querySelectorAll('#fm [data-fmtab]').forEach(b => b.classList.toggle('on', b.dataset.fmtab === tab));
+    const late = pcStatus(ROW);
+    const lateHtml = late ? `<div class="fm-warn">${esc(late)}</div>` : '';
+    const waitHtml = waiting.size ? `<div class="fm-wait">⏳ ${waiting.size === 1 ? 'לחיצה אחת ממתינה' : waiting.size + ' לחיצות ממתינות'} למחשב (בדרך כלל עד דקה)</div>` : '';
+    if (!SNAP) { $('fm-period').textContent = ''; $('fm-body').innerHTML = lateHtml || '<div class="fm-card dim">אין נתונים עדיין.</div>'; return; }
+    $('fm-period').textContent = SNAP.period.label;
+    $('fm-body').innerHTML = lateHtml + waitHtml + (tab === 'money' ? moneyHtml() : packageHtml());
+  }
+
+  function packageHtml() {
+    const s = SNAP;
+    const head = `<div class="fm-card"><div class="fm-big">${esc(deadlineText(s.period))}</div>
+      <div>${esc(packageText(s.package))}</div>
+      ${canMarkSent(s) ? `<button class="fm-btn" data-fm="sent" ${isWaiting('mark-sent', {}) ? 'disabled' : ''}>${isWaiting('mark-sent', {}) ? 'ממתין למחשב…' : 'סמן כנשלח'}</button>` : ''}
+      ${s.in_check ? `<div class="dim">🔍 ${s.in_check} בבדיקה (במחשב)</div>` : ''}</div>`;
+    if (s.locked) return head;
+    if (s.stop) return head + `<div class="fm-card err">${esc(s.stop)}</div>`;
+    const receipts = (s.receipts || []).map(r => {
+      const busy = isWaiting('receipt-confirm', { id: r.id }) || isWaiting('receipt-discard', { id: r.id });
+      const buttons = busy ? '<span class="dim">ממתין למחשב…</span>'
+        : `${r.problems.length ? `<span class="dim">חסר: ${esc(r.problems.join(', '))}. לתקן בטלגרם</span>`
+          : `<button class="fm-btn" data-fm="ok" data-id="${esc(r.id)}" data-ver="${esc(r.ver)}">✓ נכון</button>`}
+           <button class="fm-btn ghost" data-fm="discard" data-id="${esc(r.id)}">🗑 לא קבלה</button>`;
+      return `<li><div><b>${esc(r.vendor || '—')}</b><div class="dim">${dm(r.date)} · ${money(r.total, r.currency)}</div></div><div class="fm-row-btns">${buttons}</div></li>`;
+    }).join('');
+    const missing = (s.missing || []).map(m => `<li><div><b>${esc(m.merchant)}</b><div class="dim">${dm(m.date)} · ${esc(m.via)}</div></div><span class="num">${ils(m.amount)}</span></li>`).join('');
+    return head
+      + `<div class="fm-card"><h3>קבלות מטלגרם לאישור (${(s.receipts || []).length})</h3>${receipts ? `<ul class="fm-list">${receipts}</ul>` : '<div class="dim">אין.</div>'}</div>`
+      + `<div class="fm-card"><h3>חשבוניות חסרות (${(s.missing || []).length})</h3>${missing ? `<ul class="fm-list">${missing}</ul>` : '<div class="dim">אין חסרות.</div>'}</div>`
+      + (s.remaining ? `<div class="dim fm-foot">עוד ${s.remaining} החלטות מחכות במסך במחשב.</div>` : '');
+  }
+
+  const options = (list, current) => list.map(n => `<option ${n === current ? 'selected' : ''}>${esc(n)}</option>`).join('');
+
+  function moneyHtml() {
+    const res = SNAP.spending;
+    if (!res || res.stop) return `<div class="fm-card err">${esc((res && res.stop) || 'אין נתונים')}</div>`;
+    if (!res.views[domainFilter]) domainFilter = 'הכל';
+    if (!CHART_VIEWS.some(([k]) => k === view)) view = 'domain';
+    const v = res.views[domainFilter], t = v.totals;
+    const catColor = {};
+    (res.views['הכל'].by_category || []).forEach((c, i) => { catColor[c.name] = i < SERIES.length ? SERIES[i] : OTHER_COLOR; });
+    const byDomain = domainFilter === 'הכל' ? res.by_domain : res.by_domain.filter(d => d.name === domainFilter);
+    const chart = view === 'month' ? bars(v.by_month, t.spend)
+      : view === 'category' ? donut(slices(v.by_category, n => catColor[n] || OTHER_COLOR), t.spend, false, domainFilter)
+        : donut(slices(byDomain, n => DOMAIN_COLOR[n] || OTHER_COLOR), t.spend, true, domainFilter);
+    const chips = ['הכל'].concat(res.domains).map(d => `<button data-fmfilter="${esc(d)}" class="fm-chip ${d === domainFilter ? 'on' : ''}">${esc(d)}</button>`).join('');
+    const seg = CHART_VIEWS.map(([k, l]) => `<button data-fmview="${k}" class="${k === view ? 'on' : ''}">${l}</button>`).join('');
+    const cats = v.categories.map(c => {
+      const rows = !openCats.has(c.name) ? '' : `<ul class="fm-list">${c.rows.map(r => {
+        const busy = isWaiting('vendor-category', { vendor: r.vendor }) || isWaiting('vendor-domain', { vendor: r.vendor });
+        return `<li class="fm-charge"><div><b>${esc(r.merchant)}</b><div class="dim">${dm(r.date)} · ${ils(r.amount)} · ${esc(r.via)}</div></div>
+          ${busy ? '<span class="dim">ממתין למחשב…</span>' : `<div class="fm-selects"><select data-fmcat="${esc(r.vendor)}" aria-label="קטגוריה">${options(res.choices, r.category)}</select>
+          <select data-fmdom="${esc(r.vendor)}" aria-label="תחום">${options(res.domains, r.domain)}</select></div>`}</li>`;
+      }).join('')}</ul>`;
+      return `<div class="fm-cat"><button data-fmcatopen="${esc(c.name)}"><b>${esc(c.name)}</b>${c.kind === 'spend' ? '' : ' <span class="dim">לא הוצאה</span>'}
+        <span class="num">${ils(c.total)}</span><span class="dim">${c.rows.length}</span></button>${rows}</div>`;
+    }).join('') || '<div class="dim">אין חיובים בסינון הזה.</div>';
+    const withSuggestion = res.vendors.filter(x => x.suggestion !== 'לא סווג').length;
+    const vendorsCard = !res.vendors.length ? '' : `<div class="fm-card"><h3>ספקים בלי תחום (${res.vendors.length})</h3>
+      ${withSuggestion ? (isWaiting('domains-accept-all', {}) ? '<span class="dim">ממתין למחשב…</span>'
+        : `<button class="fm-btn" data-fm="domainsAll">אשר את כל ההצעות (${withSuggestion})</button>`) : ''}
+      <div class="dim">או לבחור תחום בכל חיוב למטה. התחום רק בשבילך, והחבילה לרו"ח לא משתנה.</div></div>`;
+    return `<div class="fm-card"><div class="fm-stats"><div><span class="dim">הוצאות</span><b class="num">${ils(t.spend)}</b></div>
+        <div><span class="dim">הלוואות</span><b class="num">${ils(t.loans)}</b></div><div><span class="dim">חיסכון</span><b class="num">${ils(t.savings)}</b></div></div>
+        <div class="fm-chips">${chips}</div><div class="fm-seg">${seg}</div>${chart}</div>`
+      + vendorsCard + `<div class="fm-card">${cats}</div>`
+      + '<div class="dim fm-foot">קטגוריה ותחום נבחרים לכל ספק, וחלים על כל החיובים שלו.</div>';
+  }
+
+  async function ask(cmd, fields, confirmText) {
+    if (!SNAP) return;
+    if (confirmText && !confirm(confirmText)) return render();
+    const payload = requestPayload(fields, SNAP);
+    const { data, error } = await sb().from('finance_requests').insert({ user_id: T._userId, cmd, payload }).select('id').single();
+    if (error) { say('לא נשמר: ' + error.message, false); return render(); }
+    waiting.set(data.id, { cmd, payload });
+    render();
+    follow(data.id);
+  }
+
+  async function follow(id) {
+    const started = Date.now();
+    while (Date.now() - started < POLL_MAX_MS) {
+      await new Promise(r => setTimeout(r, POLL_MS));
+      const { data } = await sb().from('finance_requests').select('status,result,done_at').eq('id', id).maybeSingle();
+      if (!data || data.status === 'pending' || data.status === 'running') continue;
+      waiting.delete(id);
+      if (data.status === 'failed') say((data.result && data.result.message) || 'לא בוצע', false);
+      else say('בוצע', true);
+      const doneAt = new Date(data.done_at || Date.now());
+      const waitSnap = Date.now();
+      do {
+        await load();
+        if (ROW && new Date(ROW.made_at) >= doneAt) break;
+        await new Promise(r => setTimeout(r, 3000));
+      } while (Date.now() - waitSnap < SNAP_WAIT_MS);
+      if ($('fm') && !$('fm').classList.contains('hidden')) render();
+      return;
+    }
+    say('המחשב עוד לא ביצע. זה יקרה כשיתחבר', false);
+  }
+
+  const builtWarning = () => SNAP && SNAP.package && SNAP.package.state === 'built'
+    ? 'החבילה שנבנתה תסומן "בנה שוב" במחשב. להמשיך?' : null;
+
+  function onClick(ev) {
+    const t = ev.target;
+    const sl = t.closest('[data-slice]');
+    if (sl) { domainFilter = domainFilter === sl.dataset.slice ? 'הכל' : sl.dataset.slice; return render(); }
+    const b = t.closest('button');
+    if (!b) return;
+    const d = b.dataset;
+    if (d.fm === 'close') return close();
+    if (d.fmtab) { tab = d.fmtab; store.set('carlos-fm-tab', tab); return render(); }
+    if (d.fmview) { view = d.fmview; store.set('carlos-fm-chart', view); return render(); }
+    if (d.fmfilter) { domainFilter = d.fmfilter; return render(); }
+    if (d.fmcatopen) { openCats.has(d.fmcatopen) ? openCats.delete(d.fmcatopen) : openCats.add(d.fmcatopen); return render(); }
+    if (d.fm === 'ok') return ask('receipt-confirm', { id: d.id, ver: d.ver });
+    if (d.fm === 'discard') return ask('receipt-discard', { id: d.id }, 'להוציא את הקבלה? (היא נשמרת בצד במחשב)');
+    if (d.fm === 'sent') return ask('mark-sent', {}, `לסמן את החבילה של ${SNAP.period.label} כנשלחה לרו"ח? אחרי זה התקופה ננעלת`);
+    if (d.fm === 'domainsAll') return ask('domains-accept-all', {}, builtWarning());
+  }
+
+  function onChange(ev) {
+    const s = ev.target.closest('select[data-fmcat], select[data-fmdom]');
+    if (!s) return;
+    if (s.dataset.fmcat !== undefined) return ask('vendor-category', { vendor: s.dataset.fmcat, category: s.value }, builtWarning());
+    return ask('vendor-domain', { vendor: s.dataset.fmdom, domain: s.value }, builtWarning());
+  }
+
+  T.FinanceMobile = { open, close };
 })();

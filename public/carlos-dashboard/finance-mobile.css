@@ -1,0 +1,48 @@
+/* finance-mobile.css — "💰 כספים" on the phone (plan 6). Uses the dashboard tokens from style.css. */
+.fm { position: fixed; inset: 0; z-index: 1100; background: var(--bg); color: var(--text); display: flex; flex-direction: column; }
+.fm.hidden { display: none; }
+body.fm-open { overflow: hidden; }
+.fm-top { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--border); }
+.fm-top b { font-size: 1.05rem; }
+.fm-x { margin-inline-start: auto; background: none; border: 0; color: var(--text); font-size: 1.3rem; min-width: 44px; min-height: 44px; }
+.fm-tabs { display: flex; gap: 6px; padding: 8px 16px; }
+.fm-tabs button, .fm-seg button, .fm-chip { background: var(--card2); color: var(--text2); border: 1px solid var(--border); border-radius: 999px; padding: 8px 14px; min-height: 40px; font: inherit; }
+.fm-tabs button.on, .fm-seg button.on, .fm-chip.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+.fm-body { overflow-y: auto; padding: 0 16px 32px; flex: 1; }
+.fm-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-top: 12px; }
+.fm-card h3 { margin: 0 0 8px; font-size: .95rem; }
+.fm-card.err, .fm-warn { color: #ff8a8a; }
+.fm-warn, .fm-wait { margin-top: 12px; padding: 10px 12px; border-radius: 10px; background: var(--card2); font-size: .9rem; }
+.fm-big { font-size: 1.25rem; font-weight: 700; margin-bottom: 4px; }
+.fm-btn { background: var(--accent); color: #fff; border: 0; border-radius: 10px; padding: 10px 14px; min-height: 44px; font: inherit; margin-top: 10px; }
+.fm-btn.ghost { background: transparent; color: var(--text2); border: 1px solid var(--border); }
+.fm-btn:disabled { opacity: .6; }
+.fm-list { list-style: none; margin: 0; padding: 0; }
+.fm-list li { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid var(--sep2); }
+.fm-list li:first-child { border-top: 0; }
+.fm-list li > div:first-child { min-width: 0; overflow-wrap: anywhere; }
+.fm-row-btns { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
+.fm-row-btns .fm-btn { margin-top: 0; }
+.fm-charge { flex-direction: column; align-items: stretch !important; }
+.fm-selects { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.fm-selects select { min-height: 40px; background: var(--input-bg); color: var(--text); border: 1px solid var(--input-border); border-radius: 8px; font: inherit; }
+.fm-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.fm-stats div { display: flex; flex-direction: column; }
+.fm-chips, .fm-seg { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.fm-chart svg { width: 100%; max-width: 320px; display: block; margin: 12px auto 0; }
+.fm-chart .slice-l { fill: #fff; font-size: 11px; text-anchor: middle; font-weight: 700; }
+.fm-chart .c-l { fill: var(--text-muted); font-size: 11px; text-anchor: middle; }
+.fm-chart .c-v { fill: var(--text); font-size: 15px; text-anchor: middle; font-weight: 700; }
+.fm-chart .bar-v { fill: var(--text2); font-size: 13px; text-anchor: middle; }
+.fm-chart .bar-l { fill: var(--text-muted); font-size: 14px; text-anchor: middle; }
+.fm-chart .axis { stroke: var(--border); }
+.fm-chart .hit { cursor: pointer; }
+.fm-chart g.hit.on path { stroke: var(--text); stroke-width: 2; }
+.fm-legend { list-style: none; padding: 0; margin: 10px 0 0; }
+.fm-legend li { display: grid; grid-template-columns: 12px 1fr auto auto; gap: 8px; align-items: center; padding: 4px 0; }
+.fm-legend i { width: 12px; height: 12px; border-radius: 3px; }
+.fm-cat > button { width: 100%; display: grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: center; background: none; border: 0; border-top: 1px solid var(--sep2); color: var(--text); padding: 12px 0; font: inherit; text-align: start; min-height: 44px; }
+.fm-cat:first-child > button { border-top: 0; }
+.num { font-variant-numeric: tabular-nums; direction: ltr; unicode-bidi: isolate; }
+.fm .dim { color: var(--text-muted); font-size: .85rem; }
+.fm-foot { margin-top: 12px; }

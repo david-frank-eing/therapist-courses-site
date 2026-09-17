@@ -5433,7 +5433,8 @@ function _mnavClose() { document.getElementById('mnav-drawer').style.display = '
 function openFinance() {
   if (!window._isAdmin) return;
   if (window.matchMedia('(max-width: 1024px)').matches) {
-    toast('כספים זמין כרגע רק במחשב. מהנייד: הבוט בטלגרם', true, 5000);
+    if (window.FinanceMobile) window.FinanceMobile.open();
+    else toast('מסך הכספים לא נטען. רענן את הדף', false, 5000);
     return;
   }
   // CSP connect-src blocks probing localhost, so just open it
