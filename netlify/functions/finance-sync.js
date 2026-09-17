@@ -2,6 +2,7 @@
 // Only Carlos's PC calls this, with X-Finance-Secret. The phone reads/writes the tables directly under RLS.
 // POST {action:'pull'}                      → {requests:[{id,cmd,payload,created_at}]}  (marks them running)
 // POST {action:'done', id, result:{ok,message}}
+// POST {action:'release', ids:[...]}        → puts running ids back to pending (PC ran out of time budget)
 // POST {action:'snapshot', data:{v:1,…}}
 const crypto = require('crypto');
 
@@ -44,7 +45,7 @@ function makeHandler({ env, fetch }) {
     const expired = { status: 'failed', done_at: now, result: { ok: false, message: 'המחשב לא הגיע לזה בזמן. נסה שוב' } };
     await rest('PATCH', `${mine}&status=eq.pending&created_at=lt.${ago(STALE_PENDING_MIN)}`, expired);
     await rest('PATCH', `${mine}&status=eq.running&picked_at=lt.${ago(STALE_RUNNING_MIN)}`, expired);
-    const pending = await rest('GET', `${mine}&status=eq.pending&order=created_at.asc&limit=20&select=id`);
+    const pending = await rest('GET', `${mine}&status=eq.pending&order=created_at.asc&limit=5&select=id`);
     if (!pending || !pending.length) return { requests: [] };
     const ids = pending.map(r => r.id).filter(id => UUID.test(id)).join(',');
     const taken = await rest('PATCH', `${mine}&status=eq.pending&id=in.(${ids})&select=id,cmd,payload,created_at`,
@@ -60,6 +61,14 @@ function makeHandler({ env, fetch }) {
     const result = { ok: r.ok === true, message: String(r.message || '').slice(0, 500) };
     await rest('PATCH', `${mine}&status=eq.running&id=eq.${id}`,
       { status: result.ok ? 'done' : 'failed', result, done_at: new Date().toISOString() });
+    return out(200, { ok: true });
+  }
+
+  async function release(body) {
+    const ids = body.ids;
+    if (!Array.isArray(ids) || ids.length > 20 || !ids.every(id => UUID.test(id))) return out(400, { error: 'bad ids' });
+    if (!ids.length) return out(200, { ok: true });
+    await rest('PATCH', `${mine}&status=eq.running&id=in.(${ids.join(',')})`, { status: 'pending', picked_at: null });
     return out(200, { ok: true });
   }
 
@@ -82,6 +91,7 @@ function makeHandler({ env, fetch }) {
     try {
       if (body.action === 'pull') return out(200, await pull());
       if (body.action === 'done') return await done(body);
+      if (body.action === 'release') return await release(body);
       if (body.action === 'snapshot') return await snapshot(body);
       return out(400, { error: 'unknown action' });
     } catch (e) {

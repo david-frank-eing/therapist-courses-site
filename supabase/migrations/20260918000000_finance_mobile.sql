@@ -36,5 +36,6 @@ CREATE POLICY "Admin owner reads finance_requests" ON public.finance_requests FO
 CREATE POLICY "Admin owner asks finance_requests" ON public.finance_requests FOR INSERT
   WITH CHECK (auth.uid() = user_id
               AND status = 'pending' AND result IS NULL AND picked_at IS NULL AND done_at IS NULL
+              AND created_at > now() - interval '1 minute' AND created_at < now() + interval '1 minute'
               AND EXISTS (SELECT 1 FROM public.profiles p WHERE p.id = auth.uid() AND p.is_admin = true));
 -- no UPDATE / DELETE policies: only the service role (finance-sync) changes requests

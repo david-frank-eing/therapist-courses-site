@@ -1,7 +1,18 @@
 // tests-finance/finance-mobile.test.cjs — run: node --test "tests-finance/**/*.test.cjs"
 const test = require('node:test');
 const assert = require('node:assert');
-const F = require('../public/carlos-dashboard/finance-mobile.js');
+const fs = require('node:fs');
+const path = require('node:path');
+const vm = require('node:vm');
+
+// finance-mobile.js is a plain browser script (module.exports guarded by `typeof module`).
+// The repo root is "type":"module", so a plain require() of a .js file here would be treated
+// as ESM; loading it into a fresh CommonJS-like vm context sidesteps that without needing a
+// package.json inside public/carlos-dashboard (which would get published).
+const src = fs.readFileSync(path.join(__dirname, '../public/carlos-dashboard/finance-mobile.js'), 'utf8');
+const ctx = { module: { exports: {} }, console, Intl };
+vm.runInNewContext(src, ctx);
+const F = ctx.module.exports;
 
 const NOW = new Date('2026-09-18T10:00:00+03:00');
 
@@ -32,7 +43,9 @@ test('mark sent only for a built, unlocked package', () => {
 });
 
 test('request carries the period key and only the given fields', () => {
-  assert.deepStrictEqual(F.requestPayload({ vendor: 'X', domain: 'DJ' }, { period: { key: '2026-07_2026-08' } }),
+  // deepEqual, not deepStrictEqual: the returned object was built inside the vm context used to
+  // load finance-mobile.js, so it has a different realm's Object.prototype than this literal.
+  assert.deepEqual(F.requestPayload({ vendor: 'X', domain: 'DJ' }, { period: { key: '2026-07_2026-08' } }),
     { vendor: 'X', domain: 'DJ', period_key: '2026-07_2026-08' });
 });
 
@@ -48,4 +61,5 @@ test('charts escape names', () => {
   const html = F.donut([{ name: '<b>', total: 10, color: '#000', key: '<b>' }], 10, true, 'הכל');
   assert.ok(!html.includes('<b>') && html.includes('&lt;b&gt;'));
   assert.match(F.bars([{ name: '2026-07', total: 5 }], 5), /יולי/);
+  assert.ok(!F.bars([{ name: '<x>-07', total: 1 }], 1).includes('<x>'));
 });

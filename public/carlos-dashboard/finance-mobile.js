@@ -88,9 +88,10 @@
     const cols = rows.map((r, i) => {
       const h = Math.max(0, r.total) / max * (H - top), x = 20 + i * W, y = H - h;
       const [yy, mm] = r.name.split('-');
-      return `<g><rect x="${x + 30}" y="${y.toFixed(1)}" width="${W - 60}" height="${h.toFixed(1)}" rx="4" fill="${SERIES[0]}"><title>${HEB_MONTHS[+mm]} ${yy}: ${ils(r.total)}</title></rect>
+      const monthName = esc(HEB_MONTHS[+mm] || '');
+      return `<g><rect x="${x + 30}" y="${y.toFixed(1)}" width="${W - 60}" height="${h.toFixed(1)}" rx="4" fill="${SERIES[0]}"><title>${monthName} ${esc(yy)}: ${ils(r.total)}</title></rect>
         <text x="${x + W / 2}" y="${(y - 8).toFixed(1)}" class="bar-v">${ils(r.total)}</text>
-        <text x="${x + W / 2}" y="${H + 20}" class="bar-l">${HEB_MONTHS[+mm]}</text></g>`;
+        <text x="${x + W / 2}" y="${H + 20}" class="bar-l">${monthName}</text></g>`;
     }).join('');
     const width = 40 + rows.length * W;
     return `<div class="fm-chart"><svg viewBox="0 0 ${width} ${H + 30}" role="img" aria-label="עמודות לפי חודש">
@@ -111,12 +112,14 @@
   const POLL_MS = 4000, POLL_MAX_MS = 180000, SNAP_WAIT_MS = 30000;
   let ROW = null, SNAP = null, tab = store.get('carlos-fm-tab', 'pkg'), view = store.get('carlos-fm-chart', 'domain');
   let domainFilter = 'הכל';
-  const waiting = new Map();        // request id -> {cmd, payload}
+  const waiting = new Map();        // request id -> {cmd, payload, since, warned}
   const openCats = new Set();
+  let pollTimer = null;             // the one shared poller for everything in `waiting`
 
   const sb = () => T._supabase;
   const say = (msg, ok) => (typeof T.toast === 'function' ? T.toast(msg, ok, 4000) : alert(msg));
   const isWaiting = (cmd, match) => [...waiting.values()].some(w => w.cmd === cmd && Object.keys(match).every(k => w.payload[k] === match[k]));
+  const isOpen = () => !!($('fm') && !$('fm').classList.contains('hidden'));
 
   function shell() {
     if ($('fm')) return;
@@ -134,9 +137,13 @@
     const { data, error } = await sb().from('finance_state').select('data,made_at,pc_seen_at').eq('user_id', T._userId).maybeSingle();
     if (error) throw error;
     ROW = data; SNAP = data && data.data;
-    const { data: open } = await sb().from('finance_requests').select('id,cmd,payload,status')
+    const { data: open } = await sb().from('finance_requests').select('id,cmd,payload,status,created_at')
       .eq('user_id', T._userId).in('status', ['pending', 'running']).order('created_at');
-    (open || []).forEach(r => { if (!waiting.has(r.id)) { waiting.set(r.id, { cmd: r.cmd, payload: r.payload || {} }); follow(r.id); } });
+    const openIds = new Set((open || []).map(r => r.id));
+    for (const id of [...waiting.keys()]) if (!openIds.has(id)) waiting.delete(id);   // no longer pending/running
+    (open || []).forEach(r => {
+      if (!waiting.has(r.id)) waiting.set(r.id, { cmd: r.cmd, payload: r.payload || {}, since: Date.parse(r.created_at) || Date.now(), warned: false });
+    });
   }
 
   async function open() {
@@ -145,10 +152,14 @@
     $('fm').classList.remove('hidden');
     document.body.classList.add('fm-open');
     $('fm-body').innerHTML = '<div class="fm-card dim">טוען…</div>';
-    try { await load(); render(); } catch (e) { $('fm-body').innerHTML = `<div class="fm-card err">לא הצלחתי לטעון: ${esc(e.message || e)}</div>`; }
+    try { await load(); render(); startPoll(); } catch (e) { $('fm-body').innerHTML = `<div class="fm-card err">לא הצלחתי לטעון: ${esc(e.message || e)}</div>`; }
   }
 
-  function close() { $('fm').classList.add('hidden'); document.body.classList.remove('fm-open'); }
+  function close() {
+    $('fm').classList.add('hidden');
+    document.body.classList.remove('fm-open');
+    stopPoll();
+  }
 
   function render() {
     document.querySelectorAll('#fm [data-fmtab]').forEach(b => b.classList.toggle('on', b.dataset.fmtab === tab));
@@ -227,31 +238,68 @@
     const payload = requestPayload(fields, SNAP);
     const { data, error } = await sb().from('finance_requests').insert({ user_id: T._userId, cmd, payload }).select('id').single();
     if (error) { say('לא נשמר: ' + error.message, false); return render(); }
-    waiting.set(data.id, { cmd, payload });
+    waiting.set(data.id, { cmd, payload, since: Date.now(), warned: false });
     render();
-    follow(data.id);
+    startPoll();
   }
 
-  async function follow(id) {
-    const started = Date.now();
-    while (Date.now() - started < POLL_MAX_MS) {
-      await new Promise(r => setTimeout(r, POLL_MS));
-      const { data } = await sb().from('finance_requests').select('status,result,done_at').eq('id', id).maybeSingle();
-      if (!data || data.status === 'pending' || data.status === 'running') continue;
-      waiting.delete(id);
-      if (data.status === 'failed') say((data.result && data.result.message) || 'לא בוצע', false);
-      else say('בוצע', true);
-      const doneAt = new Date(data.done_at || Date.now());
+  // one shared poller for everything in `waiting`, instead of one loop per request.
+  function startPoll() {
+    if (pollTimer || !waiting.size || !isOpen()) return;
+    pollTimer = setTimeout(pollTick, POLL_MS);
+  }
+
+  function stopPoll() {
+    if (pollTimer) { clearTimeout(pollTimer); pollTimer = null; }
+  }
+
+  function pollTick() {
+    pollTimer = null;
+    if (!waiting.size || !isOpen()) return;
+    pollOnce().catch(() => {}).then(() => {
+      if (waiting.size && isOpen()) pollTimer = setTimeout(pollTick, POLL_MS);
+    });
+  }
+
+  async function pollOnce() {
+    const ids = [...waiting.keys()];
+    if (!ids.length) return;
+    const { data: rows } = await sb().from('finance_requests').select('id,status,result,done_at').in('id', ids);
+    const byId = new Map((rows || []).map(r => [r.id, r]));
+    let latestDone = null;
+    for (const id of ids) {
+      const w = waiting.get(id);
+      if (!w) continue;
+      const r = byId.get(id);
+      if (!r || r.status === 'done' || r.status === 'failed') {
+        waiting.delete(id);   // done/failed → toast once, per id, then it's off the waiting list
+        if (r && r.status === 'failed') say((r.result && r.result.message) || 'לא בוצע', false);
+        else if (r && r.status === 'done') say('בוצע', true);
+        if (r && r.done_at) {
+          const doneAt = new Date(r.done_at);
+          if (!latestDone || doneAt > latestDone) latestDone = doneAt;
+        }
+      } else if (!w.warned && Date.now() - w.since >= POLL_MAX_MS) {
+        // still pending/running in the DB, so it stays in `waiting` ("ממתין" is still correct) —
+        // this is a one-time heads-up, not a failure.
+        w.warned = true;
+        say('המחשב עוד לא ביצע. זה יקרה כשיתחבר', false);
+      }
+    }
+    // refresh pc_seen_at every poll so the "PC not connected" warning updates live
+    const { data: stateRow } = await sb().from('finance_state').select('pc_seen_at,made_at').eq('user_id', T._userId).maybeSingle();
+    if (stateRow) ROW = ROW ? Object.assign({}, ROW, stateRow) : stateRow;
+
+    if (latestDone) {
       const waitSnap = Date.now();
       do {
-        await load();
-        if (ROW && new Date(ROW.made_at) >= doneAt) break;
+        const { data } = await sb().from('finance_state').select('data,made_at,pc_seen_at').eq('user_id', T._userId).maybeSingle();
+        if (data) { ROW = data; SNAP = data.data; }
+        if (ROW && ROW.made_at && new Date(ROW.made_at) >= latestDone) break;
         await new Promise(r => setTimeout(r, 3000));
       } while (Date.now() - waitSnap < SNAP_WAIT_MS);
-      if ($('fm') && !$('fm').classList.contains('hidden')) render();
-      return;
     }
-    say('המחשב עוד לא ביצע. זה יקרה כשיתחבר', false);
+    if (isOpen()) render();
   }
 
   const builtWarning = () => SNAP && SNAP.package && SNAP.package.state === 'built'

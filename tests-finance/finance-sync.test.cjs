@@ -74,6 +74,34 @@ test('snapshot needs version 1 and is stored for David', async () => {
   assert.deepStrictEqual(f.calls[0].body.data, { v: 1, period: {} });
 });
 
+test('release rejects bad ids and does nothing for an empty list', async () => {
+  const f = fakeFetch();
+  const h = makeHandler({ env: ENV, fetch: f.fetch });
+  assert.strictEqual((await h(ev({ action: 'release', ids: "not-array" }))).statusCode, 400);
+  assert.strictEqual((await h(ev({ action: 'release', ids: ["1' or 1=1"] }))).statusCode, 400);
+  assert.strictEqual((await h(ev({ action: 'release', ids: Array.from({ length: 21 }, () => '6f1c2d3e-4a5b-4c6d-8e7f-001122334455') }))).statusCode, 400);
+  const res = await h(ev({ action: 'release', ids: [] }));
+  assert.strictEqual(res.statusCode, 200);
+  assert.deepStrictEqual(JSON.parse(res.body), { ok: true });
+  assert.strictEqual(f.calls.length, 0);
+});
+
+test('release puts running ids back to pending for David only', async () => {
+  const A = 'aaaaaaaa-0000-4000-8000-000000000001', B = 'bbbbbbbb-0000-4000-8000-000000000002';
+  const f = fakeFetch();
+  const h = makeHandler({ env: ENV, fetch: f.fetch });
+  const res = await h(ev({ action: 'release', ids: [A, B] }));
+  assert.strictEqual(res.statusCode, 200);
+  assert.deepStrictEqual(JSON.parse(res.body), { ok: true });
+  assert.strictEqual(f.calls.length, 1);
+  const patch = f.calls[0];
+  assert.strictEqual(patch.method, 'PATCH');
+  assert.ok(patch.url.includes(`user_id=eq.${UID}`));
+  assert.ok(patch.url.includes('status=eq.running'));
+  assert.ok(patch.url.includes(`id=in.(${A},${B})`));
+  assert.deepStrictEqual(patch.body, { status: 'pending', picked_at: null });
+});
+
 test('unknown action is 400', async () => {
   assert.strictEqual((await makeHandler({ env: ENV, fetch: fakeFetch().fetch })(ev({ action: 'delete' }))).statusCode, 400);
 });
