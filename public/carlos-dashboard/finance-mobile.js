@@ -127,7 +127,7 @@
     const el = document.createElement('div');
     el.id = 'fm'; el.className = 'fm hidden'; el.dir = 'rtl';
     el.innerHTML = `<div class="fm-top"><b>💰 כספים</b><span id="fm-period" class="dim"></span><button class="fm-x" data-fm="close" aria-label="סגור">✕</button></div>
-      <div class="fm-tabs"><button data-fmtab="pkg">החבילה</button><button data-fmtab="money">לאן הולך הכסף</button></div>
+      <div class="fm-tabs"><button data-fmtab="pkg">דברים לרואה חשבון</button><button data-fmtab="money">לאן הולך הכסף</button></div>
       <div id="fm-body" class="fm-body"></div>`;
     document.body.appendChild(el);
     el.addEventListener('click', onClick);
@@ -178,9 +178,9 @@
     document.querySelectorAll('#fm [data-fmtab]').forEach(b => b.classList.toggle('on', b.dataset.fmtab === tab));
     const late = pcStatus(ROW);
     const lateHtml = late ? `<div class="fm-warn">${esc(late)}</div>` : '';
-    const waitHtml = waiting.size ? `<div class="fm-wait">⏳ ${waiting.size === 1 ? 'לחיצה אחת ממתינה' : waiting.size + ' לחיצות ממתינות'} למחשב (בדרך כלל עד דקה)</div>` : '';
+    const waitHtml = waiting.size ? `<div class="fm-wait">⏳ ${waiting.size === 1 ? 'לחיצה אחת ממתינה' : waiting.size + ' לחיצות ממתינות'} למחשב (בדרך כלל עד 2 דקות)</div>` : '';
     if (!SNAP) { $('fm-period').textContent = ''; $('fm-body').innerHTML = lateHtml || '<div class="fm-card dim">אין נתונים עדיין.</div>'; return; }
-    $('fm-period').textContent = SNAP.period.label;
+    $('fm-period').textContent = tab === 'money' && SNAP.spending && SNAP.spending.period ? SNAP.spending.period.label : SNAP.period.label;
     $('fm-body').innerHTML = lateHtml + waitHtml + (tab === 'money' ? moneyHtml() : packageHtml());
   }
 
@@ -191,7 +191,7 @@
       ${canMarkSent(s) ? `<button class="fm-btn" data-fm="sent" ${isWaiting('mark-sent', {}) ? 'disabled' : ''}>${isWaiting('mark-sent', {}) ? 'ממתין למחשב…' : 'סמן כנשלח'}</button>` : ''}
       ${s.in_check ? `<div class="dim">🔍 ${s.in_check} בבדיקה (במחשב)</div>` : ''}</div>`;
     if (s.locked) return head;
-    if (s.stop) return head + `<div class="fm-card err">${esc(s.stop)}</div>`;
+    const stopHtml = s.stop ? `<div class="fm-card dim">${esc(s.stop)}</div>` : '';
     const receipts = (s.receipts || []).map(r => {
       const busy = isWaiting('receipt-confirm', { id: r.id }) || isWaiting('receipt-discard', { id: r.id });
       const buttons = busy ? '<span class="dim">ממתין למחשב…</span>'
@@ -201,9 +201,9 @@
       return `<li><div><b>${esc(r.vendor || '—')}</b><div class="dim">${dm(r.date)} · ${money(r.total, r.currency)}</div></div><div class="fm-row-btns">${buttons}</div></li>`;
     }).join('');
     const missing = (s.missing || []).map(m => `<li><div><b>${esc(m.merchant)}</b><div class="dim">${dm(m.date)} · ${esc(m.via)}</div></div><span class="num">${ils(m.amount)}</span></li>`).join('');
-    return head
+    return head + stopHtml
       + `<div class="fm-card"><h3>קבלות מטלגרם לאישור (${(s.receipts || []).length})</h3>${receipts ? `<ul class="fm-list">${receipts}</ul>` : '<div class="dim">אין.</div>'}</div>`
-      + `<div class="fm-card"><h3>חשבוניות חסרות (${(s.missing || []).length})</h3>${missing ? `<ul class="fm-list">${missing}</ul>` : '<div class="dim">אין חסרות.</div>'}</div>`
+      + (s.stop ? '' : `<div class="fm-card"><h3>חשבוניות חסרות (${(s.missing || []).length})</h3>${missing ? `<ul class="fm-list">${missing}</ul>` : '<div class="dim">אין חסרות.</div>'}</div>`)
       + (s.remaining ? `<div class="dim fm-foot">עוד ${s.remaining} החלטות מחכות במסך במחשב.</div>` : '');
   }
 
