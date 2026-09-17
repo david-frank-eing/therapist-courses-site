@@ -5316,6 +5316,10 @@ function _initApp() {
     const adminBtn = document.getElementById('admin-btn');
     if (adminBtn) adminBtn.style.display = '';
     adminBtn?.addEventListener('click', () => openAdminPanel('pending'));
+    for (const id of ['finance-rail-btn', 'finance-mnav-btn']) {
+      const b = document.getElementById(id);
+      if (b) b.style.display = '';
+    }
   }
   // Admin modal close
   document.getElementById('admin-modal-close')?.addEventListener('click', () =>
@@ -5424,6 +5428,17 @@ function _initApp() {
 // ---------- Mobile nav drawer ----------
 function _mnavMore() { document.getElementById('mnav-drawer').style.display = 'block'; }
 function _mnavClose() { document.getElementById('mnav-drawer').style.display = 'none'; }
+
+// ---------- Finance (runs on Carlos's PC only) ----------
+function openFinance() {
+  if (!window._isAdmin) return;
+  if (window.matchMedia('(max-width: 1024px)').matches) {
+    toast('כספים זמין כרגע רק במחשב. מהנייד: הבוט בטלגרם', true, 5000);
+    return;
+  }
+  // CSP connect-src blocks probing localhost, so just open it
+  window.open('http://localhost:8090/finance.html', '_blank', 'noopener');
+}
 
 // ---------- Analytics ----------
 let _analyticsCurrentDays = 7;

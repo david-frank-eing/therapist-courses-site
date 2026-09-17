@@ -448,6 +448,7 @@
     <button class="ic" id="admin-btn" style="display:none"><span class="ic-icon">👑</span><span id="admin-badge" class="admin-hdr-badge"></span><span class="ic-lbl">ניהול</span></button>
     <button class="ic" id="settings-btn"><span class="ic-icon">⚙️</span><span class="ic-lbl">הגדרות</span></button>
     <button class="ic" id="analytics-rail-btn" style="display:none" onclick="openAnalytics()"><span class="ic-icon">📊</span><span class="ic-lbl">שימוש בפיצ'רים</span></button>
+    <button class="ic" id="finance-rail-btn" style="display:none" onclick="openFinance()"><span class="ic-icon">💰</span><span class="ic-lbl">כספים</span></button>
     <div class="ic-sep" style="margin-top:auto"></div>
     <button class="ic" id="logout-btn" style="color:#e07070"><span class="ic-icon">🚪</span><span class="ic-lbl">התנתק</span></button>
   </div>
@@ -546,7 +547,7 @@
     })();
   </script>
   <script src="supabase-api.js?v=1"></script>
-  <script src="app.js?v=123"></script>
+  <script src="app.js?v=124"></script>
 
   <!-- Admin modal -->
   <div id="admin-modal" class="settings-modal hidden">
@@ -588,6 +589,7 @@
       <button class="mnav-drawer-btn" onclick="_mnavClose();document.getElementById('collapse-all-btn')?.click()">⊟ כווץ הכל</button>
       <button class="mnav-drawer-btn" onclick="_mnavClose();document.getElementById('export-pdf-btn')?.click()">📄 ייצוא PDF</button>
       <button class="mnav-drawer-btn" onclick="_mnavClose();document.getElementById('help-btn')?.click()">❓ עזרה ומדריך</button>
+      <button class="mnav-drawer-btn" id="finance-mnav-btn" style="display:none" onclick="_mnavClose();openFinance()">💰 כספים</button>
       <button class="mnav-drawer-btn" style="color:#e07070" onclick="_mnavClose();document.getElementById('logout-btn')?.click()">🚪 התנתק</button>
     </div>
   </div>
