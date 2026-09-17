@@ -42,7 +42,9 @@
   }
 
   const canMarkSent = snap => !snap.locked && !!snap.package && snap.package.state === 'built';
-  const requestPayload = (fields, snap) => Object.assign({}, fields, { period_key: snap.period.key });
+  const SPENDING_CMDS = new Set(['vendor-category', 'vendor-domain', 'domains-accept-all']);
+  const requestPayload = (fields, snap, cmd) => Object.assign({}, fields, { period_key: snap.period.key },
+    SPENDING_CMDS.has(cmd) ? { spend_key: snap.spend_key } : {});
 
   // up to 7 slices; the rest become "שאר" (summed in agorot so the total stays exact)
   function slices(rows, colorOf) {
@@ -248,7 +250,7 @@
   async function ask(cmd, fields, confirmText) {
     if (!SNAP) return;
     if (confirmText && !confirm(confirmText)) return render();
-    const payload = requestPayload(fields, SNAP);
+    const payload = requestPayload(fields, SNAP, cmd);
     const { data, error } = await sb().from('finance_requests').insert({ user_id: T._userId, cmd, payload }).select('id').single();
     if (error) { say('לא נשמר: ' + error.message, false); return render(); }
     waiting.set(data.id, { cmd, payload, since: Date.now(), warned: false });
@@ -277,23 +279,24 @@
   async function pollOnce() {
     const ids = [...waiting.keys()];
     if (!ids.length) return;
-    const { data: rows } = await sb().from('finance_requests').select('id,status,result,done_at').in('id', ids);
-    const byId = new Map((rows || []).map(r => [r.id, r]));
+    const { data: rows, error } = await sb().from('finance_requests').select('id,status,result,done_at').in('id', ids);
+    if (error || !rows) return;   // failed poll: leave `waiting` untouched, no toasts
+    const byId = new Map(rows.map(r => [r.id, r]));
     const lateBefore = pcStatus(ROW), sizeBefore = waiting.size;
     let latestDone = null;
     for (const id of ids) {
       const w = waiting.get(id);
       if (!w) continue;
       const r = byId.get(id);
-      if (!r || r.status === 'done' || r.status === 'failed') {
+      if (r && (r.status === 'done' || r.status === 'failed')) {
         waiting.delete(id);   // done/failed → toast once, per id, then it's off the waiting list
-        if (r && r.status === 'failed') say((r.result && r.result.message) || 'לא בוצע', false);
-        else if (r && r.status === 'done') say('בוצע', true);
-        if (r && r.done_at) {
+        if (r.status === 'failed') say((r.result && r.result.message) || 'לא בוצע', false);
+        else say('בוצע', true);
+        if (r.done_at) {
           const doneAt = new Date(r.done_at);
           if (!latestDone || doneAt > latestDone) latestDone = doneAt;
         }
-      } else if (!w.warned && Date.now() - w.since >= POLL_MAX_MS) {
+      } else if (r && !w.warned && Date.now() - w.since >= POLL_MAX_MS) {
         // still pending/running in the DB, so it stays in `waiting` ("ממתין" is still correct) —
         // this is a one-time heads-up, not a failure.
         w.warned = true;

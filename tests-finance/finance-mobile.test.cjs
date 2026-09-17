@@ -49,6 +49,18 @@ test('request carries the period key and only the given fields', () => {
     { vendor: 'X', domain: 'DJ', period_key: '2026-07_2026-08' });
 });
 
+test('spending commands carry the spend key; receipt-confirm does not', () => {
+  const snap = { period: { key: '2026-07_2026-08' }, spend_key: '2026-08' };
+  assert.deepEqual(F.requestPayload({ vendor: 'X', category: 'Y' }, snap, 'vendor-category'),
+    { vendor: 'X', category: 'Y', period_key: '2026-07_2026-08', spend_key: '2026-08' });
+  assert.deepEqual(F.requestPayload({ vendor: 'X', domain: 'Y' }, snap, 'vendor-domain'),
+    { vendor: 'X', domain: 'Y', period_key: '2026-07_2026-08', spend_key: '2026-08' });
+  assert.deepEqual(F.requestPayload({}, snap, 'domains-accept-all'),
+    { period_key: '2026-07_2026-08', spend_key: '2026-08' });
+  assert.deepEqual(F.requestPayload({ id: '1', ver: 2 }, snap, 'receipt-confirm'),
+    { id: '1', ver: 2, period_key: '2026-07_2026-08' });
+});
+
 test('slices group the rest after 6 and keep the exact total', () => {
   const rows = [9, 8, 7, 6, 5, 4, 3.33, 2.34].map((t, i) => ({ name: 'c' + i, total: t }));
   const s = F.slices(rows, () => '#000');
