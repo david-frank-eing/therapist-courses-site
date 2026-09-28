@@ -2190,11 +2190,22 @@ function contactTasksSection(contactId, type) {
   const key = type === 'client' ? 'client_id' : 'event_id';
   const tasks = ((lastState && lastState.tasks) || []).filter(t => t[key] === contactId && t.status === 'pending');
   const rows = tasks.length
-    ? tasks.map(t => `<div class="ct-task-row">
+    ? tasks.map(t => {
+        const time = t.reminder_at ? new Date(t.reminder_at).toLocaleTimeString('en-GB', { timeZone: 'Asia/Jerusalem', hour: '2-digit', minute: '2-digit' }) : '';
+        const title = String(t.title || '').replace(/"/g, '&quot;');
+        return `<div class="ct-task-row" data-task-id="${t.id}">
         <input type="checkbox" data-task-id="${t.id}" class="ct-task-check">
-        <span>${t.title}</span>
+        <span class="ct-task-title">${t.title}</span>
         ${t.due_date ? `<span class="due-chip">${dueLabel(t)}</span>` : ''}
-      </div>`).join('')
+        <button type="button" class="ct-task-edit" title="ערוך משימה">✏️</button>
+        <div class="ct-task-editor" hidden>
+          <input type="text" class="ct-te-title" value="${title}">
+          <input type="date" class="ct-te-date" value="${t.due_date || ''}" title="תאריך">
+          <input type="time" class="ct-te-time" value="${time}" title="שעת תזכורת בטלגרם">
+          <button type="button" class="ct-te-save">שמור</button>
+          <button type="button" class="ct-te-del" title="מחק משימה">🗑</button>
+        </div>
+      </div>`; }).join('')
     : '<div class="muted-text" style="font-size:.85rem">אין משימות פתוחות</div>';
   return `<div class="ct-tasks">
     <div class="ct-tasks-title">📋 משימות (${tasks.length})</div>
@@ -2202,7 +2213,7 @@ function contactTasksSection(contactId, type) {
     <div class="ct-tasks-add">
       <input type="text" class="ct-task-new" placeholder="+ משימה חדשה">
       <input type="date" class="ct-task-date" title="תאריך (אופציונלי)">
-      <input type="time" class="ct-task-time" title="שעה (אופציונלי)">
+      <input type="time" class="ct-task-time" title="שעת תזכורת בטלגרם (אופציונלי)">
       <button type="button" class="ct-task-add">הוסף</button>
     </div>
   </div>`;
@@ -2327,6 +2338,34 @@ function bindFormButtons(card, type, id) {
       toast('✓ משימה הושלמה');
       loadState();
     }));
+  card.querySelectorAll('.ct-task-row[data-task-id]').forEach(row => {
+    const ed = row.querySelector('.ct-task-editor');
+    row.querySelector('.ct-task-edit').addEventListener('click', () => {
+      ed.hidden = !ed.hidden;
+      if (!ed.hidden) row.querySelector('.ct-te-title').focus();
+    });
+    const saveTask = async () => {
+      const title = row.querySelector('.ct-te-title').value.trim();
+      if (!title) return;
+      let due_date = row.querySelector('.ct-te-date').value || null;
+      const time = row.querySelector('.ct-te-time').value;
+      if (time && !due_date) due_date = todayStr();
+      const reminder_at = time ? new Date(`${due_date}T${time}`).toISOString() : null;
+      try { await api('/api/task/update', { id: row.dataset.taskId, title, due_date, reminder_at }); }
+      catch (_) { return; } // api() already showed the error
+      toast('✓ משימה עודכנה');
+      loadState();
+    };
+    row.querySelector('.ct-te-save').addEventListener('click', saveTask);
+    row.querySelector('.ct-te-title').addEventListener('keydown', e => { if (e.key === 'Enter') saveTask(); });
+    row.querySelector('.ct-te-del').addEventListener('click', async () => {
+      if (!confirm('למחוק את המשימה?')) return;
+      try { await api('/api/task/delete', { id: row.dataset.taskId }); } catch (_) { return; }
+      toast('🗑 משימה נמחקה');
+      loadState();
+    });
+  });
+
   const tAdd = card.querySelector('.ct-task-add');
   const tInp = card.querySelector('.ct-task-new');
   if (tAdd && tInp && id !== 'new') {
