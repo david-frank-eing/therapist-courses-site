@@ -540,7 +540,7 @@ input[type=checkbox] { width: 18px; height: 18px; cursor: pointer; accent-color:
 .ct-task-row { display: flex; align-items: center; gap: 8px; font-size: .92rem; padding: 3px 0; }
 .ct-tasks-add { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
 .ct-task-new { flex: 1; min-width: 140px; font-size: .85rem; padding: 6px 9px; }
-.ct-task-date { font-size: .85rem; padding: 6px 9px; }
+.ct-task-date, .ct-task-time { font-size: .85rem; padding: 6px 9px; }
 .ct-task-add { background: var(--bg); color: var(--text2); padding: 6px 14px; font-size: .85rem; }
 
 /* contact chip in main tasks list */

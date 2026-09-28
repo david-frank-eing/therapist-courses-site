@@ -2202,6 +2202,7 @@ function contactTasksSection(contactId, type) {
     <div class="ct-tasks-add">
       <input type="text" class="ct-task-new" placeholder="+ משימה חדשה">
       <input type="date" class="ct-task-date" title="תאריך (אופציונלי)">
+      <input type="time" class="ct-task-time" title="שעה (אופציונלי)">
       <button type="button" class="ct-task-add">הוסף</button>
     </div>
   </div>`;
@@ -2335,8 +2336,15 @@ function bindFormButtons(card, type, id) {
       if (!v) return;
       const payload = { action: 'add', title: v };
       payload[type === 'client' ? 'client_id' : 'event_id'] = id;
+      const tTime = card.querySelector('.ct-task-time');
       if (tDate && tDate.value) payload.due_date = tDate.value;
-      await api('/api/task', payload);
+      if (tTime && tTime.value) {
+        const day = payload.due_date || todayStr();
+        payload.due_date = day;
+        payload.reminder_at = new Date(`${day}T${tTime.value}`).toISOString();
+      }
+      try { await api('/api/task', payload); }
+      catch (_) { return; } // api() already showed the error; keep the typed task
       toast('✓ משימה נוספה');
       loadState();
     };
