@@ -37,7 +37,8 @@ async function _sbGetState(sb, uid) {
     sb.from('time_log').select('*').eq('user_id', uid).order('logged_at', { ascending: false }).limit(100),
     sb.from('content_items').select('*').eq('user_id', uid).order('created_at'),
     sb.from('clients').select('*').eq('user_id', uid).order('full_name'),
-    sb.from('events').select('*').eq('user_id', uid).order('date', { ascending: false }),
+    // events also holds _track() analytics rows (event_name set) — show only DJ events
+    sb.from('events').select('*').eq('user_id', uid).is('event_name', null).order('date', { ascending: false }),
     sb.from('journal_entries').select('*').eq('user_id', uid).eq('date', today),
     sb.from('sync_data').select('*').eq('user_id', uid).eq('key', 'email-summary'),
     sb.from('sync_data').select('*').eq('user_id', uid).eq('key', 'morning-briefing'),
