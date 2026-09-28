@@ -45,7 +45,7 @@ exports.handler = async () => {
     if (!fresh.length) return { statusCode: 200, body: 'Already sent' };
 
     const eventNames = await lookupNames(supabaseUrl, headers, 'events', 'id,contact,title',
-      fresh.map(t => t.event_id).filter(Boolean), e => e.contact || e.title);
+      fresh.map(t => t.event_id).filter(Boolean), e => [e.title, e.contact].filter(Boolean).join(' – '));
     const clientNames = await lookupNames(supabaseUrl, headers, 'clients', 'id,full_name',
       fresh.map(t => t.client_id).filter(Boolean), c => c.full_name);
 

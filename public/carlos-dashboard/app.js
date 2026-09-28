@@ -711,7 +711,7 @@ function contactChip(t) {
   }
   if (t.event_id) {
     const e = (lastState && lastState.events || []).find(x => x.id === t.event_id);
-    if (e) return `<span class="contact-chip">🎵 ${[e.date, e.contact].filter(Boolean).join(' · ') || '(אירוע)'}</span>`;
+    if (e) return `<span class="contact-chip">🎵 ${[e.date, e.title, e.contact].filter(Boolean).join(' · ') || '(אירוע)'}</span>`;
   }
   return '';
 }
@@ -2004,7 +2004,7 @@ function renderEventsTable(active, archived) {
     const archCls = isArchived ? ' archived-row' : '';
     return `<tr class="ct-row${archCls}" data-id="${_esc(e.id)}" data-type="event">
       <td>${date}</td>
-      <td><strong>${_esc(e.contact || '')}</strong></td>
+      <td><strong>${_esc(e.contact || '')}</strong>${e.title ? `<div class="muted-text" style="font-size:.8rem">${_esc(e.title)}</div>` : ''}</td>
       <td dir="ltr">${_esc(e.phone || '')}</td>
       <td>${_esc(e.style || '')}</td>
       <td>${e.attendees || ''}</td>
@@ -2080,7 +2080,7 @@ function eventCard(e) {
   return `<div class="ct-card${archCls}" data-id="${e.id}" data-type="event">
     <div class="ct-summary">
       <div style="min-width:0">
-        <strong>${_esc(date)} · ${_esc(e.contact || '')}</strong>
+        <strong>${[date, e.title, e.contact].filter(Boolean).map(_esc).join(' · ')}</strong>
         <span class="muted-text" style="display:block;font-size:.82rem">${_esc(sub)}</span>
       </div>
       <button class="ct-status-chip ct-status-${e.status}" data-id="${e.id}" data-type="event" data-status="${e.status}">${STATUS[e.status] || ''}</button>
@@ -2158,6 +2158,8 @@ function clientForm(c) {
 function eventForm(e) {
   const s = e.status || 'lead';
   return `<div class="ct-form">
+    <label>סוג האירוע<input type="text" name="title" list="event-type-list" value="${_esc(e.title || '')}" placeholder="למשל: בת מצווה, חתונה, יום הולדת, אירוע חברה"></label>
+    <datalist id="event-type-list">${['בר מצווה', 'בת מצווה', 'חתונה', 'יום הולדת', 'אירוע חברה', 'מסיבה פרטית', 'ברית', 'חינה'].map(x => `<option value="${x}">`).join('')}</datalist>
     ${fld('date', 'תאריך', e.date, 'date')}
     ${fld('contact', 'איש קשר', e.contact)}
     ${fld('phone', 'טלפון', e.phone)}
