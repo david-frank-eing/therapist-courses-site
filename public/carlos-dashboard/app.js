@@ -16,6 +16,57 @@ function toast(msg, ok = true, ms = 3400) {
   setTimeout(() => t.remove(), ms);
 }
 
+// In-app confirmation (the browser's confirm() looks foreign and is easy to tap by mistake on a phone).
+// Resolves true/false. Enter = confirm, Escape / backdrop = cancel.
+function uiConfirm(message, { ok = 'אישור', cancel = 'ביטול', danger = false } = {}) {
+  return new Promise(resolve => {
+    const prev = document.activeElement;
+    const wrap = document.createElement('div');
+    wrap.className = 'ui-confirm';
+    wrap.innerHTML = `<div class="ui-confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="ui-confirm-msg">
+      <div id="ui-confirm-msg" class="ui-confirm-msg"></div>
+      <div class="ui-confirm-btns">
+        <button type="button" class="ui-confirm-ok${danger ? ' danger' : ''}"></button>
+        <button type="button" class="ui-confirm-cancel"></button>
+      </div></div>`;
+    wrap.querySelector('.ui-confirm-msg').textContent = message;
+    wrap.querySelector('.ui-confirm-ok').textContent = ok;
+    wrap.querySelector('.ui-confirm-cancel').textContent = cancel;
+    const done = v => { wrap.remove(); document.removeEventListener('keydown', onKey, true); prev && prev.focus && prev.focus(); resolve(v); };
+    const onKey = e => {
+      if (e.key === 'Escape') { e.preventDefault(); done(false); }
+      else if (e.key === 'Tab') {   // keep focus inside the dialog
+        const b = [...wrap.querySelectorAll('button')], i = b.indexOf(document.activeElement);
+        e.preventDefault(); b[(i + (e.shiftKey ? b.length - 1 : 1)) % b.length].focus();
+      }
+    };
+    wrap.addEventListener('click', e => { if (e.target === wrap) done(false); });
+    wrap.querySelector('.ui-confirm-ok').addEventListener('click', () => done(true));
+    wrap.querySelector('.ui-confirm-cancel').addEventListener('click', () => done(false));
+    document.addEventListener('keydown', onKey, true);
+    document.body.appendChild(wrap);
+    wrap.querySelector(danger ? '.ui-confirm-cancel' : '.ui-confirm-ok').focus();
+  });
+}
+
+// Turn a technical error into a sentence that says what happened and what to do.
+function _friendlyError(e) {
+  const m = String((e && (e.message || e.error_description || e.error)) || e || '');
+  if (/schema cache|column .* does not exist|Could not find the .* column|relation .* does not exist/i.test(m))
+    return 'חסר שדה במסד הנתונים, ולכן השמירה לא עברה. בקש מקרלוס לעדכן את מבנה הטבלה';
+  if (/Failed to fetch|NetworkError|network|Load failed|ERR_INTERNET|timeout/i.test(m))
+    return 'אין חיבור לאינטרנט כרגע. בדוק את החיבור ונסה שוב';
+  if (/JWT|not authenticated|Invalid Refresh Token|401|session/i.test(m))
+    return 'פג תוקף ההתחברות. התנתק והתחבר מחדש';
+  if (/row-level security|permission denied|403/i.test(m))
+    return 'אין הרשאה לפעולה הזו';
+  if (/duplicate key|already exists/i.test(m))
+    return 'הפריט הזה כבר קיים';
+  if (/violates not-null|null value in column/i.test(m))
+    return 'חסר שדה חובה. מלא את כל השדות ונסה שוב';
+  return 'משהו השתבש, ולכן הפעולה לא בוצעה. נסה שוב, ואם זה חוזר ספר לקרלוס';
+}
+
 function _esc(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
@@ -31,7 +82,8 @@ async function api(url, body) {
     if (!r.ok) throw new Error('HTTP ' + r.status);
     return await r.json();
   } catch (e) {
-    toast('שגיאה בחיבור לשרת: ' + e.message, false);
+    console.error('[api]', url, e);   // the technical details stay in the console
+    toast(_friendlyError(e), false, 6000);
     throw e;
   }
 }
@@ -453,7 +505,7 @@ function renderTasks(tasks, date, completedToday) {
     e.stopPropagation();
     const overdueItems = groups.find(g => g.key === 'overdue')?.items || [];
     if (!overdueItems.length) return;
-    if (!confirm(`לדחות ${overdueItems.length} משימות שבאיחור למחר?`)) return;
+    if (!(await uiConfirm(`לדחות ${overdueItems.length} משימות שבאיחור למחר?`, { danger: true }))) return;
     const btn = e.currentTarget;
     btn.disabled = true; btn.textContent = '⏳ דוחה...';
     try {
@@ -610,7 +662,7 @@ function openEditForm(rowEl, kind, id) {
   });
   const del = form.querySelector('.ef-del');
   if (del) del.addEventListener('click', async () => {
-    if (!confirm('למחוק את המשימה לצמיתות?')) return;
+    if (!(await uiConfirm('למחוק את המשימה לצמיתות?', { danger: true }))) return;
     await api('/api/task/delete', { id });
     toast('🗑️ המשימה נמחקה');
     loadState();
@@ -2145,7 +2197,7 @@ function clientForm(c) {
       </select>
     </label>
     ${fld('notes', 'הערות', c.notes, 'textarea')}
-    ${c.id ? contactTasksSection(c.id, 'client') : ''}
+    ${contactTasksSection(c.id || 'new', 'client')}
     <div class="ct-actions">
       <button class="ct-save">שמור</button>
       ${c.id && !c.archived ? '<button class="ct-archive">📦 העבר לארכיון</button>' : ''}
@@ -2178,7 +2230,7 @@ function eventForm(e) {
       </select>
     </label>
     ${fld('notes', 'הערות', e.notes, 'textarea')}
-    ${e.id ? contactTasksSection(e.id, 'event') : '<div class="ct-tasks muted-text" style="font-size:.85rem">📋 משימות — שמור את האירוע קודם, ואז אפשר להוסיף לו משימות</div>'}
+    ${contactTasksSection(e.id || 'new', 'event')}
     <div class="ct-actions">
       <button class="ct-save">שמור</button>
       ${e.id && !e.archived ? '<button class="ct-archive">📦 העבר לארכיון</button>' : ''}
@@ -2288,7 +2340,14 @@ function bindFormButtons(card, type, id) {
     ta.insertAdjacentElement('beforebegin', btn);
   });
 
-  card.querySelector('.ct-save').addEventListener('click', async () => {
+  // typing in the card's fields (not in its task row) means there is something to lose
+  let dirty = false;
+  const markDirty = e => { if (!e.target.closest('.ct-tasks')) dirty = true; };
+  card.addEventListener('input', markDirty);
+  card.addEventListener('change', markDirty);
+
+  // returns the saved id, or null when nothing was saved
+  const saveCard = async () => {
     const data = collectForm(card);
     // הוסף photo_url מה-data attribute
     const photoArea = card.querySelector('.client-photo-area');
@@ -2296,21 +2355,36 @@ function bindFormButtons(card, type, id) {
       const url = photoArea.dataset.url;
       if (url) data.photo_url = url; else delete data.photo_url;
     }
-    if (id && id !== 'new') {
-      await api(apiBase + '/update', { ...data, id });
-      toast('✓ עודכן');
-    } else {
-      if (!Object.keys(data).length) { toast('מלא לפחות שדה אחד', false); return; }
-      await api(apiBase + '/add', data);
-      toast('✓ נוסף');
-    }
-    loadState();
+    try {
+      if (id && id !== 'new') {
+        await api(apiBase + '/update', { ...data, id });
+        toast('✓ נשמר');
+      } else {
+        if (!Object.values(data).some(v => v !== null && v !== '')) { toast('מלא לפחות שדה אחד', false); return null; }
+        const r = await api(apiBase + '/add', data);
+        if (!r || !r.id) return null;
+        id = r.id;
+        card.dataset.id = id;
+        toast('✓ נשמר');
+      }
+    } catch (_) { return null; }   // api() already explained what went wrong
+    dirty = false;
+    return id;
+  };
+  // after a reload the list is redrawn; open the same card again
+  const reopen = savedId => {
+    const again = document.querySelector(`#contacts-list .ct-card[data-id="${savedId}"]`);
+    if (again && !again.classList.contains('expanded')) expandCard(again, type, savedId);
+  };
+
+  card.querySelector('.ct-save').addEventListener('click', async () => {
+    if (await saveCard()) loadState();
   });
   const delBtn = card.querySelector('.ct-del');
   if (delBtn) {
     delBtn.addEventListener('click', async () => {
       const label = type === 'event' ? 'האירוע' : 'המטופל';
-      if (!confirm(`האם אתה בטוח שברצונך למחוק את ${label} לצמיתות?\n\nפעולה זו לא ניתנת לביטול.\nאם רק רוצה להסתיר — לחץ "📦 העבר לארכיון" במקום.`)) return;
+      if (!(await uiConfirm(`האם אתה בטוח שברצונך למחוק את ${label} לצמיתות?\n\nפעולה זו לא ניתנת לביטול.\nאם רק רוצה להסתיר — לחץ "📦 העבר לארכיון" במקום.`, { danger: true }))) return;
       await api(apiBase + '/delete', { id });
       toast('🗑️ נמחק לצמיתות');
       loadState();
@@ -2332,7 +2406,10 @@ function bindFormButtons(card, type, id) {
       loadState();
     });
   }
-  card.querySelector('.ct-cancel').addEventListener('click', () => loadState());
+  card.querySelector('.ct-cancel').addEventListener('click', async () => {
+    if (dirty && !(await uiConfirm('יש שינויים שלא נשמרו. לסגור בלי לשמור?', { ok: 'סגור בלי לשמור', cancel: 'המשך לערוך', danger: true }))) return;
+    loadState();
+  });
 
   // Per-contact task checkboxes + add row
   card.querySelectorAll('.ct-task-check').forEach(cb =>
@@ -2362,7 +2439,7 @@ function bindFormButtons(card, type, id) {
     row.querySelector('.ct-te-save').addEventListener('click', saveTask);
     row.querySelector('.ct-te-title').addEventListener('keydown', e => { if (e.key === 'Enter') saveTask(); });
     row.querySelector('.ct-te-del').addEventListener('click', async () => {
-      if (!confirm('למחוק את המשימה?')) return;
+      if (!(await uiConfirm('למחוק את המשימה?', { danger: true }))) return;
       try { await api('/api/task/delete', { id: row.dataset.taskId }); } catch (_) { return; }
       toast('🗑 משימה נמחקה');
       loadState();
@@ -2371,11 +2448,13 @@ function bindFormButtons(card, type, id) {
 
   const tAdd = card.querySelector('.ct-task-add');
   const tInp = card.querySelector('.ct-task-new');
-  if (tAdd && tInp && id !== 'new') {
+  if (tAdd && tInp) {
     const tDate = card.querySelector('.ct-task-date');
     const addCT = async () => {
       const v = tInp.value.trim();
       if (!v) return;
+      // a task on a card that isn't saved yet: save the card first (also saves any other edits)
+      if (id === 'new' || dirty) { if (!(await saveCard())) return; }
       const payload = { action: 'add', title: v };
       payload[type === 'client' ? 'client_id' : 'event_id'] = id;
       const tTime = card.querySelector('.ct-task-time');
@@ -2388,7 +2467,9 @@ function bindFormButtons(card, type, id) {
       try { await api('/api/task', payload); }
       catch (_) { return; } // api() already showed the error; keep the typed task
       toast('✓ משימה נוספה');
-      loadState();
+      const savedId = id;
+      await loadState();
+      reopen(savedId);
     };
     tAdd.addEventListener('click', addCT);
     tInp.addEventListener('keydown', e => { if (e.key === 'Enter') addCT(); });
@@ -3639,7 +3720,7 @@ function applyHistorySearch() {
   bodyEl.querySelectorAll('.history-del-btn').forEach(btn =>
     btn.addEventListener('click', async (e) => {
       e.stopPropagation();
-      if (!confirm('להסיר את המשימה מההיסטוריה? הפעולה אינה הפיכה.')) return;
+      if (!(await uiConfirm('להסיר את המשימה מההיסטוריה? הפעולה אינה הפיכה.', { danger: true }))) return;
       await api('/api/task/delete', { id: btn.dataset.id });
       toast('🗑️ הוסר מההיסטוריה');
       loadHistory();
@@ -4014,7 +4095,7 @@ function _renderHabitsSettings() {
   // Delete habit
   listEl.querySelectorAll('.hs-del-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
-      if (!confirm('למחוק הרגל זה?')) return;
+      if (!(await uiConfirm('למחוק הרגל זה?', { danger: true }))) return;
       await api('/api/habit/delete', { id: btn.dataset.id });
       toast('✓ נמחק');
       loadState();
@@ -4128,7 +4209,7 @@ function _googleConnect() {
 }
 
 async function _googleDisconnect() {
-  if (!confirm('לנתק את Google? יומן ומיילים לא יוצגו עוד.')) return;
+  if (!(await uiConfirm('לנתק את Google? יומן ומיילים לא יוצגו עוד.', { danger: true }))) return;
   await window._supabase.from('google_tokens').delete().eq('user_id', window._userId);
   toast('✓ Google נותק');
   loadConnectionsDiagnose();
@@ -4439,7 +4520,7 @@ function _bindAdminRowEvents(container) {
       const uid   = btn.dataset.deleteUid;
       const email = btn.dataset.email;
       const row   = btn.closest('.admin-user-row');
-      if (!confirm(`למחוק את ${email} לצמיתות?\n\nהפעולה אינה הפיכה.`)) return;
+      if (!(await uiConfirm(`למחוק את ${email} לצמיתות?\n\nהפעולה אינה הפיכה.`, { danger: true }))) return;
       btn.disabled = true; btn.textContent = '⏳';
       try {
         const s = await _adminGetSession();
@@ -5011,7 +5092,7 @@ function renderBooking(data) {
     }).join('');
     upcomingEl.querySelectorAll('.bk-cancel-btn').forEach(btn => {
       btn.addEventListener('click', async () => {
-        if (!confirm('לבטל את הזימון?')) return;
+        if (!(await uiConfirm('לבטל את הזימון?', { danger: true }))) return;
         await api('/api/booking/cancel', { id: btn.dataset.id });
         loadState();
         toast('זימון בוטל');
@@ -5530,7 +5611,7 @@ async function renderAnalytics(days = 7) {
   body.innerHTML = '<div class="muted-text" style="font-size:.85rem">טוען...</div>';
   try {
     const since = new Date(Date.now() - days * 86400_000).toISOString();
-    const { data, error } = await sb.from('events')
+    const { data, error } = await sb.from('usage_events')
       .select('event_name')
       .gte('created_at', since); // no user_id filter — admin sees all users
     if (error) throw error;
@@ -5590,7 +5671,7 @@ async function _track(name, props = {}) {
     const sb = window._supabase;
     const uid = window._userId;
     if (!sb || !uid) return;
-    sb.from('events').insert({ user_id: uid, event_name: name, properties: props }).then(() => {});
+    sb.from('usage_events').insert({ user_id: uid, event_name: name, properties: props }).then(() => {});
   } catch (_) {}
 }
 
@@ -5777,3 +5858,29 @@ if (!window._supabase || window._userId) {
 } else {
   window._startApp = _initApp;
 }
+
+
+// ---------- Accessibility helpers ----------
+// Icon-only buttons get their title as a spoken name; clickable cards become keyboard-reachable.
+(function () {
+  const KBD = '.ct-card:not(.expanded), .ct-row, .ct-summary, [data-kbd-click]';
+  function fix(root) {
+    if (!root.querySelectorAll) return;
+    root.querySelectorAll('button[title]:not([aria-label])').forEach(b => {
+      if (!/[\p{L}\p{N}]/u.test(b.textContent || '')) b.setAttribute('aria-label', b.title);
+    });
+    root.querySelectorAll(KBD).forEach(el => {
+      if (el.tagName === 'BUTTON' || el.hasAttribute('tabindex')) return;
+      el.setAttribute('tabindex', '0');
+      if (el.tagName !== 'TR') el.setAttribute('role', 'button');   // a row keeps its table meaning
+    });
+  }
+  document.addEventListener('keydown', e => {
+    if ((e.key !== 'Enter' && e.key !== ' ') || !e.target.matches || !e.target.matches(KBD)) return;
+    e.preventDefault();
+    e.target.click();
+  });
+  new MutationObserver(list => list.forEach(m => m.addedNodes.forEach(n => n.nodeType === 1 && fix(n.parentNode || n))))
+    .observe(document.body, { childList: true, subtree: true });
+  fix(document);
+})();

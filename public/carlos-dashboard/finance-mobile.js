@@ -334,7 +334,7 @@
 
   async function ask(cmd, fields, confirmText) {
     if (!SNAP) return;
-    if (confirmText && !confirm(confirmText)) return render();
+    if (confirmText && !(await (T.uiConfirm ? T.uiConfirm(confirmText) : Promise.resolve(confirm(confirmText))))) return render();
     const payload = requestPayload(fields, SNAP, cmd);
     const { data, error } = await sb().from('finance_requests').insert({ user_id: T._userId, cmd, payload }).select('id').single();
     if (error) { say('לא נשמר: ' + error.message, false); return render(); }

@@ -429,7 +429,7 @@ window._sbApi = async function(url, body) {
   // ── Clients ───────────────────────────────────────────────────────────────
   if (url === '/api/client/add') {
     const { name, full_name, phone, email, city, notes, photo_url, contact, source, treatment_type, status } = body || {};
-    const { error } = await sb.from('clients').insert({
+    const { data: added, error } = await sb.from('clients').insert({
       user_id: uid,
       full_name: full_name || name || '',
       phone: phone || '',
@@ -443,9 +443,9 @@ window._sbApi = async function(url, body) {
       status: status || 'lead',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
-    });
+    }).select('id').single();
     if (error) throw error;
-    return { ok: true };
+    return { ok: true, id: added.id };
   }
 
   if (url === '/api/client/update') {
@@ -470,7 +470,7 @@ window._sbApi = async function(url, body) {
   // ── Events ────────────────────────────────────────────────────────────────
   if (url === '/api/event/add') {
     const { title, date, price, status, notes, client_id, contact, phone, source, location, attendees, style, hours } = body || {};
-    const { error } = await sb.from('events').insert({
+    const { data: added, error } = await sb.from('events').insert({
       user_id: uid,
       title: title || '',
       date: date || null,
@@ -487,9 +487,9 @@ window._sbApi = async function(url, body) {
       hours: hours || null,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
-    });
+    }).select('id').single();
     if (error) throw error;
-    return { ok: true };
+    return { ok: true, id: added.id };
   }
 
   if (url === '/api/event/update') {
