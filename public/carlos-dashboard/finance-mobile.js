@@ -130,8 +130,11 @@
     el.id = 'fm'; el.className = 'fm hidden'; el.dir = 'rtl';
     el.innerHTML = `<div class="fm-top"><b>💰 כספים</b><span id="fm-period" class="dim"></span><button class="fm-help" data-fm="help" aria-label="איך משתמשים">?</button><button class="fm-x" data-fm="close" aria-label="סגור">✕</button></div>
       <div class="fm-tabs"><button data-fmtab="pkg">דברים לרואה חשבון</button><button data-fmtab="money">לאן הולך הכסף</button></div>
+      <div class="fm-upload-wrap"><label class="fm-upload">📸 צלם / העלה קבלה<input id="fm-receipt" type="file" accept="image/*,application/pdf" multiple></label>
+        <div id="fm-upload-status" class="fm-upload-status" role="status" aria-live="polite"></div></div>
       <div id="fm-body" class="fm-body"></div>`;
     document.body.appendChild(el);
+    $('fm-receipt').addEventListener('change', e => { uploadReceipts([...e.target.files]); e.target.value = ''; });
     el.addEventListener('click', onClick);
     el.addEventListener('change', onChange);
     el.addEventListener('focusout', () => {
@@ -139,6 +142,61 @@
       renderLater = false;
       setTimeout(() => { if (isOpen()) renderSafe(); }, 0);
     });
+  }
+
+  // ── receipts photographed here: kept in the cloud until the PC reads them, and a copy goes to Telegram ──
+  const RECEIPT_URL = '/.netlify/functions/receipt-inbox';
+  const UPLOAD_MAX = 4 * 1024 * 1024;
+
+  // phone photos are 3-8MB; 2000px JPEG keeps the text readable at a fraction of that
+  function shrinkImage(file) {
+    return new Promise(resolve => {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(1, 2000 / Math.max(img.width, img.height));
+        const c = document.createElement('canvas');
+        c.width = Math.round(img.width * scale); c.height = Math.round(img.height * scale);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(url);
+        c.toBlob(b => resolve(b ? { blob: b, mime: 'image/jpeg' } : { blob: file, mime: file.type }), 'image/jpeg', 0.85);
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); resolve({ blob: file, mime: file.type }); };
+      img.src = url;
+    });
+  }
+  const toBase64 = blob => new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result).split(',')[1]);
+    r.onerror = () => reject(r.error);
+    r.readAsDataURL(blob);
+  });
+
+  async function uploadReceipts(files) {
+    const status = $('fm-upload-status');
+    if (!files.length) return;
+    const lines = [];
+    const show = () => { status.innerHTML = lines.map(l => `<div>${l}</div>`).join(''); };
+    for (const f of files) {
+      const i = lines.push(`⏳ שולח ${esc(f.name)}…`) - 1; show();
+      try {
+        const { blob, mime } = f.type.startsWith('image/') ? await shrinkImage(f) : { blob: f, mime: f.type };
+        if (blob.size > UPLOAD_MAX) throw new Error('הקובץ גדול מ-4MB. שלח אותו לקרלוס בטלגרם');
+        const { data } = await sb().auth.getSession();
+        const token = data && data.session && data.session.access_token;
+        if (!token) throw new Error('צריך להתחבר מחדש');
+        const r = await fetch(RECEIPT_URL, {
+          method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+          body: JSON.stringify({ action: 'upload', filename: f.name, mime, dataBase64: await toBase64(blob) })
+        });
+        const out = await r.json().catch(() => ({}));
+        if (!r.ok || !out.ok) throw new Error(out.error || 'השרת לא קיבל את הקובץ (' + r.status + ')');
+        lines[i] = `✅ ${esc(f.name)} נשמרה${out.telegram ? ' ונשלחה לטלגרם' : ''}. קרלוס יקרא אותה כשהמחשב פעיל`;
+      } catch (e) {
+        lines[i] = `<span class="fm-upload-err">🛑 ${esc(f.name)}: ${esc(e.message || e)}</span>`;
+      }
+      show();
+    }
   }
 
   // redrawing replaces the <select>, which closes its list on the phone. Wait until it loses focus.

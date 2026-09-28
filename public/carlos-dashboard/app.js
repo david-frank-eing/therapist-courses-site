@@ -126,6 +126,7 @@ async function loadState() {
   renderPlaybookSidebar(s.userConfig && s.userConfig.domains, s.playbooks);
   renderRefreshStatus(s.lastRefresh, s.date);
   renderAnalytics(7);
+  window.MobileHome?.refresh();
 }
 
 function renderRefreshStatus(lastRefresh, todayDate) {
@@ -4053,6 +4054,7 @@ async function openSettings(scrollTo) {
     s._contactsLabels   = (lastState && lastState.userConfig && lastState.userConfig.contactsLabels) || {};
     s._platforms        = (lastState && lastState.userConfig && lastState.userConfig.platforms) || DEFAULT_PLATFORMS;
     renderSettings(s, bodyEl);
+    window.MobileHome?.mountSettings(document.getElementById('mhome-settings'));
   } catch (e) {
     bodyEl.innerHTML = '<div class="muted-text">שגיאה: ' + e.message + '</div>';
   }
@@ -4612,6 +4614,8 @@ function renderSettings(s, bodyEl) {
         </div>
       </div>
     </div>
+
+    <div class="settings-section" id="mhome-settings"></div>
 
     <div class="settings-section" id="habits-settings-section">
       <div class="settings-section-title">🏃 הרגלים</div>

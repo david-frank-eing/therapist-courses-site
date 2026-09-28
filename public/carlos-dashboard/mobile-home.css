@@ -1,0 +1,138 @@
+/* mobile-home.css — the phone's start screen (mobile-home.js). Uses the tokens from style.css. */
+#mhome, #mfocus-bar, #mhome-tabbar { display: none; }
+
+@media (max-width: 768px) {
+  body.mhome-on #mhome:not([hidden]) {
+    display: block; position: fixed; inset: 0; z-index: 190; overflow-y: auto;
+    background: var(--bg); color: var(--text);
+    padding: calc(14px + env(safe-area-inset-top, 0px)) 16px 90px;
+  }
+  body.mhome-on #mhome[hidden] { display: none; }
+  body.mhome-on.mhome-tabs #mobile-nav { display: none; }
+
+  /* focus mode: only the chosen area is shown */
+  .mf-hide { display: none !important; }
+  body.mfocus { padding-top: 0; }
+  body.mfocus header { display: none; }
+  body.mfocus .layout, body.mfocus .main-col, body.mfocus .sidebar { display: block; }
+  body.mfocus .mf-keep > .card, body.mfocus .sidebar .sb-card.mf-keep { margin-bottom: 12px; }
+  body.mfocus #mfocus-bar:not(:empty) {
+    display: flex; flex-direction: column; gap: 8px; position: sticky; top: 0; z-index: 60;
+    background: var(--bg); padding: calc(6px + env(safe-area-inset-top, 0px)) 0 10px; margin-bottom: 4px;
+  }
+
+  body.mhome-tabs #mhome-tabbar:not(:empty) {
+    display: flex; position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
+    background: var(--card); border-top: 1px solid var(--border);
+    padding: 6px 6px calc(6px + env(safe-area-inset-bottom, 0px));
+    box-shadow: 0 -2px 16px rgba(0,0,0,.35);
+  }
+}
+
+/* ── shared pieces ── */
+.mh-top { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+.mh-top h1 { font-size: 1.5rem; font-weight: 800; margin: 0; text-wrap: balance; }
+.mh-date { color: var(--text-muted); font-size: .92rem; }
+.mh-ghost {
+  background: transparent; border: 1px solid var(--border); border-radius: 999px; color: var(--text2);
+  padding: 7px 14px; font: inherit; font-size: .9rem; white-space: nowrap; cursor: pointer;
+}
+.mh-ghost:hover { background: var(--hover); }
+#mhome button:focus-visible, #mfocus-bar button:focus-visible, #mhome-tabbar button:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 2px;
+}
+
+.mh-badge { font-size: .82rem; font-weight: 500; border-radius: 999px; padding: 2px 10px; white-space: nowrap; }
+.mh-danger { background: rgba(255,128,128,.15); color: var(--danger); }
+.mh-warn   { background: rgba(255,180,84,.15);  color: var(--warning); }
+.mh-ok     { background: rgba(95,214,160,.15);  color: var(--success); }
+.mh-acc    { background: rgba(108,140,255,.16); color: var(--accent); }
+
+.mh-alert {
+  display: flex; gap: 10px; align-items: center; width: 100%; text-align: start; cursor: pointer;
+  background: rgba(255,128,128,.14); border: 0; border-radius: 14px; color: var(--text);
+  padding: 12px 14px; margin-bottom: 14px; font: inherit;
+}
+.mh-alert b { color: var(--danger); }
+.mh-go { margin-inline-start: auto; color: var(--text-muted); }
+
+/* tiles */
+.mh-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.mh-tile {
+  background: var(--card); border: 1px solid var(--border); border-radius: 18px; color: var(--text);
+  padding: 16px 14px 14px; min-height: 120px; text-align: start; font: inherit; cursor: pointer;
+  display: flex; flex-direction: column; gap: 6px; transition: transform .12s ease;
+}
+.mh-tile:active { transform: scale(.97); }
+.mh-tile .mh-ic { font-size: 1.7rem; line-height: 1; }
+.mh-tile .mh-name { font-size: 1.1rem; font-weight: 700; }
+.mh-tile .mh-badge { margin-top: auto; align-self: flex-start; }
+.mh-tile.wide { grid-column: 1 / -1; min-height: 0; flex-direction: row; align-items: center; gap: 12px; }
+.mh-tile.wide .mh-badge { margin: 0; }
+
+/* list */
+.mh-list { display: flex; flex-direction: column; gap: 8px; }
+.mh-row {
+  display: flex; align-items: center; gap: 12px; width: 100%; text-align: start; cursor: pointer; font: inherit;
+  background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 13px 14px; color: var(--text);
+}
+.mh-row .mh-ic { font-size: 1.35rem; width: 1.6em; text-align: center; }
+.mh-row .mh-name { font-weight: 700; font-size: 1.05rem; flex: 1; }
+.mh-chev { color: var(--text-muted); }
+
+/* today feed */
+.mh-feed { display: flex; flex-direction: column; gap: 10px; }
+.mh-card {
+  width: 100%; text-align: start; cursor: pointer; font: inherit; color: var(--text);
+  background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 14px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.mh-card.urgent { background: rgba(255,128,128,.14); border-color: transparent; }
+.mh-card-h { font-size: .85rem; color: var(--text-muted); }
+.mh-big { font-size: 1.1rem; font-weight: 700; }
+.mh-line { display: flex; gap: 10px; align-items: baseline; }
+.mh-sub { color: var(--text-muted); font-size: .88rem; }
+.mh-time { color: var(--accent); font-weight: 700; font-variant-numeric: tabular-nums; min-width: 3.2em; }
+
+/* customize */
+.mh-cust-head h2 { font-size: 1.3rem; margin: 0 0 6px; }
+.mh-help { color: var(--text-muted); font-size: .92rem; margin: 0 2px 12px; }
+.mh-cust { display: flex; flex-direction: column; gap: 8px; }
+.mh-cust-row { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 10px 12px; display: flex; align-items: center; gap: 10px; }
+.mh-cust-row.off { opacity: .55; }
+.mh-cust-row .mh-name { flex: 1; font-weight: 500; }
+.mh-toggle { width: 46px; height: 28px; border-radius: 999px; border: 0; padding: 3px; background: var(--border); display: flex; flex: none; cursor: pointer; }
+.mh-toggle::after { content: ""; width: 22px; height: 22px; border-radius: 50%; background: #fff; transition: transform .15s ease; }
+.mh-toggle[aria-checked="true"] { background: var(--success); }
+.mh-toggle[aria-checked="true"]::after { transform: translateX(-18px); }
+.mh-mv { width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--border); background: transparent; color: var(--text); flex: none; cursor: pointer; }
+.mh-mv:disabled { opacity: .3; cursor: default; }
+.mh-done {
+  margin-top: 14px; width: 100%; background: rgba(108,140,255,.16); color: var(--accent);
+  border: 1px dashed var(--accent); border-radius: 14px; padding: 12px; font: inherit; font-weight: 700; cursor: pointer;
+}
+.mh-reset { display: block; margin: 14px auto 0; }
+
+/* focus bar */
+.mh-bar-row { display: flex; align-items: center; gap: 10px; }
+.mh-bar-row h2 { font-size: 1.25rem; margin: 0; font-weight: 800; }
+.mh-back { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 8px 14px; color: var(--text); font: inherit; cursor: pointer; }
+.mh-seg { display: flex; gap: 6px; }
+.mh-seg button { flex: 1; background: var(--card); border: 1px solid var(--border); border-radius: 999px; padding: 7px 6px; color: var(--text); font: inherit; font-size: .9rem; cursor: pointer; }
+.mh-seg button[aria-pressed="true"] { background: rgba(108,140,255,.16); border-color: var(--accent); color: var(--accent); font-weight: 700; }
+
+/* bottom tab bar */
+#mhome-tabbar button {
+  flex: 1; background: transparent; border: 0; display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 4px 2px; font: inherit; font-size: .72rem; color: var(--text-muted); border-radius: 10px; cursor: pointer;
+}
+#mhome-tabbar .mh-ti { font-size: 1.25rem; line-height: 1.2; }
+#mhome-tabbar button[aria-current="page"] { color: var(--accent); font-weight: 700; background: rgba(108,140,255,.16); }
+
+/* settings */
+.mh-set-layouts { display: flex; gap: 8px; flex-wrap: wrap; }
+.mh-set-opt { display: flex; align-items: center; gap: 6px; background: var(--input-bg); border: 1px solid var(--border); border-radius: 10px; padding: 7px 12px; cursor: pointer; }
+
+@media (prefers-reduced-motion: reduce) {
+  .mh-tile, .mh-toggle::after { transition: none; }
+}
