@@ -6,6 +6,10 @@
 [functions."google-scheduled-refresh"]
   schedule = "0 4 * * *"
 
+# Scheduled function: Telegram alert when a task's reminder time arrives
+[functions."task-reminders"]
+  schedule = "*/5 * * * *"
+
 [dev]
   command = "npm run dev"
   targetPort = 8080
