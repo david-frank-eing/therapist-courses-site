@@ -2175,7 +2175,7 @@ function eventForm(e) {
       </select>
     </label>
     ${fld('notes', 'הערות', e.notes, 'textarea')}
-    ${e.id ? contactTasksSection(e.id, 'event') : ''}
+    ${e.id ? contactTasksSection(e.id, 'event') : '<div class="ct-tasks muted-text" style="font-size:.85rem">📋 משימות — שמור את האירוע קודם, ואז אפשר להוסיף לו משימות</div>'}
     <div class="ct-actions">
       <button class="ct-save">שמור</button>
       ${e.id && !e.archived ? '<button class="ct-archive">📦 העבר לארכיון</button>' : ''}
@@ -2251,6 +2251,27 @@ function bindFormButtons(card, type, id) {
       bindPhotoRemove(photoArea);
     }
   }
+
+  // Notes: grow with the text, and ⤢ toggles a large editing area
+  card.querySelectorAll('textarea[data-autogrow]').forEach(ta => {
+    const _grow = () => {
+      if (ta.classList.contains('ta-expanded')) return;
+      ta.style.height = 'auto';
+      ta.style.height = Math.min(ta.scrollHeight + 2, 320) + 'px';
+    };
+    ta.addEventListener('input', _grow);
+    _grow();
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'ta-expand-btn';
+    btn.textContent = '⤢ הגדל';
+    btn.addEventListener('click', () => {
+      const on = ta.classList.toggle('ta-expanded');
+      btn.textContent = on ? '⤡ הקטן' : '⤢ הגדל';
+      if (on) { ta.style.height = ''; ta.focus(); } else _grow();
+    });
+    ta.insertAdjacentElement('beforebegin', btn);
+  });
 
   card.querySelector('.ct-save').addEventListener('click', async () => {
     const data = collectForm(card);

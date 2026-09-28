@@ -201,7 +201,7 @@ window._sbApi = async function(url, body) {
 
   // ── Tasks ─────────────────────────────────────────────────────────────────
   if (url === '/api/task') {
-    const { action, id, title, category, priority, due_date, reminder_at } = body || {};
+    const { action, id, title, category, priority, due_date, reminder_at, client_id, event_id } = body || {};
 
     if (action === 'toggle') {
       const { error } = await sb.from('tasks').update({
@@ -221,6 +221,9 @@ window._sbApi = async function(url, body) {
         status: 'pending',
         due_date: due_date || null,
         reminder_at: reminder_at || null,
+        // only sent when set, so ordinary tasks don't depend on these columns
+        ...(client_id ? { client_id } : {}),
+        ...(event_id ? { event_id } : {}),
         created_at: new Date().toISOString()
       });
       if (error) throw error;
