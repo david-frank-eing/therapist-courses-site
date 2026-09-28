@@ -250,6 +250,7 @@
     document.body.classList.add('mhome-on');
     const inArea = view in AREAS;
     root.hidden = inArea;
+    document.body.classList.toggle('mhome-home', !inArea);
     if (!inArea) {
       clearFocus();
       root.innerHTML = view === 'customize' ? customize()
@@ -261,7 +262,7 @@
 
   function teardown() {
     clearFocus();
-    document.body.classList.remove('mhome-on', 'mhome-tabs');
+    document.body.classList.remove('mhome-on', 'mhome-tabs', 'mhome-home');
     if (root) { root.hidden = true; bar.innerHTML = ''; tabbar.innerHTML = ''; }
   }
 
