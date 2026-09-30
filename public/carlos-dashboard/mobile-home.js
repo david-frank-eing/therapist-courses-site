@@ -211,8 +211,15 @@
     if (!wrap || !targets.length) return false;
     targets.forEach(t => {
       for (let el = t; el && el !== wrap.parentElement; el = el.parentElement) el.classList.add('mf-keep');
-      t.querySelectorAll('.section-body.collapsed').forEach(b => b.classList.remove('collapsed'));
-      t.querySelector(':scope > .section-body')?.classList.remove('collapsed');
+      // a section folded on this device (▸, stored per section) opens when chosen from the start screen
+      t.querySelectorAll('.section-body').forEach(body => {
+        body.classList.remove('collapsed');
+        if (body.style.display === 'none') {
+          body.style.display = '';
+          const tgl = body.parentElement && body.parentElement.querySelector(':scope > h2 .section-toggle');
+          if (tgl) tgl.textContent = '▾';
+        }
+      });
     });
     document.querySelectorAll('.mf-keep').forEach(el => {
       if (targets.includes(el)) return;
