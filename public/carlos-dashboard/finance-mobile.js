@@ -253,6 +253,8 @@
       <li><b>שינוי קטגוריה או תחום:</b> פותחים קטגוריה, ובוחרים בשורה. זה נשמר לספק, וחל על כל החיובים שלו, גם בתקופות הבאות, ובמחשב.</li>
       <li><b>אשר את כל ההצעות:</b> נותן תחום לכל הספקים שיש להם הצעה.</li>
       <li>שינוי כאן לא משנה את מה שנשלח לרו"ח.</li>
+      <li><b>לעומת התקופה הקודמת:</b> רק הסכום הכולל והפרש ממנו (אחוז בסוגריים). הפירוט לפי קטגוריה מוצג רק במחשב. אם לא ירדו פירוטים לתקופה הקודמת בזמנו, מוצג "אין נתוני השוואה" במקום מספר מדומה.</li>
+      <li><b>עשרת הספקים הגדולים</b> ו<b>מנויים חוזרים</b> (עם אומדן עלות שנתית): לעיון בלבד, בלי כפתורים.</li>
     </ul>
     <h3>מה עושים רק במחשב</h3>
     <ul>
@@ -296,6 +298,34 @@
 
   const options = (list, current) => list.map(n => `<option ${n === current ? 'selected' : ''}>${esc(n)}</option>`).join('');
 
+  // read-only views from the pushed snapshot (comparison here is the headline only; the PC shows
+  // the full per-category breakdown). No new tap commands — this is display-only.
+  function comparisonHtml(c) {
+    if (!c) return '';
+    if (!c.available) return `<div class="fm-card dim">${esc(c.message)}</div>`;
+    const t = c.total;
+    const sign = t.diff > 0 ? '+' : '';
+    const pct = t.diff_pct == null ? '' : ` (${sign}${t.diff_pct.toFixed(1)}%)`;
+    return `<div class="fm-card"><h3>לעומת ${esc(c.previous_label)}</h3>
+      <div class="fm-stats"><div><span class="dim">התקופה הזו</span><b class="num">${ils(t.current)}</b></div>
+        <div><span class="dim">קודם</span><b class="num">${ils(t.previous)}</b></div>
+        <div><span class="dim">הפרש</span><b class="num${t.diff > 0 ? ' fm-rise' : ''}">${sign}${ils(t.diff)}${pct}</b></div></div></div>`;
+  }
+
+  function topVendorsHtml(list) {
+    if (!list || !list.length) return '';
+    const rows = list.map((v, i) => `<li><div>${i + 1}. <b>${esc(v.name)}</b><div class="dim">${esc(v.category)}</div></div>
+      <div><b class="num">${ils(v.total)}</b><div class="dim num">${v.share_pct.toFixed(1)}%</div></div></li>`).join('');
+    return `<div class="fm-card"><h3>עשרת הספקים הגדולים</h3><ul class="fm-list">${rows}</ul></div>`;
+  }
+
+  function subscriptionsHtml(list) {
+    if (!list || !list.length) return '';
+    const rows = list.map(s => `<li><div><b>${esc(s.merchant)}</b><div class="dim">${s.has_invoice ? 'יש חשבונית' : 'בלי חשבונית'}</div></div>
+      <div><b class="num">${ils(s.bimonthly_total)}</b><div class="dim num">בשנה (אומדן): ${ils(s.annual_estimate)}</div></div></li>`).join('');
+    return `<div class="fm-card"><h3>מנויים חוזרים</h3><ul class="fm-list">${rows}</ul></div>`;
+  }
+
   function moneyHtml() {
     const res = SNAP.spending;
     if (!res || res.stop) return `<div class="fm-card err">${esc((res && res.stop) || 'אין נתונים')}</div>`;
@@ -329,7 +359,8 @@
         <div><span class="dim">הלוואות</span><b class="num">${ils(t.loans)}</b></div><div><span class="dim">חיסכון</span><b class="num">${ils(t.savings)}</b></div></div>
         <div class="fm-chips">${chips}</div><div class="fm-seg">${seg}</div>${chart}</div>`
       + vendorsCard + `<div class="fm-card">${cats}</div>`
-      + '<div class="dim fm-foot">קטגוריה ותחום נבחרים לכל ספק, וחלים על כל החיובים שלו.</div>';
+      + comparisonHtml(res.comparison) + topVendorsHtml(res.top_vendors) + subscriptionsHtml(res.subscriptions)
+      + '<div class="dim fm-foot">קטגוריה ותחום נבחרים לכל ספק, וחלים על כל החיובים שלו. ההשוואה לתקופה הקודמת כאן היא רק הכותרת - הפירוט לפי קטגוריה במחשב.</div>';
   }
 
   async function ask(cmd, fields, confirmText) {

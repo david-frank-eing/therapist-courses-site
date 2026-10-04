@@ -18,6 +18,7 @@ body.fm-open { overflow: hidden; }
 .fm-card h3 { margin: 0 0 8px; font-size: .95rem; }
 .fm-card.err, .fm-warn { color: #ff8a8a; }
 .fm-warn, .fm-wait { margin-top: 12px; padding: 10px 12px; border-radius: 10px; background: var(--card2); font-size: .9rem; }
+.fm-rise { color: #ff8a8a; }
 .fm-big { font-size: 1.25rem; font-weight: 700; margin-bottom: 4px; }
 .fm-btn { background: var(--accent); color: #fff; border: 0; border-radius: 10px; padding: 10px 14px; min-height: 44px; font: inherit; margin-top: 10px; }
 .fm-btn.ghost { background: transparent; color: var(--text2); border: 1px solid var(--border); }
