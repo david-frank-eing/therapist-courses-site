@@ -253,8 +253,8 @@
       <li><b>שינוי קטגוריה או תחום:</b> פותחים קטגוריה, ובוחרים בשורה. זה נשמר לספק, וחל על כל החיובים שלו, גם בתקופות הבאות, ובמחשב.</li>
       <li><b>אשר את כל ההצעות:</b> נותן תחום לכל הספקים שיש להם הצעה.</li>
       <li>שינוי כאן לא משנה את מה שנשלח לרו"ח.</li>
-      <li><b>לעומת התקופה הקודמת:</b> רק הסכום הכולל והפרש ממנו (אחוז בסוגריים). הפירוט לפי קטגוריה מוצג רק במחשב. אם לא ירדו פירוטים לתקופה הקודמת בזמנו, מוצג "אין נתוני השוואה" במקום מספר מדומה.</li>
-      <li><b>עשרת הספקים הגדולים</b> ו<b>מנויים חוזרים</b> (עם אומדן עלות שנתית): לעיון בלבד, בלי כפתורים.</li>
+      <li><b>לעומת התקופה הקודמת:</b> רק הסכום הכולל והפרש ממנו (אחוז בסוגריים). עלייה בולטת (במחשב) דורשת גם 15% וגם 150 ₪ לפחות. הפירוט לפי קטגוריה מוצג רק במחשב. אם לא ירדו פירוטים לתקופה הקודמת בזמנו, או שהארכיון שלה חלקי, מוצג "אין נתוני השוואה" במקום מספר מדומה.</li>
+      <li><b>הספקים הגדולים</b> ו<b>מנויים חוזרים</b> (עם אומדן עלות שנתית): לעיון בלבד, בלי כפתורים.</li>
     </ul>
     <h3>מה עושים רק במחשב</h3>
     <ul>
@@ -307,7 +307,7 @@
     const sign = t.diff > 0 ? '+' : '';
     const pct = t.diff_pct == null ? '' : ` (${sign}${t.diff_pct.toFixed(1)}%)`;
     return `<div class="fm-card"><h3>לעומת ${esc(c.previous_label)}</h3>
-      <div class="fm-stats"><div><span class="dim">התקופה הזו</span><b class="num">${ils(t.current)}</b></div>
+      <div class="fm-stats"><div><span class="dim">סה"כ הוצאות בתקופה</span><b class="num">${ils(t.current)}</b></div>
         <div><span class="dim">קודם</span><b class="num">${ils(t.previous)}</b></div>
         <div><span class="dim">הפרש</span><b class="num${t.diff > 0 ? ' fm-rise' : ''}">${sign}${ils(t.diff)}${pct}</b></div></div></div>`;
   }
@@ -316,7 +316,7 @@
     if (!list || !list.length) return '';
     const rows = list.map((v, i) => `<li><div>${i + 1}. <b>${esc(v.name)}</b><div class="dim">${esc(v.category)}</div></div>
       <div><b class="num">${ils(v.total)}</b><div class="dim num">${v.share_pct.toFixed(1)}%</div></div></li>`).join('');
-    return `<div class="fm-card"><h3>עשרת הספקים הגדולים</h3><ul class="fm-list">${rows}</ul></div>`;
+    return `<div class="fm-card"><h3>הספקים הגדולים (${list.length})</h3><ul class="fm-list">${rows}</ul></div>`;
   }
 
   function subscriptionsHtml(list) {
