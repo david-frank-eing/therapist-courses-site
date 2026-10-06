@@ -302,6 +302,12 @@
 
   const options = (list, current) => list.map(n => `<option ${n === current ? 'selected' : ''}>${esc(n)}</option>`).join('');
 
+  // כמו במחשב: האפשרות הראשונה היא "אוטומטי", אחרת אין דרך חזרה אחרי בחירה אחת
+  const catSelect = (row, choices) => `<select data-fmcat="${esc(row.vendor)}" aria-label="קטגוריה">
+    <option value="" ${row.category_chosen ? '' : 'selected'}>אוטומטי · ${esc(row.category)}</option>
+    ${choices.map(n => `<option ${row.category_chosen && n === row.category ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select>`;
+  const nCharges = n => (n === 1 ? 'חיוב אחד' : `${n} חיובים`);
+
   // read-only views from the pushed snapshot (comparison here is the headline only; the PC shows
   // the full per-category breakdown). No new tap commands — this is display-only.
   function comparisonHtml(c) {
@@ -362,11 +368,11 @@
       const rows = !openCats.has(c.name) ? '' : `<ul class="fm-list">${c.rows.map(r => {
         const busy = isWaiting('vendor-category', { vendor: r.vendor }) || isWaiting('vendor-domain', { vendor: r.vendor });
         return `<li class="fm-charge"><div><b>${esc(r.merchant)}</b><div class="dim">${dm(r.date)} · ${ils(r.amount)} · ${esc(r.via)}</div></div>
-          ${busy ? '<span class="dim">ממתין למחשב…</span>' : `<div class="fm-selects"><select data-fmcat="${esc(r.vendor)}" aria-label="קטגוריה">${options(res.choices, r.category)}</select>
+          ${busy ? '<span class="dim">ממתין למחשב…</span>' : `<div class="fm-selects">${catSelect(r, res.choices)}
           <select data-fmdom="${esc(r.vendor)}" aria-label="תחום">${options(res.domains, r.domain)}</select></div>`}</li>`;
       }).join('')}</ul>`;
       return `<div class="fm-cat"><button data-fmcatopen="${esc(c.name)}"><b>${esc(c.name)}</b>${c.kind === 'spend' ? '' : ' <span class="dim">לא הוצאה</span>'}
-        <span class="num">${ils(c.total)}</span><span class="dim">${c.rows.length}</span></button>${rows}</div>`;
+        <span class="num">${ils(c.total)}</span><span class="dim">${nCharges(c.rows.length)}</span></button>${rows}</div>`;
     }).join('') || '<div class="dim">אין חיובים בסינון הזה.</div>';
     const withSuggestion = res.vendors.filter(x => x.suggestion !== 'לא סווג').length;
     const vendorsCard = !res.vendors.length ? '' : `<div class="fm-card"><h3>ספקים בלי תחום (${res.vendors.length})</h3>
@@ -487,7 +493,7 @@
   function onChange(ev) {
     const s = ev.target.closest('select[data-fmcat], select[data-fmdom]');
     if (!s) return;
-    if (s.dataset.fmcat !== undefined) return ask('vendor-category', { vendor: s.dataset.fmcat, category: s.value }, builtWarning());
+    if (s.dataset.fmcat !== undefined) return ask('vendor-category', { vendor: s.dataset.fmcat, category: s.value || null }, builtWarning());
     return ask('vendor-domain', { vendor: s.dataset.fmdom, domain: s.value }, builtWarning());
   }
 
