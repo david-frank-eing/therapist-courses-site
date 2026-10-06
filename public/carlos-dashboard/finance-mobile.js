@@ -114,6 +114,10 @@
   const POLL_MS = 4000, POLL_MAX_MS = 180000, SNAP_WAIT_MS = 30000;
   let ROW = null, SNAP = null, tab = store.get('carlos-fm-tab', 'pkg'), view = store.get('carlos-fm-chart', 'domain');
   let domainFilter = 'הכל';
+  // החודש המוצג ב"כספים": '0' / '1' בתוך התקופה, או '' לשני החודשים יחד (דוד, 06/10).
+  // 'both' ולא '' ב-localStorage, כי store.get מחזיר את ברירת המחדל על מחרוזת ריקה.
+  let monthIdx = store.get('carlos-fm-month', '1');
+  if (monthIdx === 'both') monthIdx = '';
   const waiting = new Map();        // request id -> {cmd, payload, since, warned}
   const openCats = new Set();
   let pollTimer = null;             // the one shared poller for everything in `waiting`
@@ -319,23 +323,37 @@
     return `<div class="fm-card"><h3>הספקים הגדולים (${list.length})</h3><ul class="fm-list">${rows}</ul></div>`;
   }
 
-  function subscriptionsHtml(list) {
+  // תמיד על שני החודשים של התקופה: מנוי מזוהה בכך שהוא חוזר בשניהם (api.do_spending)
+  function subscriptionsHtml(list, bothLabel) {
     if (!list || !list.length) return '';
     const rows = list.map(s => `<li><div><b>${esc(s.merchant)}</b><div class="dim">${s.has_invoice ? 'יש חשבונית' : 'בלי חשבונית'}</div></div>
       <div><b class="num">${ils(s.bimonthly_total)}</b><div class="dim num">בשנה (אומדן): ${ils(s.annual_estimate)}</div></div></li>`).join('');
-    return `<div class="fm-card"><h3>מנויים חוזרים</h3><ul class="fm-list">${rows}</ul></div>`;
+    return `<div class="fm-card"><h3>מנויים חוזרים</h3>${bothLabel
+      ? `<div class="dim">על שני החודשים של ${esc(bothLabel)}, כי מנוי מזוהה בכך שהוא חוזר בשניהם.</div>` : ''}
+      <ul class="fm-list">${rows}</ul></div>`;
   }
 
   function moneyHtml() {
-    const res = SNAP.spending;
-    if (!res || res.stop) return `<div class="fm-card err">${esc((res && res.stop) || 'אין נתונים')}</div>`;
+    const base = SNAP.spending;
+    if (!base || base.stop) return `<div class="fm-card err">${esc((base && base.stop) || 'אין נתונים')}</div>`;
+    // כל חודש מגיע מוכן מהמחשב (cloud._spending_months). הנייד רק בוחר איזה להציג, ולא מחשב כלום.
+    const slices = SNAP.spending_months || [];
+    const names = (base.period && base.period.month_labels) || [];
+    if (monthIdx !== '' && !slices[+monthIdx]) monthIdx = '';
+    const res = monthIdx === '' ? base : Object.assign({}, base, slices[+monthIdx]);
+    const monthChips = !slices.length ? '' : `<div class="fm-chips">${names.map((n, i) =>
+      `<button data-fmmonth="${i}" class="fm-chip ${String(i) === monthIdx ? 'on' : ''}">${esc(n)}</button>`).join('')}
+      <button data-fmmonth="" class="fm-chip ${monthIdx === '' ? 'on' : ''}">שני החודשים</button></div>`;
+    const scope = res.month_label
+      ? `${esc(res.month_label)} — חודש אחד מתוך ${esc(base.period.label)}`
+      : `${esc(base.period.label)} — שני החודשים יחד, כמו בדיווח המע"מ`;
     if (!res.views[domainFilter]) domainFilter = 'הכל';
     if (!CHART_VIEWS.some(([k]) => k === view)) view = 'domain';
     const v = res.views[domainFilter], t = v.totals;
     const catColor = {};
     (res.views['הכל'].by_category || []).forEach((c, i) => { catColor[c.name] = i < SERIES.length ? SERIES[i] : OTHER_COLOR; });
     const byDomain = domainFilter === 'הכל' ? res.by_domain : res.by_domain.filter(d => d.name === domainFilter);
-    const chart = view === 'month' ? bars(v.by_month, t.spend)
+    const chart = view === 'month' ? bars(v.months || v.by_month, t.spend)
       : view === 'category' ? donut(slices(v.by_category, n => catColor[n] || OTHER_COLOR), t.spend, false, domainFilter)
         : donut(slices(byDomain, n => DOMAIN_COLOR[n] || OTHER_COLOR), t.spend, true, domainFilter);
     const chips = ['הכל'].concat(res.domains).map(d => `<button data-fmfilter="${esc(d)}" class="fm-chip ${d === domainFilter ? 'on' : ''}">${esc(d)}</button>`).join('');
@@ -355,11 +373,13 @@
       ${withSuggestion ? (isWaiting('domains-accept-all', {}) ? '<span class="dim">ממתין למחשב…</span>'
         : `<button class="fm-btn" data-fm="domainsAll">אשר את כל ההצעות (${withSuggestion})</button>`) : ''}
       <div class="dim">או לבחור תחום בכל חיוב למטה. התחום רק בשבילך, והחבילה לרו"ח לא משתנה.</div></div>`;
-    return `<div class="fm-card"><div class="fm-stats"><div><span class="dim">הוצאות</span><b class="num">${ils(t.spend)}</b></div>
+    return `<div class="fm-card"><div class="dim fm-scope">${scope}</div>${monthChips}
+        <div class="fm-stats"><div><span class="dim">הוצאות</span><b class="num">${ils(t.spend)}</b></div>
         <div><span class="dim">הלוואות</span><b class="num">${ils(t.loans)}</b></div><div><span class="dim">חיסכון</span><b class="num">${ils(t.savings)}</b></div></div>
         <div class="fm-chips">${chips}</div><div class="fm-seg">${seg}</div>${chart}</div>`
       + vendorsCard + `<div class="fm-card">${cats}</div>`
-      + comparisonHtml(res.comparison) + topVendorsHtml(res.top_vendors) + subscriptionsHtml(res.subscriptions)
+      + comparisonHtml(res.comparison) + topVendorsHtml(res.top_vendors)
+      + subscriptionsHtml(res.subscriptions, res.month_label ? base.period.label : '')
       + '<div class="dim fm-foot">קטגוריה ותחום נבחרים לכל ספק, וחלים על כל החיובים שלו. ההשוואה לתקופה הקודמת כאן היא רק הכותרת - הפירוט לפי קטגוריה במחשב.</div>';
   }
 
@@ -452,6 +472,11 @@
     if (d.fmtab) { tab = d.fmtab; store.set('carlos-fm-tab', tab); return render(); }
     if (d.fmview) { view = d.fmview; store.set('carlos-fm-chart', view); return render(); }
     if (d.fmfilter) { domainFilter = d.fmfilter; return render(); }
+    if (d.fmmonth !== undefined) {
+      monthIdx = d.fmmonth;
+      store.set('carlos-fm-month', monthIdx === '' ? 'both' : monthIdx);
+      return render();
+    }
     if (d.fmcatopen) { openCats.has(d.fmcatopen) ? openCats.delete(d.fmcatopen) : openCats.add(d.fmcatopen); return render(); }
     if (d.fm === 'ok') return ask('receipt-confirm', { id: d.id, ver: d.ver });
     if (d.fm === 'discard') return ask('receipt-discard', { id: d.id }, 'להוציא את הקבלה? (היא נשמרת בצד במחשב)');
