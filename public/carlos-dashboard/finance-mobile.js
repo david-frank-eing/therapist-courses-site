@@ -343,11 +343,11 @@
     const base = SNAP.spending;
     if (!base || base.stop) return `<div class="fm-card err">${esc((base && base.stop) || 'אין נתונים')}</div>`;
     // כל חודש מגיע מוכן מהמחשב (cloud._spending_months). הנייד רק בוחר איזה להציג, ולא מחשב כלום.
-    const slices = SNAP.spending_months || [];
+    const monthSlices = SNAP.spending_months || [];
     const names = (base.period && base.period.month_labels) || [];
-    if (monthIdx !== '' && !slices[+monthIdx]) monthIdx = '';
-    const res = monthIdx === '' ? base : Object.assign({}, base, slices[+monthIdx]);
-    const monthChips = !slices.length ? '' : `<div class="fm-chips">${names.map((n, i) =>
+    if (monthIdx !== '' && !monthSlices[+monthIdx]) monthIdx = '';
+    const res = monthIdx === '' ? base : Object.assign({}, base, monthSlices[+monthIdx]);
+    const monthChips = !monthSlices.length ? '' : `<div class="fm-chips">${names.map((n, i) =>
       `<button data-fmmonth="${i}" class="fm-chip ${String(i) === monthIdx ? 'on' : ''}">${esc(n)}</button>`).join('')}
       <button data-fmmonth="" class="fm-chip ${monthIdx === '' ? 'on' : ''}">שני החודשים</button></div>`;
     const scope = res.month_label
