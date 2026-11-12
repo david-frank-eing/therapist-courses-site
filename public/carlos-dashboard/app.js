@@ -5483,7 +5483,7 @@ function _initApp() {
     const adminBtn = document.getElementById('admin-btn');
     if (adminBtn) adminBtn.style.display = '';
     adminBtn?.addEventListener('click', () => openAdminPanel('pending'));
-    for (const id of ['finance-rail-btn', 'finance-mnav-btn']) {
+    for (const id of ['finance-rail-btn', 'finance-mnav-btn', 'areas-rail-btn', 'areas-mnav-btn']) {
       const b = document.getElementById(id);
       if (b) b.style.display = '';
     }

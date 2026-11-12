@@ -104,18 +104,18 @@ const Admin = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="container py-10 md:py-16">
+      <main className="container py-10 md:py-16" data-area="K1">
         <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-6">אזור ניהול</h1>
 
         <Tabs defaultValue="courses" className="w-full">
-          <TabsList className="mb-6">
+          <TabsList className="mb-6" data-area="K2">
             <TabsTrigger value="courses">קורסים</TabsTrigger>
             <TabsTrigger value="listings">מודעות</TabsTrigger>
             <TabsTrigger value="users">משתמשים</TabsTrigger>
             <TabsTrigger value="settings">הגדרות אתר</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="courses">
+          <TabsContent value="courses" data-area="K3">
             <div className="flex items-center justify-between mb-6">
               <p className="text-muted-foreground">
                 הוספה, עריכה, סרטונים ומשאבים של הקורסים.
@@ -195,15 +195,15 @@ const Admin = () => {
             )}
           </TabsContent>
 
-          <TabsContent value="listings">
+          <TabsContent value="listings" data-area="K6">
             <ListingsManager />
           </TabsContent>
 
-          <TabsContent value="users">
+          <TabsContent value="users" data-area="K7">
             <UsersManager />
           </TabsContent>
 
-          <TabsContent value="settings">
+          <TabsContent value="settings" data-area="K8">
             <SiteSettingsManager />
           </TabsContent>
         </Tabs>

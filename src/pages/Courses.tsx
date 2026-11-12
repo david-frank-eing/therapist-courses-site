@@ -50,7 +50,7 @@ const Courses = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main>
+      <main data-area="K10">
         <section className="py-12 md:py-20">
           <div className="container">
             <div className="text-center mb-12">

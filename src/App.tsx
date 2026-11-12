@@ -17,6 +17,7 @@ import Admin from "./pages/Admin";
 import BookingPage from "./pages/BookingPage";
 import ComingSoon from "./pages/ComingSoon";
 import NotFound from "./pages/NotFound";
+import { AreaNamesToggle } from "@/components/AreaNamesToggle";
 
 const queryClient = new QueryClient();
 
@@ -63,6 +64,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <AppRoutes />
+          <AreaNamesToggle />
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>

@@ -1,0 +1,23 @@
+{
+  "ui": "אתר הקורסים",
+  "prefix": "K",
+  "files": "H:\\therapist-courses-site\\src — כל אזור מסומן בקוד ב-data-area",
+  "areas": [
+    { "code": "K1",  "name": "אזור ניהול",              "sel": "[data-area=\"K1\"]",  "where": "src/pages/Admin.tsx" },
+    { "code": "K2",  "name": "לשוניות הניהול",          "sel": "[data-area=\"K2\"]",  "where": "src/pages/Admin.tsx" },
+    { "code": "K3",  "name": "רשימת הקורסים",           "sel": "[data-area=\"K3\"]",  "where": "src/pages/Admin.tsx" },
+    { "code": "K4",  "name": "טופס קורס",               "sel": "[data-area=\"K4\"]",  "where": "src/components/admin/CourseFormDialog.tsx" },
+    { "code": "K5",  "name": "תוכן ומשאבים של קורס",    "sel": "[data-area=\"K5\"]",  "where": "src/components/admin/ResourceManagerDialog.tsx" },
+    { "code": "K6",  "name": "ניהול מודעות",            "sel": "[data-area=\"K6\"]",  "where": "src/components/admin/ListingsManager.tsx" },
+    { "code": "K7",  "name": "ניהול משתמשים",           "sel": "[data-area=\"K7\"]",  "where": "src/components/admin/UsersManager.tsx" },
+    { "code": "K8",  "name": "הגדרות אתר",              "sel": "[data-area=\"K8\"]",  "where": "src/components/admin/SiteSettingsManager.tsx" },
+
+    { "code": "K10", "name": "קטלוג הקורסים",           "sel": "[data-area=\"K10\"]", "where": "src/pages/Courses.tsx · CourseGrid.tsx" },
+    { "code": "K11", "name": "דף קורס: כותרת",          "sel": "[data-area=\"K11\"]", "where": "src/pages/CoursePage.tsx" },
+    { "code": "K12", "name": "דף קורס: נגן",            "sel": "[data-area=\"K12\"]", "where": "src/pages/CoursePage.tsx" },
+    { "code": "K13", "name": "דף קורס: רשימת התוכן",    "sel": "[data-area=\"K13\"]", "where": "src/pages/CoursePage.tsx" },
+
+    { "code": "K20", "name": "סרגל עליון",              "sel": "header",              "where": "src/components/Header.tsx" },
+    { "code": "K21", "name": "תחתית האתר",              "sel": "footer",              "where": "src/components/Footer.tsx" }
+  ]
+}

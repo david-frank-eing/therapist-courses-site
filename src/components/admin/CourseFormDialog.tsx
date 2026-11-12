@@ -123,7 +123,7 @@ export const CourseFormDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto" dir="rtl">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto" dir="rtl" data-area="K4">
         <DialogHeader>
           <DialogTitle>{isEditing ? "עריכת קורס" : "קורס חדש"}</DialogTitle>
           <DialogDescription>

@@ -219,7 +219,7 @@ export const ResourceManagerDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" dir="rtl">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" dir="rtl" data-area="K5">
         <DialogHeader>
           <DialogTitle>תוכן ומשאבים — {course?.title}</DialogTitle>
           <DialogDescription>

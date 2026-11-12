@@ -1,0 +1,42 @@
+{
+  "ui": "הדשבורד בענן",
+  "prefix": "D",
+  "files": "H:\\therapist-courses-site\\public\\carlos-dashboard — app.js · index.html · style.css · supabase-api.js",
+  "areas": [
+    { "code": "D1",  "name": "בריפינג בוקר",            "sel": "#briefing",        "where": "index.html #briefing · app.js" },
+    { "code": "D2",  "name": "סיכום מיילים",            "sel": "#email",           "where": "index.html #email" },
+    { "code": "D3",  "name": "משימות",                  "sel": "#tasks",           "where": "index.html #tasks · app.js renderTasks" },
+    { "code": "D4",  "name": "מחר",                     "sel": "#tomorrow",        "where": "index.html #tomorrow" },
+    { "code": "D5",  "name": "תוכן השבוע",              "sel": "#content",         "where": "index.html #content" },
+    { "code": "D6",  "name": "לקוחות ואירועים",         "sel": "#contacts",        "where": "index.html #contacts" },
+    { "code": "D7",  "name": "הרגלים",                  "sel": "#habits",          "where": "index.html #habits" },
+    { "code": "D8",  "name": "מעקב (תקציר)",            "sel": "#tracking-mini",   "where": "index.html #tracking-mini" },
+    { "code": "D9",  "name": "יומן אישי",               "sel": "#journal",         "where": "index.html #journal" },
+    { "code": "D10", "name": "זימונים",                 "sel": "#booking-mgmt",    "where": "index.html #booking-mgmt" },
+
+    { "code": "D20", "name": "פוקוס היום",              "sel": ".sb-focus-card",   "where": "index.html .sb-focus-card" },
+    { "code": "D21", "name": "יומן היום",               "sel": ".sb-cal-card",     "where": "index.html .sb-cal-card · app.js renderSidebarCalendar" },
+    { "code": "D22", "name": "פלייבוקים",               "sel": ".sb-pb-card",      "where": "index.html .sb-pb-card" },
+    { "code": "D23", "name": "שאל את קרלוס",            "sel": ".sb-ask-card",     "where": "index.html .sb-ask-card" },
+
+    { "code": "D30", "name": "כותרת וברכה",             "sel": ".page-wrap > header", "where": "index.html header" },
+    { "code": "D31", "name": "סרגל הכלים",              "sel": "#icon-rail",       "where": "index.html #icon-rail" },
+    { "code": "D32", "name": "שעון העצר",               "sel": "#timer-widget",    "where": "index.html #timer-widget" },
+    { "code": "D33", "name": "התראת זימון חדש",         "sel": "#booking-alert-bar", "where": "index.html #booking-alert-bar" },
+    { "code": "D34", "name": "ממתינים לאישור",          "sel": "#pending-users-bar", "where": "index.html #pending-users-bar" },
+    { "code": "D35", "name": "ניווט תחתון (נייד)",      "sel": "#mobile-nav",      "where": "index.html #mobile-nav" },
+    { "code": "D36", "name": "מסך הבית בנייד",          "sel": "#mhome",           "where": "mobile-home.js" },
+    { "code": "D37", "name": "כספים בנייד",             "sel": "#fm",              "where": "finance-mobile.js" },
+
+    { "code": "D40", "name": "מעקב ויעדים (מסך מלא)",   "sel": "#tracking-overlay .crm-overlay-inner", "where": "index.html #tracking-overlay" },
+    { "code": "D41", "name": "לקוחות ואירועים (מסך מלא)", "sel": "#crm-overlay .crm-overlay-inner", "where": "index.html #crm-overlay" },
+    { "code": "D42", "name": "הגדרות",                  "sel": "#settings-modal .settings-inner", "where": "index.html #settings-modal" },
+    { "code": "D43", "name": "ניהול משתמשים",           "sel": "#admin-modal .settings-inner", "where": "index.html #admin-modal · netlify/functions/admin-users.js" },
+    { "code": "D44", "name": "מדריך שימוש",             "sel": "#help-modal .settings-inner", "where": "index.html #help-modal" },
+    { "code": "D45", "name": "היסטוריית משימות",        "sel": "#history-modal .settings-inner", "where": "index.html #history-modal" },
+    { "code": "D46", "name": "שימוש בפיצ'רים",          "sel": "#analytics-modal .settings-inner", "where": "index.html #analytics-modal" },
+    { "code": "D47", "name": "חלון פלייבוק",            "sel": "#playbook-modal .pb-modal-inner", "where": "index.html #playbook-modal" },
+    { "code": "D48", "name": "ארכיון היומן",            "sel": "#journal-modal .jnl-modal-inner", "where": "index.html #journal-modal" },
+    { "code": "D49", "name": "במה עבדת?",               "sel": "#attrib-overlay .dialog", "where": "index.html #attrib-overlay" }
+  ]
+}

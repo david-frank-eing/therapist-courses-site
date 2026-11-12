@@ -190,7 +190,7 @@ const CoursePage = () => {
         </Link>
 
         {/* Course header */}
-        <div className="mb-8">
+        <div className="mb-8" data-area="K11">
           <div className="flex flex-wrap items-center gap-2 mb-3">
             <Badge variant="secondary">{CATEGORY_LABELS[course.category]}</Badge>
             <Badge variant="outline">מנוי: {TIER_LABELS[course.min_tier]}</Badge>
@@ -220,7 +220,7 @@ const CoursePage = () => {
 
         {/* Video player (only when the course has videos) */}
         {videoResources.length > 0 && (
-          <div className="mb-6">
+          <div className="mb-6" data-area="K12">
             {activeVideo && activeAllowed && activeVideoSrc ? (
               <div className="rounded-xl overflow-hidden bg-black aspect-video">
                 {activeVideoSrc.type === "iframe" ? (
@@ -252,7 +252,7 @@ const CoursePage = () => {
         {resources.length === 0 ? (
           <p className="text-muted-foreground">עדיין אין תוכן בקורס זה.</p>
         ) : (
-          <ul className="space-y-2">
+          <ul className="space-y-2" data-area="K13">
             {resources.map((resource) => {
               const allowed = canAccessTier(resource.min_tier);
               const isVideo = isVideoResource(resource);
