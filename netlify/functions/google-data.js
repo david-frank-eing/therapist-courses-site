@@ -4,7 +4,8 @@
 
 exports.handler = async (event) => {
   const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Origin': process.env.URL || 'null',   // this site only (was '*')
+    'Vary': 'Origin',
     'Access-Control-Allow-Headers': 'Authorization, Content-Type',
     'Content-Type': 'application/json'
   };

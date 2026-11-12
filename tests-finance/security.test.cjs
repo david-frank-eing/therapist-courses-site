@@ -116,3 +116,69 @@ test('dashboard: text from the booking form and from Google Calendar is escaped 
   const esc = new Function(m[0] + '; return _esc;')();
   assert.strictEqual(esc('<img src=x onerror=alert(1)>"'), '&lt;img src=x onerror=alert(1)&gt;&quot;');
 });
+
+// ---- finance permission (12/11/2026): its own switch, set only by the admin ----
+const ADMIN = 'admin@example.com';
+let restImpl = async () => ({ ok: true, json: async () => [], text: async () => '' });
+const asUser = email => async (url, opt) => {
+  if (String(url).includes('/auth/v1/user')) return { ok: true, json: async () => ({ id: ALICE, email }) };
+  return restImpl(url, opt);
+};
+async function adminCall(event, fetchImpl) {
+  Object.assign(process.env, { ADMIN_EMAIL: ADMIN, SUPABASE_URL: 'https://x.supabase.co', SUPABASE_SERVICE_KEY: ENV.SUPABASE_SERVICE_KEY, URL: 'https://site.example' });
+  const file = require.resolve('../netlify/functions/admin-users.js');
+  require.cache[file] = undefined;                 // ADMIN_EMAIL is read when the module loads
+  const { handler } = require(file);
+  const realFetch = global.fetch, realErr = console.error;
+  global.fetch = fetchImpl; console.error = () => {};
+  try { return await handler(event); } finally { global.fetch = realFetch; console.error = realErr; }
+}
+const post = body => ({ httpMethod: 'POST', headers: { authorization: 'Bearer t' }, body: JSON.stringify(body) });
+
+test('set_finance: only the admin, only a real user id, only true/false', async () => {
+  const calls = [];
+  restImpl = async (url, opt) => { calls.push([url, opt && opt.method, opt && opt.body]); return { ok: true, json: async () => [{ finance_enabled: true }], text: async () => '' }; };
+
+  let r = await adminCall(post({ action: 'set_finance', userId: MALLORY, enabled: true }), asUser('someone@else.com'));
+  assert.strictEqual(r.statusCode, 403);
+  assert.strictEqual(calls.length, 0);
+
+  for (const bad of [{ userId: 'x', enabled: true }, { userId: MALLORY + '&is_admin=eq.true', enabled: true }, { userId: MALLORY, enabled: 'yes' }, { userId: MALLORY }]) {
+    r = await adminCall(post(Object.assign({ action: 'set_finance' }, bad)), asUser(ADMIN));
+    assert.strictEqual(r.statusCode, 400, JSON.stringify(bad));
+  }
+  assert.strictEqual(calls.length, 0);
+
+  r = await adminCall(post({ action: 'set_finance', userId: MALLORY, enabled: true }), asUser(ADMIN));
+  assert.strictEqual(r.statusCode, 200);
+  assert.deepStrictEqual(JSON.parse(r.body), { ok: true, finance: true });
+  assert.strictEqual(calls.length, 1);
+  assert.ok(calls[0][0].endsWith('/rest/v1/profiles?id=eq.' + MALLORY) && calls[0][1] === 'PATCH');
+  assert.deepStrictEqual(JSON.parse(calls[0][2]), { finance_enabled: true });
+  assert.strictEqual(r.headers['Access-Control-Allow-Origin'], 'https://site.example');      // not '*'
+});
+
+test('set_finance before the migration: a clear message, and the user list keeps its tiers', async () => {
+  restImpl = async (url, opt) => {
+    if (opt && opt.method === 'PATCH') return { ok: false, status: 400, text: async () => 'column "finance_enabled" does not exist' };
+    if (String(url).includes('finance_enabled')) return { ok: false, status: 400, json: async () => ({ message: 'column does not exist' }) };
+    if (String(url).includes('/auth/v1/admin/users')) return { ok: true, text: async () => JSON.stringify({ users: [{ id: MALLORY, email: 'm@x.co', created_at: '2026-01-01' }] }) };
+    return { ok: true, text: async () => JSON.stringify([{ id: MALLORY, full_name: 'M', subscription_tier: 'premium' }]) };
+  };
+  let r = await adminCall(post({ action: 'set_finance', userId: MALLORY, enabled: true }), asUser(ADMIN));
+  assert.strictEqual(r.statusCode, 409);
+  assert.ok(!r.body.includes('does not exist'));
+  r = await adminCall({ httpMethod: 'GET', headers: { authorization: 'Bearer t' } }, asUser(ADMIN));
+  const users = JSON.parse(r.body).users;
+  assert.strictEqual(users[0].tier, 'premium');          // not blanked by the missing column
+  assert.strictEqual(users[0].finance, null);            // "unknown", so the dashboard hides the switch
+});
+
+test('dashboard: finance buttons follow the finance switch, and fall back to admin-only until the column exists', () => {
+  const app = fs.readFileSync(path.join(__dirname, '../public/carlos-dashboard/app.js'), 'utf8');
+  const html = fs.readFileSync(path.join(__dirname, '../public/carlos-dashboard/index.html'), 'utf8');
+  assert.match(app, /function openFinance\(\) \{\s*if \(!window\._financeEnabled\) return;/);
+  assert.match(app, /if \(window\._financeEnabled\) \{\s*for \(const id of \['finance-rail-btn', 'finance-mnav-btn'\]\)/);
+  assert.ok(html.indexOf('window._financeEnabled = window._isAdmin;') < html.indexOf(".select('finance_enabled')"));
+  assert.ok(!/select\('[^']*is_admin[^']*finance_enabled/.test(html));   // never in the query that decides access
+});

@@ -15,7 +15,7 @@
     calendar: { ic: '📅', name: 'יומן היום',  short: 'יומן', targets: ['.sb-cal-card'] },
     clients:  { ic: '💆', name: 'מטופלים',    targets: ['#contacts'], tab: 'clients' },
     habits:   { ic: '🌱', name: 'הרגלים',     targets: ['#habits'] },
-    finance:  { ic: '💰', name: 'כספים',      action: () => window.openFinance && window.openFinance(), admin: true },
+    finance:  { ic: '💰', name: 'כספים',      action: () => window.openFinance && window.openFinance(), finance: true },
     ask:      { ic: '💬', name: 'שאל קרלוס',  short: 'שאל', targets: ['.sb-ask-card'], wide: true },
     focus:    { ic: '🎯', name: 'פוקוס היום', short: 'פוקוס', targets: ['.sb-focus-card'] },
     email:    { ic: '📧', name: 'מיילים',     targets: ['#email'] },
@@ -42,7 +42,7 @@
   let view = 'home';          // 'home' | 'customize' | area key
   let taskDay = 'today';      // tasks focus: today | tomorrow | all
 
-  const available = k => AREAS[k] && (!AREAS[k].admin || window._isAdmin);
+  const available = k => AREAS[k] && (!AREAS[k].admin || window._isAdmin) && (!AREAS[k].finance || window._financeEnabled);
   const visibleAreas = () => prefs.order.filter(k => available(k) && !prefs.hidden.includes(k));
 
   // ── numbers on the tiles (from the state the app already loaded) ──

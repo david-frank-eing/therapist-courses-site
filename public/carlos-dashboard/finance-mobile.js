@@ -224,7 +224,7 @@
   }
 
   async function open() {
-    if (!T._isAdmin || !sb()) return;
+    if (!(T._financeEnabled === undefined ? T._isAdmin : T._financeEnabled) || !sb()) return;
     shell();
     $('fm').classList.remove('hidden');
     document.body.classList.add('fm-open');

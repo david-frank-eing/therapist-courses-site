@@ -4415,6 +4415,7 @@ function _renderAdminUserRow(u) {
             ? `<button class="admin-revoke-btn" data-uid="${_esc(u.id)}" data-tier="free">🚫 בטל גישה</button>`
             : `<button class="admin-approve-btn" data-uid="${_esc(u.id)}" data-tier="premium">✅ אשר גישה</button>`
         }
+        ${typeof u.finance !== 'boolean' ? '' : `<button class="admin-fin-btn" data-fin-uid="${_esc(u.id)}" data-on="${u.finance ? '1' : '0'}" aria-pressed="${u.finance}" title="האם המשתמש רואה את אזור הכספים" style="padding:4px 9px;border-radius:8px;border:1px solid var(--border);background:${u.finance ? 'var(--primary)' : 'transparent'};color:${u.finance ? '#fff' : 'var(--muted)'};cursor:pointer;font-size:.78rem">💰 כספים: ${u.finance ? 'כן' : 'לא'}</button>`}
         ${isAdmin ? '' : `<button class="admin-delete-btn" data-delete-uid="${_esc(u.id)}" data-email="${_esc(u.email)}" title="מחק משתמש">🗑️</button>`}
       </div>
     </div>`;
@@ -4487,6 +4488,32 @@ async function _reloadAdminUsers() {
 }
 
 function _bindAdminRowEvents(container) {
+  container.querySelectorAll('[data-fin-uid]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const uid = btn.dataset.finUid, next = btn.dataset.on !== '1';
+      btn.disabled = true;
+      try {
+        const s = await _adminGetSession();
+        const res = await fetch('/.netlify/functions/admin-users', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + s.access_token },
+          body: JSON.stringify({ action: 'set_finance', userId: uid, enabled: next })
+        });
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(body.error || 'שגיאת שרת ' + res.status);
+        btn.dataset.on = next ? '1' : '0';
+        btn.setAttribute('aria-pressed', String(next));
+        btn.textContent = '💰 כספים: ' + (next ? 'כן' : 'לא');
+        btn.style.background = next ? 'var(--primary)' : 'transparent';
+        btn.style.color = next ? '#fff' : 'var(--muted)';
+        if (window._adminUsersCache) { const cu = window._adminUsersCache.find(u => u.id === uid); if (cu) cu.finance = next; }
+        toast(next ? '💰 אזור הכספים נפתח למשתמש' : '💰 אזור הכספים נסגר למשתמש');
+      } catch (e) {
+        toast('שגיאה: ' + e.message, false);
+      }
+      btn.disabled = false;
+    });
+  });
   container.querySelectorAll('[data-uid]').forEach(btn => {
     btn.addEventListener('click', async () => {
       const uid  = btn.dataset.uid;
@@ -5483,7 +5510,14 @@ function _initApp() {
     const adminBtn = document.getElementById('admin-btn');
     if (adminBtn) adminBtn.style.display = '';
     adminBtn?.addEventListener('click', () => openAdminPanel('pending'));
-    for (const id of ['finance-rail-btn', 'finance-mnav-btn', 'areas-rail-btn', 'areas-mnav-btn']) {
+    for (const id of ['areas-rail-btn', 'areas-mnav-btn']) {
+      const b = document.getElementById(id);
+      if (b) b.style.display = '';
+    }
+  }
+  // Finance has its own switch (profiles.finance_enabled), separate from being the admin
+  if (window._financeEnabled) {
+    for (const id of ['finance-rail-btn', 'finance-mnav-btn']) {
       const b = document.getElementById(id);
       if (b) b.style.display = '';
     }
@@ -5598,8 +5632,9 @@ function _mnavClose() { document.getElementById('mnav-drawer').style.display = '
 
 // ---------- Finance (runs on Carlos's PC only) ----------
 function openFinance() {
-  if (!window._isAdmin) return;
-  if (window.matchMedia('(max-width: 1024px)').matches) {
+  if (!window._financeEnabled) return;
+  // The full screen lives on the admin's own computer (localhost). Everyone else gets the cloud view.
+  if (!window._isAdmin || window.matchMedia('(max-width: 1024px)').matches) {
     if (window.FinanceMobile) window.FinanceMobile.open();
     else toast('מסך הכספים לא נטען. רענן את הדף', false, 5000);
     return;

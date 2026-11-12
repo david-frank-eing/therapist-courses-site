@@ -1,12 +1,16 @@
 // admin-users.js — user management for admin only
 // GET  /.netlify/functions/admin-users         → list all users + tiers
 // POST /.netlify/functions/admin-users         → { action:'set_tier', userId, tier }
+//                                               { action:'set_finance', userId, enabled }   (profiles.finance_enabled)
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || '';
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 exports.handler = async (event) => {
   const cors = {
-    'Access-Control-Allow-Origin': '*',
+    // only this site's own pages may call the admin API from a browser (was '*')
+    'Access-Control-Allow-Origin': process.env.URL || 'null',
+    'Vary': 'Origin',
     'Access-Control-Allow-Headers': 'Authorization, Content-Type',
     'Content-Type': 'application/json'
   };
@@ -54,6 +58,17 @@ exports.handler = async (event) => {
       try { usersData = JSON.parse(usersText); } catch (_) { return json(500, { error: 'Users parse error: ' + usersText.slice(0, 100) }, cors); }
       try { profiles  = JSON.parse(profText);  } catch (_) { profiles = []; }
 
+      // finance_enabled is read on its own and tolerantly: before its migration runs the column does not
+      // exist, and asking for it together with the tiers would have blanked every user's tier.
+      let finMap = null;
+      try {
+        const fr = await fetch(`${supabaseUrl}/rest/v1/profiles?select=id,finance_enabled`, {
+          headers: { apikey: serviceKey, Authorization: 'Bearer ' + serviceKey }
+        });
+        const rows = fr.ok ? await fr.json() : null;
+        if (Array.isArray(rows)) { finMap = {}; rows.forEach(r => { finMap[r.id] = r.finance_enabled === true; }); }
+      } catch (_) { finMap = null; }
+
       const users = usersData.users || [];
       const profMap = {};
       (Array.isArray(profiles) ? profiles : []).forEach(p => { profMap[p.id] = p; });
@@ -66,6 +81,7 @@ exports.handler = async (event) => {
           email:      u.email,
           name:       profMap[u.id]?.full_name || '',
           tier:       profMap[u.id]?.subscription_tier || 'free',
+          finance:    finMap ? finMap[u.id] === true : null,     // null = the column is not in the database yet
           created_at: u.created_at
         }));
 
@@ -84,7 +100,7 @@ exports.handler = async (event) => {
     if (body.action === 'set_tier') {
       const { userId, tier } = body;
       const valid = ['free', 'basic', 'premium', 'vip'];
-      if (!userId || !valid.includes(tier)) return json(400, { error: 'Invalid params' }, cors);
+      if (!UUID.test(String(userId || '')) || !valid.includes(tier)) return json(400, { error: 'Invalid params' }, cors);
 
       const h = { 'Content-Type': 'application/json', apikey: serviceKey, Authorization: 'Bearer ' + serviceKey };
 
@@ -118,6 +134,23 @@ exports.handler = async (event) => {
       }
 
       return json(200, { ok: true, tier_set: tier }, cors);
+    }
+
+    // ── set_finance: who sees the finance area ──
+    if (body.action === 'set_finance') {
+      const { userId, enabled } = body;
+      if (!UUID.test(String(userId || '')) || typeof enabled !== 'boolean') return json(400, { error: 'Invalid params' }, cors);
+      const h = { 'Content-Type': 'application/json', apikey: serviceKey, Authorization: 'Bearer ' + serviceKey, Prefer: 'return=representation' };
+      const r = await fetch(`${supabaseUrl}/rest/v1/profiles?id=eq.${userId}`, {
+        method: 'PATCH', headers: h, body: JSON.stringify({ finance_enabled: enabled })
+      });
+      if (!r.ok) {
+        console.error('[admin-users] set_finance', r.status, (await r.text()).slice(0, 200));
+        return json(409, { error: 'ההרשאה לכספים עוד לא הופעלה במסד הנתונים (צריך להריץ את קובץ ה-SQL)' }, cors);
+      }
+      const rows = await r.json().catch(() => []);
+      if (!Array.isArray(rows) || !rows.length) return json(404, { error: 'המשתמש לא נמצא' }, cors);
+      return json(200, { ok: true, finance: rows[0].finance_enabled === true }, cors);
     }
 
     // ── invite_user ──
@@ -219,7 +252,7 @@ exports.handler = async (event) => {
     // ── delete_user ──
     if (body.action === 'delete_user') {
       const { userId } = body;
-      if (!userId) return json(400, { error: 'Missing userId' }, cors);
+      if (!UUID.test(String(userId || ''))) return json(400, { error: 'Missing userId' }, cors);
       // Prevent deleting the admin account even via direct API call
       const checkRes = await fetch(`${supabaseUrl}/auth/v1/admin/users/${userId}`, {
         headers: { apikey: serviceKey, Authorization: 'Bearer ' + serviceKey }
