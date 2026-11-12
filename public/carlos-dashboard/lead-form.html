@@ -69,6 +69,10 @@
     </div>
 
     <form id="lead-form" novalidate>
+      <!-- honeypot: hidden from people and from screen readers; bots fill every field they find -->
+      <div style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden" aria-hidden="true">
+        <label>Website <input type="text" id="hp-website" name="website" tabindex="-1" autocomplete="off"></label>
+      </div>
       <!-- === THERAPY FIELDS === -->
       <div id="therapy-fields">
         <label>שם מלא <span class="req">*</span></label>
@@ -182,18 +186,22 @@
 
     btn.disabled = true; btn.textContent = '...שולח';
 
+    payload.website = document.getElementById('hp-website').value;
     try {
       const res  = await fetch('/.netlify/functions/lead-capture', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
-      const data = await res.json();
-      if (!res.ok || data.error) throw new Error(data.error || 'שגיאה');
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.error) {
+        // 400 / 429 carry a message the person can act on (bad phone, too many requests)
+        const e = new Error(data.error || 'שגיאה'); e.forUser = res.status === 400 || res.status === 429; throw e;
+      }
       document.getElementById('form-wrap').classList.add('hidden');
       document.getElementById('success-wrap').classList.remove('hidden');
     } catch (err) {
-      showErr('אופס, משהו השתבש. נסה שוב.');
+      showErr(err.forUser ? err.message : 'אופס, משהו השתבש. נסה שוב.');
       btn.disabled = false; btn.textContent = 'שלח פרטים ▶';
     }
   });

@@ -1,13 +1,23 @@
 // google-callback.js — exchanges OAuth code for tokens and stores in Supabase
 
+const oauthState = require('../lib/google-oauth-state.cjs');
+
 exports.handler = async (event) => {
-  const { code, state: userId, error } = event.queryStringParameters || {};
+  const { code, state, error } = event.queryStringParameters || {};
 
   if (error) {
     return redirect('/carlos-dashboard/?google_error=' + encodeURIComponent(error));
   }
-  if (!code || !userId) {
+  if (!code || !state) {
     return redirect('/carlos-dashboard/?google_error=missing_params');
+  }
+  // The user id is whatever google-auth signed for the browser that started the flow — and only if
+  // this is that same browser (cookie). A state from the URL alone is never trusted.
+  const headers = event.headers || {};
+  let userId = null;
+  try { userId = oauthState.verify(process.env, state, headers.cookie || headers.Cookie); } catch (e) { userId = null; }
+  if (!userId) {
+    return redirect('/carlos-dashboard/?google_error=' + encodeURIComponent('החיבור לא אומת. התחל אותו מחדש מההגדרות'));
   }
 
   const clientId     = process.env.GOOGLE_CLIENT_ID;
@@ -67,5 +77,5 @@ exports.handler = async (event) => {
 };
 
 function redirect(url) {
-  return { statusCode: 302, headers: { Location: url } };
+  return { statusCode: 302, headers: { Location: url, 'Set-Cookie': oauthState.clearCookie, 'Cache-Control': 'no-store' } };
 }

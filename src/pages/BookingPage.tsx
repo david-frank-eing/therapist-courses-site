@@ -77,6 +77,39 @@ export default function BookingPage() {
     setSubmitting(true);
     setError("");
 
+    // One server-side step (public.book_slot): checks the slot is still free, saves the appointment,
+    // marks the slot taken and notifies the therapist — atomically. The three separate calls below
+    // could not do the last two for an anonymous visitor (row security), so a booked slot stayed
+    // bookable and no notification was saved. They remain only as a fallback until the database
+    // function exists (migration 20261112000000).
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const rpc = await (supabase as any).rpc("book_slot", {
+      p_slot: selectedSlot.id,
+      p_name: form.name,
+      p_phone: form.phone,
+      p_service: form.service || (profile.services?.[0] || ""),
+      p_notes: form.notes || "",
+    });
+    // PGRST202 / 42883: the function is not in the database yet
+    const missing = rpc.error && (rpc.error.code === "PGRST202" || rpc.error.code === "42883");
+    if (!missing) {
+      const reason = rpc.error ? "error" : rpc.data?.ok ? "" : (rpc.data?.reason || "error");
+      if (!reason) { setDone(true); setSubmitting(false); return; }
+      if (reason === "taken") {
+        setError("מצטערים, חלון זה כבר נתפס. אנא בחר חלון אחר.");
+        setSelectedSlot(null);
+        setSlots(prev => prev.filter(s => s.id !== selectedSlot.id));
+      } else if (reason === "invalid") {
+        setError("יש לבדוק את השם ואת מספר הטלפון ולנסות שוב");
+      } else if (reason === "busy") {
+        setError("נקבעו הרבה תורים בזמן קצר. נסו שוב בעוד שעה");
+      } else {
+        setError("שגיאה בשמירת התור — נסה שוב");
+      }
+      setSubmitting(false);
+      return;
+    }
+
     // Re-check slot availability to prevent race conditions
     const { data: slotCheck } = await supabase
       .from("availability_slots").select("booked").eq("id", selectedSlot.id).single();

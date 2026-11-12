@@ -438,7 +438,7 @@ function renderTasks(tasks, date, completedToday) {
     const overdueCls = isOverdue(t) ? 'overdue' : '';
     // 🔴 = עבר התאריך, ⚠️ = דחוף. משימה יכולה להיות שניהם — כל סימן מופיע פעם אחת
     const marks = (isOverdue(t) ? '🔴 ' : '') + (t.priority === 'urgent' ? '⚠️ ' : '');
-    const notesChip = (t.notes && t.notes.trim()) ? `<span class="notes-chip" title="${(t.notes||'').replace(/"/g,'&quot;').slice(0,200)}">📝 בתהליך</span>` : '';
+    const notesChip = (t.notes && t.notes.trim()) ? `<span class="notes-chip" title="${_esc((t.notes||'').slice(0,200))}">📝 בתהליך</span>` : '';
     return `<li class="${overdueCls}" data-id="${t.id}" data-group="${groupKey}"><input type="checkbox" data-id="${t.id}">
       <span class="${t.priority === 'urgent' ? 'urgent' : ''}">${marks}${_esc(t.title)}</span>
       ${notesChip}
@@ -452,7 +452,7 @@ function renderTasks(tasks, date, completedToday) {
     const toggle  = g.collapsible ? `<button class="tg-toggle" type="button" title="פתח / סגור">${overdueOpen ? '▾' : '◂'}</button>` : '';
     const pushAll = g.key === 'overdue' ? `<button class="tg-push-all" type="button" title="דחה את כל המשימות שבאיחור למחר">⏭️ דחה הכל למחר</button>` : '';
     return `<li class="tg-head${g.collapsible ? ' tg-clickable' : ''}" data-group-head="${g.key}">
-      ${toggle}<span class="tg-title">${g.title}</span><span class="tg-count">${g.items.length}</span>${pushAll}</li>`;
+      ${toggle}<span class="tg-title">${_esc(g.title)}</span><span class="tg-count">${g.items.length}</span>${pushAll}</li>`;
   };
 
   const pendingHtml = groups.length
@@ -760,11 +760,11 @@ function buildMultiImgWidget(existingUrls) {
 function contactChip(t) {
   if (t.client_id) {
     const c = (lastState && lastState.clients || []).find(x => x.id === t.client_id);
-    if (c) return `<span class="contact-chip">💆 ${c.name || '(לקוח)'}</span>`;
+    if (c) return `<span class="contact-chip">💆 ${_esc(c.name || '(לקוח)')}</span>`;
   }
   if (t.event_id) {
     const e = (lastState && lastState.events || []).find(x => x.id === t.event_id);
-    if (e) return `<span class="contact-chip">🎵 ${[e.date, e.title, e.contact].filter(Boolean).join(' · ') || '(אירוע)'}</span>`;
+    if (e) return `<span class="contact-chip">🎵 ${_esc([e.date, e.title, e.contact].filter(Boolean).join(' · ') || '(אירוע)')}</span>`;
   }
   return '';
 }
@@ -819,7 +819,7 @@ function renderTomorrow(tasks, upcomingEvents) {
         const time = t.reminder_at ? (() => { const _d = new Date(t.reminder_at); return isNaN(_d) ? '' : ' · ' + _d.toLocaleTimeString('en-GB', { timeZone: 'Asia/Jerusalem', hour: '2-digit', minute: '2-digit' }); })() : '';
         return `<li data-id="${t.id}">
           <input type="checkbox" data-id="${t.id}">
-          <span>${t.title}</span>
+          <span>${_esc(t.title)}</span>
           ${time ? `<span class="due-chip">⏰${time}</span>` : ''}
           <button class="row-edit-btn" data-id="${t.id}" data-kind="task" title="ערוך">✏️</button>
         </li>`;
@@ -900,9 +900,9 @@ function renderTimeToday(timeLog, date) {
   const total = sessions.reduce((sum, x) => sum + (x.seconds || 0), 0);
   el.innerHTML = sessions.map(s =>
     `<div class="time-row">
-       <span>${s.label || s.domain}</span>
+       <span>${_esc(s.label || s.domain)}</span>
        <span class="time-meta">
-         <span class="muted-text">${fmt(s.seconds)}${s.note ? ' · ' + s.note : ''}</span>
+         <span class="muted-text">${fmt(s.seconds)}${s.note ? ' · ' + _esc(s.note) : ''}</span>
          <button class="time-del" data-id="${s.id}" title="מחק רישום">✕</button>
        </span>
      </div>`
@@ -1070,7 +1070,7 @@ function renderContent(content, weekly) {
         }).join('');
         return `<div class="c-item" data-id="${item.id}">
           ${thumbHtml}
-          <span class="c-item-title">${icon} ${item.title || '(ללא כותרת)'}</span>
+          <span class="c-item-title">${icon} ${_esc(item.title || '(ללא כותרת)')}</span>
           <span class="c-domain">${domainLabel(item.domain)}</span>
           ${platformTags}
           ${thumbUrls.length > 1 ? `<span class="c-img-badge">📸 ${thumbUrls.length}</span>` : ''}
@@ -2250,7 +2250,7 @@ function contactTasksSection(contactId, type) {
         const title = String(t.title || '').replace(/"/g, '&quot;');
         return `<div class="ct-task-row" data-task-id="${t.id}">
         <input type="checkbox" data-task-id="${t.id}" class="ct-task-check">
-        <span class="ct-task-title">${t.title}</span>
+        <span class="ct-task-title">${_esc(t.title)}</span>
         ${t.due_date ? `<span class="due-chip">${dueLabel(t)}</span>` : ''}
         <button type="button" class="ct-task-edit" title="ערוך משימה">✏️</button>
         <div class="ct-task-editor" hidden>
@@ -2681,7 +2681,7 @@ function renderSbFocus(items, dateKey) {
     ? items.map((it, i) =>
         `<div class="sbf-item">
           <span class="sbf-emoji">${it.emoji || '•'}</span>
-          <span class="sbf-text">${it.text || ''}</span>
+          <span class="sbf-text">${_esc(it.text || '')}</span>
           <button class="sbf-edit-btn" data-idx="${i}" title="ערוך">✏️</button>
           <button class="sbf-del-btn"  data-idx="${i}" title="הסר">✕</button>
         </div>`).join('')
@@ -2713,7 +2713,7 @@ function openSbFocusForm(items, idx) {
   const form = document.createElement('div');
   form.className = 'sbf-form';
   form.innerHTML = `
-    <input type="text" id="sbf-text" value="${(it.text || '').replace(/"/g,'&quot;')}" placeholder="פוקוס להיום..." style="width:100%;box-sizing:border-box;direction:rtl;text-align:right">
+    <input type="text" id="sbf-text" value="${_esc(it.text || '')}" placeholder="פוקוס להיום..." style="width:100%;box-sizing:border-box;direction:rtl;text-align:right">
     <div class="sbf-form-btns">
       <button id="sbf-save">💾 שמור</button>
       <button id="sbf-cancel" class="sbf-cancel">ביטול</button>
@@ -2776,10 +2776,10 @@ function renderSbCalendar(cal, todayKey) {
   const isStale = cal && cal.date !== todayKey && effectiveCalEvents.length === calEvents.length;
   const eventsHtml = allEvents.map(ev => `
     <div class="cal-event${ev._isBooking ? ' cal-event-booking' : ''}">
-      <span class="cal-time">${ev.time || ''}${ev.end_time ? '–' + ev.end_time : ''}</span>
+      <span class="cal-time">${_esc(ev.time || '')}${ev.end_time ? '–' + _esc(ev.end_time) : ''}</span>
       <div>
-        <div class="cal-title">${ev.title || ''}</div>
-        ${ev.location ? `<div class="cal-loc">📍 ${ev.location}</div>` : ''}
+        <div class="cal-title">${_esc(ev.title || '')}</div>
+        ${ev.location ? `<div class="cal-loc">📍 ${_esc(ev.location)}</div>` : ''}
       </div>
     </div>`).join('');
 
@@ -4164,7 +4164,7 @@ async function loadConnectionsDiagnose() {
             <span style="font-size:1.4rem">✅</span>
             <div>
               <div style="font-weight:600">Google מחובר</div>
-              <div class="muted-text" style="font-size:.82rem">${data.google_email} · עודכן: ${updated}</div>
+              <div class="muted-text" style="font-size:.82rem">${_esc(data.google_email || '')} · עודכן: ${_esc(updated)}</div>
             </div>
             <button id="conn-google-refresh" style="margin-right:auto;padding:5px 12px;background:var(--primary);color:#fff;border:none;border-radius:8px;cursor:pointer">🔄 רענן</button>
             <button id="conn-google-disconnect" style="padding:5px 12px;background:transparent;border:1px solid var(--border);border-radius:8px;cursor:pointer;color:var(--muted)">נתק</button>
@@ -4202,10 +4202,22 @@ async function loadConnectionsDiagnose() {
   }
 }
 
-function _googleConnect() {
-  const uid = window._userId;
-  if (!uid) return;
-  window.location.href = '/.netlify/functions/google-auth?user_id=' + uid;
+// The server decides who is connecting, from the session token — not from a user id in the URL.
+// It answers with the Google consent URL and sets a short-lived cookie that the callback checks,
+// so a link someone else prepared cannot attach your Gmail to their account.
+async function _googleConnect() {
+  try {
+    const { data: { session } } = await window._supabase.auth.getSession();
+    if (!session) { toast('צריך להתחבר מחדש לדאשבורד לפני חיבור Google', false); return; }
+    const r = await fetch('/.netlify/functions/google-auth', {
+      method: 'POST', headers: { Authorization: 'Bearer ' + session.access_token }
+    });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || !d.url) throw new Error(d.error || ('HTTP ' + r.status));
+    window.location.href = d.url;
+  } catch (e) {
+    toast('לא הצלחתי להתחיל חיבור ל-Google. נסה שוב', false);
+  }
 }
 
 async function _googleDisconnect() {
