@@ -112,12 +112,15 @@ export const Header = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem asChild>
-                  <Link to="/profile" className="cursor-pointer">
-                    <User size={16} className="ml-2" />
-                    הפרופיל שלי
-                  </Link>
-                </DropdownMenuItem>
+                {/* the profile settings live in the dashboard, which only premium/vip can open */}
+                {profile && ['premium','vip'].includes(profile.subscription_tier) && (
+                  <DropdownMenuItem asChild>
+                    <a href="/carlos-dashboard/" className="cursor-pointer">
+                      <User size={16} className="ml-2" />
+                      הפרופיל שלי
+                    </a>
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem asChild>
                   <Link to="/my-courses" className="cursor-pointer">
                     📚 הקורסים שלי

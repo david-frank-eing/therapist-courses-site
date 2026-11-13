@@ -4425,7 +4425,7 @@ async function _loadAdminPanel() {
   const el = document.getElementById('admin-users-list');
   if (!el) return;
 
-  const signupUrl = 'https://stupendous-lily-f8cd84.netlify.app/auth';
+  const signupUrl = window.location.origin + '/auth';
   // Invite section at top
   el.innerHTML = `
     <div class="admin-invite-form">
@@ -4686,7 +4686,7 @@ async function _renderAdminModalTab(tab) {
     body.innerHTML = '<div class="admin-users-list">' + users.map(_renderAdminUserRow).join('') + '</div>';
     _bindAdminRowEvents(body);
   } else if (tab === 'invite') {
-    const signupUrl = 'https://stupendous-lily-f8cd84.netlify.app/auth';
+    const signupUrl = window.location.origin + '/auth';
     body.innerHTML = `<div class="admin-invite-form">
       <div class="admin-invite-title">➕ הזמן משתמש חדש</div>
       <div style="font-size:.82rem;color:var(--text2);margin-bottom:10px;line-height:1.6">
@@ -5048,7 +5048,7 @@ function renderBookingAlerts(notifications, appointments) {
 }
 
 function renderPublicBookingBar(el, slug) {
-  const origin = 'https://stupendous-lily-f8cd84.netlify.app';
+  const origin = window.location.origin;
   if (slug) {
     const url = `${origin}/book/${slug}`;
     el.innerHTML = `<div class="bk-tunnel-active">
@@ -5290,7 +5290,7 @@ function openBookingProfileModal() {
     const body = document.getElementById('settings-body');
     if (!modal || !body) return;
     const currentSlug = prof.slug || '';
-    const origin = 'https://stupendous-lily-f8cd84.netlify.app';
+    const origin = window.location.origin;
     body.innerHTML = `
       <h3 style="margin:0 0 14px;color:var(--text)">✏️ ערוך דף ציבורי</h3>
       <div style="display:flex;flex-direction:column;gap:10px">
@@ -5371,7 +5371,7 @@ function openBookingProfileModal() {
 document.getElementById('copy-booking-link')?.addEventListener('click', () => {
   const slug = lastState && lastState.bookingData && lastState.bookingData.publicSlug;
   const url = slug
-    ? `https://stupendous-lily-f8cd84.netlify.app/book/${slug}`
+    ? `${window.location.origin}/book/${encodeURIComponent(slug)}`
     : window.location.origin + '/book';
   navigator.clipboard.writeText(url)
     .then(() => toast(slug ? 'קישור הועתק ✓' : 'הגדר slug בפרופיל הזימון קודם'))
@@ -5381,7 +5381,7 @@ document.getElementById('copy-booking-link')?.addEventListener('click', () => {
 document.getElementById('copy-lead-therapy')?.addEventListener('click', () => {
   const slug = lastState && lastState.bookingData && lastState.bookingData.publicSlug;
   if (!slug) { toast('הגדר slug בפרופיל הזימון קודם', false); return; }
-  const url = `https://stupendous-lily-fc8d84.netlify.app/carlos-dashboard/lead-form.html?slug=${slug}&type=therapy`;
+  const url = `${window.location.origin}/carlos-dashboard/lead-form.html?slug=${encodeURIComponent(slug)}&type=therapy`;
   navigator.clipboard.writeText(url)
     .then(() => toast('💆 קישור טופס מטופלים הועתק ✓'))
     .catch(() => toast(url));
@@ -5390,7 +5390,7 @@ document.getElementById('copy-lead-therapy')?.addEventListener('click', () => {
 document.getElementById('copy-lead-event')?.addEventListener('click', () => {
   const slug = lastState && lastState.bookingData && lastState.bookingData.publicSlug;
   if (!slug) { toast('הגדר slug בפרופיל הזימון קודם', false); return; }
-  const url = `https://stupendous-lily-fc8d84.netlify.app/carlos-dashboard/lead-form.html?slug=${slug}&type=event`;
+  const url = `${window.location.origin}/carlos-dashboard/lead-form.html?slug=${encodeURIComponent(slug)}&type=event`;
   navigator.clipboard.writeText(url)
     .then(() => toast('🎵 קישור טופס אירועים הועתק ✓'))
     .catch(() => toast(url));
