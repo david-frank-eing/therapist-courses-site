@@ -16,6 +16,8 @@ import ClientDetail from "./pages/ClientDetail";
 import Admin from "./pages/Admin";
 import BookingPage from "./pages/BookingPage";
 import Pricing from "./pages/Pricing";
+import CourseEditor from "./pages/CourseEditor";
+import Home from "./pages/Home";
 import ComingSoon from "./pages/ComingSoon";
 import NotFound from "./pages/NotFound";
 import { AreaNamesToggle } from "@/components/AreaNamesToggle";
@@ -50,6 +52,8 @@ function AppRoutes() {
       <Route path="/crm" element={<CRM />} />
       <Route path="/crm/:id" element={<ClientDetail />} />
       <Route path="/admin" element={<Admin />} />
+      <Route path="/admin/course/:id" element={<CourseEditor />} />
+      <Route path="/home" element={<Home />} />
       <Route path="/book/:slug" element={<BookingPage />} />
       <Route path="/pricing" element={<Pricing />} />
       {/* until there is a real "my courses" page (planned: progress per tier) */}

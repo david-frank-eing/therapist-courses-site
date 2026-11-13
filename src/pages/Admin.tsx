@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -10,12 +10,13 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CATEGORY_LABELS, TIER_LABELS } from "@/lib/constants";
-import { CourseFormDialog, type Course } from "@/components/admin/CourseFormDialog";
-import { ResourceManagerDialog } from "@/components/admin/ResourceManagerDialog";
+import type { Database } from "@/integrations/supabase/types";
 import { UsersManager } from "@/components/admin/UsersManager";
 import { ListingsManager } from "@/components/admin/ListingsManager";
 import { SiteSettingsManager } from "@/components/admin/SiteSettingsManager";
-import { Loader2, Plus, Pencil, Trash2, FileText, ShieldAlert } from "lucide-react";
+import { Loader2, Plus, Pencil, Trash2, ShieldAlert } from "lucide-react";
+
+type Course = Database["public"]["Tables"]["courses"]["Row"];
 
 const Admin = () => {
   const { user, isAdmin, isLoading: authLoading } = useAuth();
@@ -23,10 +24,8 @@ const Admin = () => {
 
   const [courses, setCourses] = useState<Course[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [formOpen, setFormOpen] = useState(false);
-  const [editingCourse, setEditingCourse] = useState<Course | null>(null);
-  const [resourceCourse, setResourceCourse] = useState<Course | null>(null);
-  const [resourceDialogOpen, setResourceDialogOpen] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const navigate = useNavigate();
 
   const fetchCourses = async () => {
     setIsLoading(true);
@@ -42,19 +41,20 @@ const Admin = () => {
     if (isAdmin) fetchCourses();
   }, [isAdmin]);
 
-  const openCreate = () => {
-    setEditingCourse(null);
-    setFormOpen(true);
-  };
-
-  const openEdit = (course: Course) => {
-    setEditingCourse(course);
-    setFormOpen(true);
-  };
-
-  const openResources = (course: Course) => {
-    setResourceCourse(course);
-    setResourceDialogOpen(true);
+  // a new course starts as a draft and opens straight in the editor (/admin/course/:id)
+  const openCreate = async () => {
+    setIsCreating(true);
+    const { data, error } = await supabase
+      .from("courses")
+      .insert({ title: "קורס חדש", category: "business", is_published: false, order_index: courses.length })
+      .select()
+      .single();
+    setIsCreating(false);
+    if (error || !data) {
+      toast({ title: "הקורס לא נוצר", description: error?.message, variant: "destructive" });
+      return;
+    }
+    navigate(`/admin/course/${data.id}`);
   };
 
   const handleDelete = async (course: Course) => {
@@ -118,10 +118,10 @@ const Admin = () => {
           <TabsContent value="courses" data-area="K3">
             <div className="flex items-center justify-between mb-6">
               <p className="text-muted-foreground">
-                הוספה, עריכה, סרטונים ומשאבים של הקורסים.
+                לחיצה על "עריכה" פותחת את הקורס: פרטים, פרקים, סרטונים וקבצים, הכול בעמוד אחד.
               </p>
-              <Button onClick={openCreate} className="gap-1">
-                <Plus size={18} />
+              <Button onClick={openCreate} disabled={isCreating} className="gap-1">
+                {isCreating ? <Loader2 size={18} className="animate-spin" /> : <Plus size={18} />}
                 קורס חדש
               </Button>
             </div>
@@ -168,17 +168,11 @@ const Admin = () => {
                     </div>
 
                     <div className="flex items-center gap-2 shrink-0">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="gap-1"
-                        onClick={() => openResources(course)}
-                      >
-                        <FileText size={16} />
-                        תוכן ומשאבים
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={() => openEdit(course)}>
-                        <Pencil size={16} />
+                      <Button variant="outline" size="sm" className="gap-1" asChild>
+                        <Link to={`/admin/course/${course.id}`}>
+                          <Pencil size={16} />
+                          עריכה והעלאת תכנים
+                        </Link>
                       </Button>
                       <Button
                         variant="ghost"
@@ -209,18 +203,6 @@ const Admin = () => {
         </Tabs>
       </main>
       <Footer />
-
-      <CourseFormDialog
-        open={formOpen}
-        onOpenChange={setFormOpen}
-        course={editingCourse}
-        onSaved={fetchCourses}
-      />
-      <ResourceManagerDialog
-        open={resourceDialogOpen}
-        onOpenChange={setResourceDialogOpen}
-        course={resourceCourse}
-      />
     </div>
   );
 };

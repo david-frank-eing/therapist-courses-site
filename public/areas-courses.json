@@ -6,8 +6,8 @@
     { "code": "K1",  "name": "אזור ניהול",              "sel": "[data-area=\"K1\"]",  "where": "src/pages/Admin.tsx" },
     { "code": "K2",  "name": "לשוניות הניהול",          "sel": "[data-area=\"K2\"]",  "where": "src/pages/Admin.tsx" },
     { "code": "K3",  "name": "רשימת הקורסים",           "sel": "[data-area=\"K3\"]",  "where": "src/pages/Admin.tsx" },
-    { "code": "K4",  "name": "טופס קורס",               "sel": "[data-area=\"K4\"]",  "where": "src/components/admin/CourseFormDialog.tsx" },
-    { "code": "K5",  "name": "תוכן ומשאבים של קורס",    "sel": "[data-area=\"K5\"]",  "where": "src/components/admin/ResourceManagerDialog.tsx" },
+    { "code": "K4",  "name": "פס המצב של עורך הקורס",  "sel": "[data-area=\"K4\"]",  "where": "src/pages/CourseEditor.tsx" },
+    { "code": "K5",  "name": "פרקים ושיעורים",          "sel": "[data-area=\"K5\"]",  "where": "src/pages/CourseEditor.tsx" },
     { "code": "K6",  "name": "ניהול מודעות",            "sel": "[data-area=\"K6\"]",  "where": "src/components/admin/ListingsManager.tsx" },
     { "code": "K7",  "name": "ניהול משתמשים",           "sel": "[data-area=\"K7\"]",  "where": "src/components/admin/UsersManager.tsx" },
     { "code": "K8",  "name": "הגדרות אתר",              "sel": "[data-area=\"K8\"]",  "where": "src/components/admin/SiteSettingsManager.tsx" },
@@ -16,6 +16,12 @@
     { "code": "K11", "name": "דף קורס: כותרת",          "sel": "[data-area=\"K11\"]", "where": "src/pages/CoursePage.tsx" },
     { "code": "K12", "name": "דף קורס: נגן",            "sel": "[data-area=\"K12\"]", "where": "src/pages/CoursePage.tsx" },
     { "code": "K13", "name": "דף קורס: רשימת התוכן",    "sel": "[data-area=\"K13\"]", "where": "src/pages/CoursePage.tsx" },
+
+    { "code": "K30", "name": "הבית שלי",                "sel": "[data-area=\"K30\"]", "where": "src/pages/Home.tsx" },
+    { "code": "K31", "name": "בורר התצוגה",             "sel": "[data-area=\"K31\"]", "where": "src/pages/Home.tsx" },
+    { "code": "K32", "name": "הבית שלי: אריחים",        "sel": "[data-area=\"K32\"]", "where": "src/pages/Home.tsx" },
+    { "code": "K33", "name": "הבית שלי: היום שלי",      "sel": "[data-area=\"K33\"]", "where": "src/pages/Home.tsx" },
+    { "code": "K34", "name": "הבית שלי: תפריט צד",      "sel": "[data-area=\"K34\"]", "where": "src/pages/Home.tsx" },
 
     { "code": "K20", "name": "סרגל עליון",              "sel": "header",              "where": "src/components/Header.tsx" },
     { "code": "K21", "name": "תחתית האתר",              "sel": "footer",              "where": "src/components/Footer.tsx" }

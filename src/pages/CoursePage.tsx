@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, useSearchParams, Link } from "react-router-dom";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import type { Database } from "@/integrations/supabase/types";
+import type { Database, SubscriptionTier } from "@/integrations/supabase/types";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Header } from "@/components/Header";
@@ -22,9 +23,17 @@ import {
 } from "lucide-react";
 
 type Course = Database["public"]["Tables"]["courses"]["Row"];
-type Resource = Database["public"]["Tables"]["course_resources"]["Row"];
+type Resource = Database["public"]["Tables"]["course_resources"]["Row"] & { section_id?: string | null };
+interface Section {
+  id: string;
+  title: string;
+  order_index: number;
+}
 
 const BUCKET = "course-files";
+const TIER_ORDER: SubscriptionTier[] = ["free", "basic", "premium", "vip"];
+// course_sections is newer than the generated types
+const db = supabase as unknown as SupabaseClient;
 
 const VIDEO_FILE_RE = /\.(mp4|webm|mov|m4v|ogg)$/i;
 
@@ -51,11 +60,19 @@ const getVideoEmbed = (url: string): { type: "iframe" | "file"; src: string } =>
 
 const CoursePage = () => {
   const { id } = useParams<{ id: string }>();
-  const { user, canAccessTier } = useAuth();
+  const { user, isAdmin, canAccessTier: canAccessOwnTier } = useAuth();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
+
+  // "?as=basic": the admin looks at the course the way that tier sees it (from the course editor)
+  const asParam = searchParams.get("as") as SubscriptionTier | null;
+  const previewTier = isAdmin && asParam && TIER_ORDER.includes(asParam) ? asParam : null;
+  const canAccessTier = (required: SubscriptionTier) =>
+    previewTier ? TIER_ORDER.indexOf(previewTier) >= TIER_ORDER.indexOf(required) : canAccessOwnTier(required);
 
   const [course, setCourse] = useState<Course | null>(null);
   const [resources, setResources] = useState<Resource[]>([]);
+  const [sections, setSections] = useState<Section[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeVideoId, setActiveVideoId] = useState<string | null>(null);
   const [activeVideoSrc, setActiveVideoSrc] = useState<
@@ -67,23 +84,30 @@ const CoursePage = () => {
     if (!id) return;
     const load = async () => {
       setIsLoading(true);
-      const [{ data: courseData }, { data: resourceData }] = await Promise.all([
-        supabase
-          .from("courses")
-          .select("*")
-          .eq("id", id)
-          .eq("is_published", true)
-          .maybeSingle(),
+      let courseQuery = supabase.from("courses").select("*").eq("id", id);
+      // in a preview the admin may look at a course that is still a draft
+      if (!previewTier) courseQuery = courseQuery.eq("is_published", true);
+      const [{ data: courseData }, { data: resourceData }, sectionResult] = await Promise.all([
+        courseQuery.maybeSingle(),
         supabase
           .from("course_resources")
           .select("*")
           .eq("course_id", id)
           .eq("is_published", true)
           .order("order_index", { ascending: true }),
+        db.from("course_sections").select("id,title,order_index").eq("course_id", id).order("order_index", { ascending: true }),
       ]);
 
       setCourse(courseData ?? null);
-      const res = resourceData ?? [];
+      // a site without the chapters table yet simply shows one list
+      const secs = sectionResult.error ? [] : ((sectionResult.data as Section[]) ?? []);
+      setSections(secs);
+      const rank = new Map(secs.map((s, i) => [s.id, i]));
+      const res = ((resourceData ?? []) as Resource[]).slice().sort((a, b) => {
+        const ra = a.section_id && rank.has(a.section_id) ? rank.get(a.section_id)! : secs.length;
+        const rb = b.section_id && rank.has(b.section_id) ? rank.get(b.section_id)! : secs.length;
+        return ra - rb || (a.order_index ?? 0) - (b.order_index ?? 0);
+      });
       setResources(res);
 
       const firstVideo = res.find(
@@ -94,7 +118,7 @@ const CoursePage = () => {
     };
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id, user]);
+  }, [id, user, previewTier]);
 
   // Resolve the playable source for the active video (URL embed or signed file URL)
   useEffect(() => {
@@ -181,6 +205,17 @@ const CoursePage = () => {
     <div className="min-h-screen bg-background">
       <Header />
       <main className="container py-8 md:py-12 max-w-4xl">
+        {previewTier && (
+          <Card className="p-3 mb-6 bg-accent text-accent-foreground text-sm flex flex-wrap items-center justify-between gap-2">
+            <span>
+              תצוגה מקדימה: כך רואה את הקורס מי שבדרגת <strong>{TIER_LABELS[previewTier]}</strong>.
+              {!course.is_published && " הקורס עדיין בטיוטה, ורק מנהל רואה אותו."}
+            </span>
+            <Button asChild size="sm" variant="outline">
+              <Link to={`/admin/course/${course.id}`}>חזרה לעריכה</Link>
+            </Button>
+          </Card>
+        )}
         <Link
           to="/courses"
           className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary mb-6"
@@ -253,13 +288,23 @@ const CoursePage = () => {
           <p className="text-muted-foreground">עדיין אין תוכן בקורס זה.</p>
         ) : (
           <ul className="space-y-2" data-area="K13">
-            {resources.map((resource) => {
+            {resources.map((resource, index) => {
               const allowed = canAccessTier(resource.min_tier);
               const isVideo = isVideoResource(resource);
               const isActive = resource.id === activeVideoId;
               const isLink = !!resource.url && !resource.file_path && !isVideo;
+              // a chapter heading before the first lesson of every chapter
+              const chapterAt = sections.findIndex((s) => s.id === resource.section_id);
+              const prevSection = index > 0 ? resources[index - 1].section_id ?? null : undefined;
+              const startsChapter =
+                sections.length > 0 && (index === 0 || (resource.section_id ?? null) !== prevSection);
               return (
                 <li key={resource.id}>
+                  {startsChapter && (
+                    <h3 className={`font-semibold text-foreground mb-2 ${index > 0 ? "mt-5" : ""}`}>
+                      {chapterAt >= 0 ? `פרק ${chapterAt + 1}: ${sections[chapterAt].title}` : "חומרים נוספים"}
+                    </h3>
+                  )}
                   <div
                     className={`w-full flex items-center justify-between gap-3 rounded-lg border p-3 transition-smooth ${
                       isActive ? "border-primary bg-primary/5" : "border-border"

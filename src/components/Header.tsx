@@ -12,12 +12,18 @@ import {
 } from "./ui/dropdown-menu";
 import { Badge } from "./ui/badge";
 
-const navLinks = [
-  { label: "דף הבית", href: "/" },
+// up to 5 items: guests see courses / board / pricing; signed-in users see their home first.
+// "אודות" and "צור קשר" stay in the footer; "ניהול" moved into the personal menu.
+const guestLinks = [
   { label: "קורסים", href: "/courses" },
-  { label: "לוח מודעות", href: "/board" },
-  { label: "אודות", href: "#about" },
-  { label: "צור קשר", href: "#contact" },
+  { label: "לוח", href: "/board" },
+  { label: "מחירים", href: "/pricing" },
+];
+const memberLinks = [
+  { label: "הבית שלי", href: "/home" },
+  { label: "קורסים", href: "/courses" },
+  { label: "מטופלים", href: "/crm", minTier: "premium" },
+  { label: "לוח", href: "/board" },
 ];
 
 const tierLabels: Record<string, string> = {
@@ -29,7 +35,8 @@ const tierLabels: Record<string, string> = {
 
 export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { user, profile, signOut, isAdmin } = useAuth();
+  const { user, profile, signOut, isAdmin, canAccessTier } = useAuth();
+  const navLinks = user ? memberLinks.filter((l) => !l.minTier || canAccessTier("premium")) : guestLinks;
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
@@ -78,22 +85,6 @@ export const Header = () => {
               </a>
             )
           ))}
-          {user && (
-            <Link
-              to="/crm"
-              className="px-4 py-2 text-muted-foreground hover:text-primary transition-smooth rounded-lg hover:bg-accent"
-            >
-              המטופלים שלי
-            </Link>
-          )}
-          {isAdmin && (
-            <Link
-              to="/admin"
-              className="px-4 py-2 text-primary font-medium hover:text-primary/80 transition-smooth rounded-lg hover:bg-accent"
-            >
-              ניהול
-            </Link>
-          )}
         </nav>
 
         <div className="hidden md:flex items-center gap-3">
@@ -126,6 +117,11 @@ export const Header = () => {
                     📚 הקורסים שלי
                   </Link>
                 </DropdownMenuItem>
+                {isAdmin && (
+                  <DropdownMenuItem asChild>
+                    <Link to="/admin" className="cursor-pointer">⚙️ ניהול</Link>
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive">
                   <LogOut size={16} className="ml-2" />
@@ -180,24 +176,6 @@ export const Header = () => {
                 </a>
               )
             ))}
-            {user && (
-              <Link
-                to="/crm"
-                onClick={() => setIsMenuOpen(false)}
-                className="px-4 py-3 text-foreground hover:text-primary hover:bg-accent rounded-lg transition-smooth"
-              >
-                המטופלים שלי
-              </Link>
-            )}
-            {isAdmin && (
-              <Link
-                to="/admin"
-                onClick={() => setIsMenuOpen(false)}
-                className="px-4 py-3 text-primary font-medium hover:bg-accent rounded-lg transition-smooth"
-              >
-                ניהול
-              </Link>
-            )}
             {profile && ['premium','vip'].includes(profile.subscription_tier) && (
               <a
                 href="/carlos-dashboard/"
@@ -210,6 +188,15 @@ export const Header = () => {
             <div className="mt-2 pt-2 border-t border-border">
               {user ? (
                 <>
+                  {isAdmin && (
+                    <Link
+                      to="/admin"
+                      onClick={() => setIsMenuOpen(false)}
+                      className="block px-4 py-2 text-primary font-medium hover:bg-accent rounded-lg"
+                    >
+                      ⚙️ ניהול
+                    </Link>
+                  )}
                   <div className="px-4 py-2 text-sm text-muted-foreground">
                     {profile?.full_name || user.email}
                     {profile?.subscription_tier && profile.subscription_tier !== "free" && (

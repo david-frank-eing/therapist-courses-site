@@ -32,7 +32,7 @@ const Auth = () => {
   const { user, signIn, signUp, resetPassword } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const redirectTo = searchParams.get("redirect") || "/";
+  const redirectTo = searchParams.get("redirect") || "/home";
   const { toast } = useToast();
 
   useEffect(() => {

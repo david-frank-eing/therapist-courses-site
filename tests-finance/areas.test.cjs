@@ -40,7 +40,7 @@ test('dashboard: every selector names an id or class that exists in the page or 
 
 test('courses: every data-area code in the registry is on a component, and the other way round', () => {
   const files = ['src/pages/Admin.tsx', 'src/pages/CoursePage.tsx', 'src/pages/Courses.tsx',
-    'src/components/admin/CourseFormDialog.tsx', 'src/components/admin/ResourceManagerDialog.tsx'].map(read).join('\n');
+    'src/pages/CourseEditor.tsx', 'src/pages/Home.tsx'].map(read).join('\n');
   const marked = new Set((files.match(/data-area="K\d+"/g) || []).map(m => m.slice(11, -1)));
   const wanted = new Set(courses.areas.filter(a => /data-area/.test(a.sel || '')).map(a => a.code));
   assert.deepStrictEqual([...marked].sort(), [...wanted].sort());
@@ -60,4 +60,13 @@ test('the engine draws a layer and never touches storage or the network beyond i
   const engine = read('public/areas-engine.js');
   assert.ok(!/localStorage|sessionStorage|document\.cookie|XMLHttpRequest/.test(engine));
   assert.strictEqual((engine.match(/fetch\(/g) || []).length, 1);
+});
+
+test('course editor: the old dialogs are gone and nothing points at them; /home needs a login', () => {
+  for (const f of ['CourseFormDialog', 'ResourceManagerDialog', 'VideoManagerDialog']) {
+    assert.ok(!fs.existsSync(path.join(root, 'src/components/admin', f + '.tsx')), f + ' should be deleted');
+    assert.ok(!read('src/pages/Admin.tsx').includes(f), 'Admin.tsx still references ' + f);
+  }
+  assert.match(read('src/App.tsx'), /path="\/admin\/course\/:id"/);
+  assert.match(read('src/pages/Home.tsx'), /if \(!user\) return <Navigate to="\/auth/);
 });
