@@ -868,7 +868,7 @@ function renderHabits(habits, date) {
   const habitHtml = habits.habits.length
     ? habits.habits.map(h => `<label class="habit">
         <input type="checkbox" data-id="${h.id}" ${done.includes(h.id) ? 'checked' : ''}>
-        <span class="habit-name">${h.emoji} ${h.label}</span>
+        <span class="habit-name">${_esc(h.emoji)} ${_esc(h.label)}</span>
         <span class="habit-stats">
           <span>${weeklyCount(h.id)}/7 שבוע</span>
           <span>${monthCount(h.id)}/${daysInMonth} חודש</span>
@@ -950,7 +950,7 @@ function renderContentSelects(contentTypes, domains) {
   if (platEl) {
     const active = activePlatforms();
     platEl.innerHTML = active.length ? active.map(p =>
-      `<label class="c-plat-check"><input type="checkbox" name="plat" value="${p.id}"> ${p.emoji} ${p.label}</label>`
+      `<label class="c-plat-check"><input type="checkbox" name="plat" value="${p.id}"> ${_esc(p.emoji)} ${_esc(p.label)}</label>`
     ).join('') : '';
   }
 }
@@ -1066,7 +1066,7 @@ function renderContent(content, weekly) {
         const itemPlatforms = Array.isArray(item.platforms) ? item.platforms : [];
         const platformTags = itemPlatforms.map(pid => {
           const p = PLATFORMS.find(x => x.id === pid);
-          return p ? `<span class="c-platform-tag">${p.emoji} ${p.label}</span>` : '';
+          return p ? `<span class="c-platform-tag">${_esc(p.emoji)} ${_esc(p.label)}</span>` : '';
         }).join('');
         return `<div class="c-item" data-id="${item.id}">
           ${thumbHtml}
@@ -1137,7 +1137,7 @@ function renderQuotaBars(containerSel, quotas, scope, append) {
     const fillCls = pct >= 75 ? ' quota-fill-good' : pct >= 40 ? ' quota-fill-warn' : pct > 0 ? ' quota-fill-low' : '';
     return `<div class="quota" data-key="${key}" data-scope="${scope}">
       <div class="quota-label">
-        <span>${q.emoji} ${q.label}</span>
+        <span>${_esc(q.emoji)} ${_esc(q.label)}</span>
         <span class="quota-nums">${q.done} / <span class="quota-target">${q.target}</span>
           <button class="quota-edit" title="ערוך יעד">✏️</button></span>
       </div>
@@ -1740,8 +1740,8 @@ function openAttrib(seconds) {
     <div class="attrib-domains-label">בחר נושא:</div>
     <div class="attrib-radios">
       ${DOMAINS.map((d, i) => `<label class="attrib-radio">
-        <input type="radio" name="attrib-domain" value="${d.id}" data-label="${d.label}" ${i === 4 ? 'checked' : ''}>
-        <span>${d.label}</span>
+        <input type="radio" name="attrib-domain" value="${d.id}" data-label="${_esc(d.label)}" ${i === 4 ? 'checked' : ''}>
+        <span>${_esc(d.label)}</span>
       </label>`).join('')}
     </div>
     <button id="attrib-save" type="button" class="attrib-save">💾 שמור זמן</button>
@@ -1798,7 +1798,7 @@ $('#tw-manual').addEventListener('click', (e) => {
   const box = $('#tw-manual-box');
   if (!box.classList.contains('hidden')) { box.classList.add('hidden'); return; }
   box.innerHTML =
-    `<select id="m-domain">${DOMAINS.map(d => `<option value="${d.id}">${d.label}</option>`).join('')}</select>
+    `<select id="m-domain">${DOMAINS.map(d => `<option value="${_esc(d.id)}">${_esc(d.label)}</option>`).join('')}</select>
      <input type="number" id="m-min" min="1" placeholder="דקות">
      <input type="text" id="m-note" placeholder="הערה (אופציונלי)">
      <button id="m-save">שמור זמן</button>`;
@@ -2658,7 +2658,7 @@ function renderHabitsHistory(habits, todayKey) {
     const total = days.filter(d => (completions[d.key] || []).includes(h.id)).length;
     const sumCls = total >= 5 ? 'hh-sum-good' : '';
     return `<tr>
-      <td class="hh-habit-name">${h.emoji} ${h.label}</td>
+      <td class="hh-habit-name">${_esc(h.emoji)} ${_esc(h.label)}</td>
       ${cells.join('')}
       <td class="hh-sum ${sumCls}">${total}/7</td>
     </tr>`;
@@ -3657,7 +3657,7 @@ async function loadHistory() {
     if (error) throw new Error(error.message);
     renderHistory(data || []);
   } catch (e) {
-    bodyEl.innerHTML = '<div class="muted-text">שגיאה: ' + e.message + '</div>';
+    bodyEl.innerHTML = '<div class="muted-text">שגיאה: ' + _esc(e.message) + '</div>';
   }
 }
 let _historyAllTasks = [];
@@ -3955,7 +3955,7 @@ function _renderPlatformsSettings(platforms) {
     <div class="plat-row" data-id="${p.id}">
       <label class="plat-toggle">
         <input type="checkbox" ${p.active ? 'checked' : ''} data-plat="${p.id}">
-        <span>${p.emoji} ${p.label}</span>
+        <span>${_esc(p.emoji)} ${_esc(p.label)}</span>
       </label>
     </div>`).join('');
   el.querySelectorAll('input[type="checkbox"]').forEach(cb => {
@@ -4034,8 +4034,8 @@ function _renderHabitsSettings() {
     listEl.innerHTML = habits.map(h => `
       <div class="habit-settings-row" data-id="${h.id}" style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">
         <button class="hs-emoji-btn" data-id="${h.id}" title="שנה אמוג'י"
-          style="font-size:1.4rem;border:none;background:transparent;cursor:pointer;min-width:32px">${h.emoji}</button>
-        <input type="text" class="hs-label-inp" data-id="${h.id}" value="${h.label.replace(/"/g,'&quot;')}"
+          style="font-size:1.4rem;border:none;background:transparent;cursor:pointer;min-width:32px">${_esc(h.emoji)}</button>
+        <input type="text" class="hs-label-inp" data-id="${h.id}" value="${_esc(h.label)}"
           style="flex:1;padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:inherit">
         <button class="hs-save-btn" data-id="${h.id}" style="padding:4px 10px;background:var(--primary);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:.8rem">שמור</button>
         <button class="hs-del-btn" data-id="${h.id}" style="padding:4px 8px;background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:.8rem">✕</button>
@@ -4137,7 +4137,7 @@ async function openSettings(scrollTo) {
     renderSettings(s, bodyEl);
     window.MobileHome?.mountSettings(document.getElementById('mhome-settings'));
   } catch (e) {
-    bodyEl.innerHTML = '<div class="muted-text">שגיאה: ' + e.message + '</div>';
+    bodyEl.innerHTML = '<div class="muted-text">שגיאה: ' + _esc(e.message) + '</div>';
   }
 }
 
@@ -4185,7 +4185,7 @@ async function loadConnectionsDiagnose() {
         document.getElementById('conn-google-connect')?.addEventListener('click', _googleConnect);
       }
     } catch(e) {
-      body.innerHTML = '<div class="muted-text">שגיאה: ' + e.message + '</div>';
+      body.innerHTML = '<div class="muted-text">שגיאה: ' + _esc(e.message) + '</div>';
     }
     return;
   }
@@ -4198,7 +4198,7 @@ async function loadConnectionsDiagnose() {
     renderConnectionChecks(data.checks || [], body);
     renderConnectionLogs(data.recentLog || []);
   } catch (e) {
-    body.innerHTML = '<div class="conn-error">שגיאה בטעינת סטטוס: ' + e.message + '</div>';
+    body.innerHTML = '<div class="conn-error">שגיאה בטעינת סטטוס: ' + _esc(e.message) + '</div>';
   }
 }
 
@@ -4483,7 +4483,7 @@ async function _reloadAdminUsers() {
     rowsEl.innerHTML = users.map(_renderAdminUserRow).join('');
     _bindAdminRowEvents(rowsEl);
   } catch (e) {
-    rowsEl.innerHTML = '<div class="muted-text">שגיאה: ' + e.message + '</div>';
+    rowsEl.innerHTML = '<div class="muted-text">שגיאה: ' + _esc(e.message) + '</div>';
   }
 }
 
