@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { useToast } from "@/hooks/use-toast";
@@ -7,12 +7,15 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ListingFormDialog } from "@/components/board/ListingFormDialog";
 import { LISTING_CATEGORY_LABELS } from "@/lib/constants";
-import { Loader2, Pencil, Trash2, Eye, EyeOff } from "lucide-react";
+import { Loader2, Pencil, Trash2, Eye, EyeOff, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { fetchAll } from "@/lib/fetchAll";
 import { useConfirm } from "@/components/ConfirmDialog";
 
 type Listing = Database["public"]["Tables"]["listings"]["Row"];
 
 const BUCKET = "listing-images";
+const PAGE = 30;
 
 export const ListingsManager = () => {
   const [listings, setListings] = useState<Listing[]>([]);
@@ -21,14 +24,21 @@ export const ListingsManager = () => {
   const [editOpen, setEditOpen] = useState(false);
   const { toast } = useToast();
   const confirm = useConfirm();
+  const [query, setQuery] = useState("");
+  const [shownCount, setShownCount] = useState(PAGE);
+  useEffect(() => setShownCount(PAGE), [query]);
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return q ? listings.filter((l) => [l.title, l.description, l.city].some((v) => (v ?? "").toLowerCase().includes(q))) : listings;
+  }, [listings, query]);
+  const shown = filtered.slice(0, shownCount);
 
   const fetchListings = async () => {
     setIsLoading(true);
-    const { data, error } = await supabase
-      .from("listings")
-      .select("*")
-      .order("created_at", { ascending: false });
-    if (!error && data) setListings(data);
+    const { data, error } = await fetchAll<Listing>((from, to) =>
+      supabase.from("listings").select("*").order("created_at", { ascending: false }).order("id").range(from, to) as any
+    );
+    if (!error) setListings(data);
     setIsLoading(false);
   };
 
@@ -86,7 +96,12 @@ export const ListingsManager = () => {
       <p className="text-sm text-muted-foreground">
         כל המודעות בלוח. אפשר להסתיר, לערוך או למחוק כל מודעה.
       </p>
-      {listings.map((listing) => (
+      <div className="relative">
+        <Search size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+        <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="חיפוש לפי כותרת, תיאור או עיר" className="pr-9" />
+      </div>
+      {filtered.length === 0 && <Card className="p-8 text-center text-muted-foreground">אין מודעות שמתאימות לחיפוש.</Card>}
+      {shown.map((listing) => (
         <Card
           key={listing.id}
           className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4"
@@ -130,6 +145,12 @@ export const ListingsManager = () => {
           </div>
         </Card>
       ))}
+      {filtered.length > shown.length && (
+        <div className="flex flex-col items-center gap-1 pt-2">
+          <Button variant="outline" onClick={() => setShownCount((n) => n + PAGE)}>להציג עוד</Button>
+          <span className="text-xs text-muted-foreground">מוצגות {shown.length} מתוך {filtered.length}</span>
+        </div>
+      )}
 
       <ListingFormDialog
         open={editOpen}
