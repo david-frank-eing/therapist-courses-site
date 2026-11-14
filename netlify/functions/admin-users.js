@@ -41,35 +41,21 @@ exports.handler = async (event) => {
   // ── GET: list users ──────────────────────────────────────────────────────────
   if (event.httpMethod === 'GET') {
     try {
-      const [usersRes, profRes] = await Promise.all([
-        fetch(`${supabaseUrl}/auth/v1/admin/users?per_page=200`, {
-          headers: { apikey: serviceKey, Authorization: 'Bearer ' + serviceKey }
-        }),
-        fetch(`${supabaseUrl}/rest/v1/profiles?select=id,full_name,subscription_tier`, {
-          headers: { apikey: serviceKey, Authorization: 'Bearer ' + serviceKey }
-        })
-      ]);
-
-      const usersText = await usersRes.text();
-      const profText  = await profRes.text();
-
-      let usersData = {};
-      let profiles  = [];
-      try { usersData = JSON.parse(usersText); } catch (_) { return json(500, { error: 'Users parse error: ' + usersText.slice(0, 100) }, cors); }
-      try { profiles  = JSON.parse(profText);  } catch (_) { profiles = []; }
+      let authUsers;
+      try { authUsers = await allAuthUsers(supabaseUrl, serviceKey); }
+      catch (e) { return json(500, { error: e.message }, cors); }
+      let profiles = [];
+      try { profiles = await allRows(`${supabaseUrl}/rest/v1/profiles?select=id,full_name,subscription_tier&order=id`, serviceKey); } catch (_) { profiles = []; }
 
       // finance_enabled is read on its own and tolerantly: before its migration runs the column does not
       // exist, and asking for it together with the tiers would have blanked every user's tier.
       let finMap = null;
       try {
-        const fr = await fetch(`${supabaseUrl}/rest/v1/profiles?select=id,finance_enabled`, {
-          headers: { apikey: serviceKey, Authorization: 'Bearer ' + serviceKey }
-        });
-        const rows = fr.ok ? await fr.json() : null;
-        if (Array.isArray(rows)) { finMap = {}; rows.forEach(r => { finMap[r.id] = r.finance_enabled === true; }); }
+        const rows = await allRows(`${supabaseUrl}/rest/v1/profiles?select=id,finance_enabled&order=id`, serviceKey);
+        finMap = {}; rows.forEach(r => { finMap[r.id] = r.finance_enabled === true; });
       } catch (_) { finMap = null; }
 
-      const users = usersData.users || [];
+      const users = authUsers;
       const profMap = {};
       (Array.isArray(profiles) ? profiles : []).forEach(p => { profMap[p.id] = p; });
 
@@ -162,13 +148,8 @@ exports.handler = async (event) => {
         // Step 1: check if user already exists
         let existingUser = null;
         try {
-          const existRes = await fetch(`${supabaseUrl}/auth/v1/admin/users?per_page=200`, {
-            headers: { apikey: serviceKey, Authorization: 'Bearer ' + serviceKey }
-          });
-          if (existRes.ok) {
-            const existData = await existRes.json();
-            existingUser = (existData.users || []).find(u => u.email === email) || null;
-          }
+          const all = await allAuthUsers(supabaseUrl, serviceKey);
+          existingUser = all.find(u => (u.email || '').toLowerCase() === email.toLowerCase()) || null;
         } catch (_) { /* ignore — if check fails, proceed to invite */ }
 
         // Step 2: if exists, just upgrade tier
@@ -277,6 +258,40 @@ exports.handler = async (event) => {
 
   return json(405, { error: 'Method not allowed' }, cors);
 };
+
+// Supabase hands out the account list 200 at a time (and table rows 1000 at a time): read every page,
+// so a site with hundreds of therapists does not lose the ones past the first page.
+async function allAuthUsers(supabaseUrl, serviceKey) {
+  const users = [];
+  for (let page = 1; page <= 100; page++) {
+    const r = await fetch(`${supabaseUrl}/auth/v1/admin/users?page=${page}&per_page=200`, {
+      headers: { apikey: serviceKey, Authorization: 'Bearer ' + serviceKey }
+    });
+    const text = await r.text();
+    let data;
+    try { data = JSON.parse(text); } catch (_) { throw new Error('Users parse error: ' + text.slice(0, 100)); }
+    if (!r.ok) throw new Error(data.msg || data.message || 'Users HTTP ' + r.status);
+    const batch = data.users || [];
+    users.push(...batch);
+    if (batch.length < 200) break;
+  }
+  return users;
+}
+
+async function allRows(url, serviceKey) {
+  const rows = [];
+  for (let from = 0; from < 100000; from += 1000) {
+    const r = await fetch(url, {
+      headers: { apikey: serviceKey, Authorization: 'Bearer ' + serviceKey, Range: `${from}-${from + 999}`, 'Range-Unit': 'items' }
+    });
+    if (!r.ok) { if (from === 0) throw new Error('HTTP ' + r.status); break; }
+    const batch = await r.json();
+    if (!Array.isArray(batch)) break;
+    rows.push(...batch);
+    if (batch.length < 1000) break;
+  }
+  return rows;
+}
 
 function json(status, body, headers = {}) {
   return { statusCode: status, headers: { 'Content-Type': 'application/json', ...headers }, body: JSON.stringify(body) };
