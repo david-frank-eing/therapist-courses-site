@@ -157,7 +157,13 @@ export const TiersManager = () => {
                   const open = courses.filter((c) => c.is_published && opensCourse(t, c.min_tier));
                   return (
                     <td key={t} className="p-3 text-center text-xs text-muted-foreground align-top">
-                      {loadingCourses ? "…" : open.length === 0 ? "אין" : open.map((c) => <div key={c.id}>{c.title}</div>)}
+                      {loadingCourses ? "…" : open.length === 0 ? "אין" : (
+                        // a few names, the rest folded: with dozens of courses the row would fill the screen
+                        <div title={open.map((c) => c.title).join("\n")}>
+                          {open.slice(0, 3).map((c) => <div key={c.id} className="truncate max-w-[10rem] mx-auto">{c.title}</div>)}
+                          {open.length > 3 && <div className="font-semibold text-foreground/70">ועוד {open.length - 3}</div>}
+                        </div>
+                      )}
                     </td>
                   );
                 })}
