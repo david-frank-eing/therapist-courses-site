@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { CATEGORY_LABELS } from "@/lib/constants";
 import { loadProgress, type ProgressRow } from "@/lib/progress";
+import { fetchAll } from "@/lib/fetchAll";
 import type { CourseCategory, SubscriptionTier } from "@/integrations/supabase/types";
 
 // "הקורסים שלי" (M15): the courses I started, how far I got and where to continue; below them the courses
@@ -30,7 +31,8 @@ const MyCourses = () => {
     (async () => {
       const [c, l, p] = await Promise.all([
         supabase.from("courses").select("id,title,description,category,min_tier,order_index").eq("is_published", true).order("order_index"),
-        supabase.from("course_resources").select("id,course_id,min_tier").eq("is_published", true),
+        // every published lesson of every course: past 1000 rows, so read in pages
+        fetchAll<LessonRow>((from, to) => supabase.from("course_resources").select("id,course_id,min_tier").eq("is_published", true).order("id").range(from, to) as any),
         loadProgress(user.id),
       ]);
       setCourses((c.data as CourseRow[]) ?? []);
