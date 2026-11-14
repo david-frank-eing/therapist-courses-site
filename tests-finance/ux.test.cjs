@@ -57,3 +57,25 @@ test('pricing: a member asks to switch plans instead of being sent to sign-in', 
   assert.ok(s.includes('התכנית הנוכחית שלך'));
   assert.ok(s.includes('href="#contact"'));
 });
+
+test('course progress: each user reads and writes only their own rows; the site works without the table', () => {
+  const sql = read('supabase/migrations/20261115020000_lesson_progress.sql');
+  for (const cmd of ['SELECT', 'INSERT', 'UPDATE', 'DELETE'])
+    assert.ok(sql.includes('FOR ' + cmd + ' USING (auth.uid() = user_id)') || sql.includes('FOR ' + cmd + ' WITH CHECK (auth.uid() = user_id)'), cmd);
+  assert.match(sql, /ENABLE ROW LEVEL SECURITY/);
+  const lib = read('src/lib/progress.ts');
+  assert.ok(lib.includes('return error ? null'), 'a missing table must read as "no tracking", not crash');
+  const page = read('src/pages/CoursePage.tsx');
+  assert.ok(page.includes('resumeFrom(') && page.includes('markViewed('));
+});
+
+test('"my courses" and "my account" are real pages, behind sign-in, and in the personal menu', () => {
+  const app = read('src/App.tsx');
+  assert.ok(app.includes('path="/my-courses" element={<MyCourses />}'));
+  assert.ok(app.includes('path="/account" element={<Account />}'));
+  assert.ok(read('src/pages/MyCourses.tsx').includes('Navigate to="/auth?redirect=/my-courses"'));
+  assert.ok(read('src/pages/Account.tsx').includes('Navigate to="/auth?redirect=/account"'));
+  const h = read('src/components/Header.tsx');
+  assert.ok(h.includes('to="/account"') && h.includes('to="/my-courses"'));
+  assert.ok(!h.includes('הפרופיל שלי'), 'the old "profile" item led to the dashboard');
+});

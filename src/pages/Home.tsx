@@ -5,6 +5,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { loadProgress } from "@/lib/progress";
 
 // "הבית שלי" (M17): three views of the same page, the therapist picks which one to see.
 // Read-only. The reminders, bookings and finance tiles only LINK to the existing dashboard.
@@ -51,6 +52,7 @@ const Home = () => {
   const [appts, setAppts] = useState<Appt[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [financeOn, setFinanceOn] = useState(false);
+  const [lastCourse, setLastCourse] = useState<{ id: string; title: string } | null>(null);
 
   const pick = (v: View) => {
     setView(v);
@@ -76,6 +78,13 @@ const Home = () => {
       setAppts(ap?.data ?? []);
       setTasks(tk?.data ?? []);
       setFinanceOn(!!fin?.data?.finance_enabled);
+      // the course this user opened last, for "להמשיך ללמוד"
+      const prog = await loadProgress(user.id);
+      const last = prog?.[0]?.course_id;
+      if (last) {
+        const { data } = await db.from("courses").select("id,title").eq("id", last).eq("is_published", true).maybeSingle();
+        if (alive && data) setLastCourse(data);
+      }
     })().catch(() => { /* the tiles do not depend on this data */ });
     return () => { alive = false; };
   }, [user, canBooking, canTasks]);
@@ -198,6 +207,20 @@ const Home = () => {
           </div>
         </div>
 
+        <Link
+          to={lastCourse ? `/course/${lastCourse.id}` : "/my-courses"}
+          className="mb-4 flex items-center gap-3 rounded-2xl border border-primary/30 bg-primary/5 p-4 hover:border-primary"
+        >
+          <span className="text-2xl">📚</span>
+          <span className="min-w-0">
+            <b className="block">{lastCourse ? "להמשיך ללמוד" : "הקורסים שלי"}</b>
+            <span className="text-sm text-muted-foreground truncate block">
+              {lastCourse ? lastCourse.title : "הקורסים שפתוחים לך וההתקדמות בהם"}
+            </span>
+          </span>
+          <span className="mr-auto text-primary font-semibold text-sm">←</span>
+        </Link>
+
         {view === "tiles" && (
           <div data-area="K32" className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
             {open.map((it) => go(it, tileCls(it), tileBody(it)))}
@@ -229,9 +252,6 @@ const Home = () => {
               )}
             </nav>
             <div className="space-y-4 min-w-0">
-              <Link to="/courses" className="block rounded-2xl border bg-card p-4 shadow-sm hover:border-primary">
-                📚 <b>להמשיך ללמוד</b> <span className="text-sm text-muted-foreground">— לכל הקורסים</span>
-              </Link>
               {todayPanels}
               {lockedRow}
             </div>

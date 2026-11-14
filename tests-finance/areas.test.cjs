@@ -41,7 +41,8 @@ test('dashboard: every selector names an id or class that exists in the page or 
 test('courses: every data-area code in the registry is on a component, and the other way round', () => {
   const files = ['src/pages/Admin.tsx', 'src/pages/CoursePage.tsx', 'src/pages/Courses.tsx',
     'src/pages/CourseEditor.tsx', 'src/pages/Home.tsx', 'src/components/Header.tsx',
-    'src/components/admin/UsersManager.tsx', 'src/components/admin/TiersManager.tsx'].map(read).join('\n');
+    'src/components/admin/UsersManager.tsx', 'src/components/admin/TiersManager.tsx',
+    'src/pages/MyCourses.tsx', 'src/pages/Account.tsx'].map(read).join('\n');
   const marked = new Set((files.match(/data-area="K\d+"/g) || []).map(m => m.slice(11, -1)));
   const wanted = new Set(courses.areas.filter(a => /data-area/.test(a.sel || '')).map(a => a.code));
   assert.deepStrictEqual([...marked].sort(), [...wanted].sort());

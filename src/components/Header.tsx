@@ -118,15 +118,12 @@ export const Header = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-                {/* the profile settings live in the dashboard, which only premium/vip can open */}
-                {profile && hasPaidTools && (
-                  <DropdownMenuItem asChild>
-                    <a href="/carlos-dashboard/" className="cursor-pointer">
-                      <User size={16} className="ml-2" />
-                      הפרופיל שלי
-                    </a>
-                  </DropdownMenuItem>
-                )}
+                <DropdownMenuItem asChild>
+                  <Link to="/account" className="cursor-pointer">
+                    <User size={16} className="ml-2" />
+                    החשבון שלי
+                  </Link>
+                </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link to="/my-courses" className="cursor-pointer">
                     📚 הקורסים שלי
@@ -203,6 +200,12 @@ export const Header = () => {
             <div className="mt-2 pt-2 border-t border-border">
               {user ? (
                 <>
+                  <Link to="/my-courses" onClick={() => setIsMenuOpen(false)} className="block px-4 py-2 hover:bg-accent rounded-lg">
+                    📚 הקורסים שלי
+                  </Link>
+                  <Link to="/account" onClick={() => setIsMenuOpen(false)} className="block px-4 py-2 hover:bg-accent rounded-lg">
+                    👤 החשבון שלי
+                  </Link>
                   {isAdmin && (
                     <Link
                       to="/admin"

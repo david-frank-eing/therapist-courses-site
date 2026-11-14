@@ -110,7 +110,7 @@ const Admin = () => {
       <main className="container py-10 md:py-16" data-area="K1">
         <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-6">אזור ניהול</h1>
 
-        <Tabs defaultValue="courses" className="w-full">
+        <Tabs defaultValue="courses" className="w-full" dir="rtl">
           <TabsList className="mb-6" data-area="K2">
             <TabsTrigger value="courses">קורסים</TabsTrigger>
             <TabsTrigger value="listings">מודעות</TabsTrigger>

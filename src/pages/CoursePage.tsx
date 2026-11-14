@@ -10,6 +10,8 @@ import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { loadProgress, markViewed, resumeFrom, type ProgressRow } from "@/lib/progress";
 import { CATEGORY_LABELS, TIER_LABELS, RESOURCE_TYPE_LABELS } from "@/lib/constants";
 import {
   Loader2,
@@ -20,6 +22,7 @@ import {
   Clock,
   ArrowRight,
   ExternalLink,
+  CheckCircle2,
 } from "lucide-react";
 
 type Course = Database["public"]["Tables"]["courses"]["Row"];
@@ -79,6 +82,10 @@ const CoursePage = () => {
     { type: "iframe" | "file"; src: string } | null
   >(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  // lessons this user already opened; null = not tracked (guest, admin preview, or the table is not there yet)
+  const [progress, setProgress] = useState<ProgressRow[] | null>(null);
+  const [resumedFrom, setResumedFrom] = useState<string | null>(null);
+  const tracking = !!user && !previewTier && progress !== null;
 
   useEffect(() => {
     if (!id) return;
@@ -87,7 +94,7 @@ const CoursePage = () => {
       let courseQuery = supabase.from("courses").select("*").eq("id", id);
       // in a preview the admin may look at a course that is still a draft
       if (!previewTier) courseQuery = courseQuery.eq("is_published", true);
-      const [{ data: courseData }, { data: resourceData }, sectionResult] = await Promise.all([
+      const [{ data: courseData }, { data: resourceData }, sectionResult, prog] = await Promise.all([
         courseQuery.maybeSingle(),
         supabase
           .from("course_resources")
@@ -96,7 +103,9 @@ const CoursePage = () => {
           .eq("is_published", true)
           .order("order_index", { ascending: true }),
         db.from("course_sections").select("id,title,order_index").eq("course_id", id).order("order_index", { ascending: true }),
+        user && !previewTier ? loadProgress(user.id, id) : Promise.resolve(null),
       ]);
+      setProgress(prog);
 
       setCourse(courseData ?? null);
       // a site without the chapters table yet simply shows one list
@@ -110,10 +119,11 @@ const CoursePage = () => {
       });
       setResources(res);
 
-      const firstVideo = res.find(
-        (r) => isVideoResource(r) && canAccessTier(r.min_tier)
-      );
-      setActiveVideoId(firstVideo?.id ?? null);
+      const playable = res.filter((r) => isVideoResource(r) && canAccessTier(r.min_tier));
+      // back to a course: continue from where this user stopped
+      const resume = prog ? resumeFrom(playable, prog) : null;
+      setResumedFrom(resume ? resume.title : null);
+      setActiveVideoId((resume ?? playable[0])?.id ?? null);
       setIsLoading(false);
     };
     load();
@@ -150,8 +160,21 @@ const CoursePage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeVideoId, resources]);
 
+  const viewed = new Set((progress ?? []).map((p) => p.resource_id));
+  const noteViewed = (resource: Resource) => {
+    if (!user || previewTier || progress === null || !id || viewed.has(resource.id)) return;
+    setProgress((p) => [{ resource_id: resource.id, course_id: id, viewed_at: new Date().toISOString() }, ...(p ?? [])]);
+    markViewed(user.id, id, resource.id);
+  };
+  const play = (resource: Resource) => {
+    setActiveVideoId(resource.id);
+    setResumedFrom(null);
+    noteViewed(resource);
+  };
+
   // Open / download a non-video resource (signed URL for files, direct for links)
   const handleOpen = async (resource: Resource) => {
+    noteViewed(resource);
     if (resource.url && !resource.file_path) {
       window.open(resource.url, "_blank");
       return;
@@ -200,6 +223,9 @@ const CoursePage = () => {
   const hasAnyUnlockedVideo = videoResources.some((v) => canAccessTier(v.min_tier));
   const activeVideo = resources.find((r) => r.id === activeVideoId) ?? null;
   const activeAllowed = activeVideo ? canAccessTier(activeVideo.min_tier) : false;
+  const openLessons = resources.filter((r) => canAccessTier(r.min_tier));
+  const doneCount = openLessons.filter((r) => viewed.has(r.id)).length;
+  const percent = openLessons.length ? Math.round((doneCount / openLessons.length) * 100) : 0;
 
   return (
     <div className="min-h-screen bg-background">
@@ -253,6 +279,19 @@ const CoursePage = () => {
           </Card>
         )}
 
+        {tracking && openLessons.length > 0 && (
+          <div className="mb-6 space-y-2" data-area="K14">
+            <div className="flex items-center justify-between text-sm">
+              <span className="font-semibold">{doneCount === openLessons.length ? "סיימת את הקורס 🎉" : "ההתקדמות שלך"}</span>
+              <span className="text-muted-foreground tabular-nums">{doneCount} מתוך {openLessons.length} שיעורים</span>
+            </div>
+            <Progress value={percent} aria-label="ההתקדמות בקורס" />
+            {resumedFrom && (
+              <p className="text-sm text-primary">ממשיכים מאיפה שעצרת: {resumedFrom}</p>
+            )}
+          </div>
+        )}
+
         {/* Video player (only when the course has videos) */}
         {videoResources.length > 0 && (
           <div className="mb-6" data-area="K12">
@@ -267,7 +306,7 @@ const CoursePage = () => {
                     allowFullScreen
                   />
                 ) : (
-                  <video src={activeVideoSrc.src} controls className="w-full h-full" />
+                  <video src={activeVideoSrc.src} controls className="w-full h-full" onPlay={() => noteViewed(activeVideo)} />
                 )}
               </div>
             ) : (
@@ -279,6 +318,14 @@ const CoursePage = () => {
                 </p>
               </div>
             )}
+          </div>
+        )}
+
+        {tracking && activeVideo && activeAllowed && !viewed.has(activeVideo.id) && (
+          <div className="-mt-3 mb-6 flex justify-end">
+            <Button variant="ghost" size="sm" className="gap-1 text-primary" onClick={() => noteViewed(activeVideo)}>
+              <CheckCircle2 size={16} />סימון השיעור כנצפה
+            </Button>
           </div>
         )}
 
@@ -313,6 +360,8 @@ const CoursePage = () => {
                     <div className="flex items-center gap-3 min-w-0">
                       {!allowed ? (
                         <Lock size={18} className="text-muted-foreground shrink-0" />
+                      ) : viewed.has(resource.id) ? (
+                        <CheckCircle2 size={18} className="text-emerald-600 shrink-0" aria-label="נצפה" />
                       ) : isVideo ? (
                         <Play size={18} className="text-primary shrink-0" />
                       ) : (
@@ -337,7 +386,7 @@ const CoursePage = () => {
                           variant={isActive ? "default" : "outline"}
                           size="sm"
                           className="gap-1"
-                          onClick={() => setActiveVideoId(resource.id)}
+                          onClick={() => play(resource)}
                         >
                           <Play size={14} />
                           {isActive ? "מתנגן" : "נגן"}

@@ -30,6 +30,9 @@
     { "code": "K22", "name": "שורת החזרה",            "sel": "[data-area=\"K22\"]", "where": "src/components/Header.tsx" },
     { "code": "K40", "name": "טבלת המשתמשים",           "sel": "[data-area=\"K40\"]", "where": "src/components/admin/UsersManager.tsx" },
     { "code": "K41", "name": "חלונית משתמש",            "sel": "[data-area=\"K41\"]", "where": "src/components/admin/UsersManager.tsx" },
-    { "code": "K42", "name": "תכניות ומחירים",          "sel": "[data-area=\"K42\"]", "where": "src/components/admin/TiersManager.tsx" }
+    { "code": "K42", "name": "תכניות ומחירים",          "sel": "[data-area=\"K42\"]", "where": "src/components/admin/TiersManager.tsx" },
+    { "code": "K14", "name": "דף קורס: ההתקדמות שלי",     "sel": "[data-area=\"K14\"]", "where": "src/pages/CoursePage.tsx" },
+    { "code": "K35", "name": "הקורסים שלי",             "sel": "[data-area=\"K35\"]", "where": "src/pages/MyCourses.tsx" },
+    { "code": "K36", "name": "החשבון שלי",              "sel": "[data-area=\"K36\"]", "where": "src/pages/Account.tsx" }
   ]
 }
