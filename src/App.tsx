@@ -21,6 +21,7 @@ import Home from "./pages/Home";
 import ComingSoon from "./pages/ComingSoon";
 import NotFound from "./pages/NotFound";
 import { AreaNamesToggle } from "@/components/AreaNamesToggle";
+import { ConfirmProvider } from "@/components/ConfirmDialog";
 
 const queryClient = new QueryClient();
 
@@ -74,10 +75,12 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <BrowserRouter>
-          <AppRoutes />
-          <AreaNamesToggle />
-        </BrowserRouter>
+        <ConfirmProvider>
+          <BrowserRouter>
+            <AppRoutes />
+            <AreaNamesToggle />
+          </BrowserRouter>
+        </ConfirmProvider>
       </TooltipProvider>
     </AuthProvider>
   </QueryClientProvider>

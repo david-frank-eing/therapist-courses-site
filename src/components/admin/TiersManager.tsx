@@ -176,7 +176,7 @@ export const TiersManager = () => {
       </section>
 
       {/* 2. the plan texts */}
-      <section>
+      <section data-area="K42">
         <h2 className="text-lg font-bold mb-1">איך התכניות מופיעות בדף המחירים</h2>
         <p className="text-sm text-muted-foreground mb-3">
           שם, מחיר, משפט קצר והטבות נוספות. היכולות שסימנת למעלה נכתבות בכרטיס אוטומטית (מודגשות), ואחריהן ההטבות שכתבת כאן.

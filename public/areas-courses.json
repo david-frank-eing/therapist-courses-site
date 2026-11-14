@@ -12,7 +12,7 @@
     { "code": "K7",  "name": "ניהול משתמשים",           "sel": "[data-area=\"K7\"]",  "where": "src/components/admin/UsersManager.tsx" },
     { "code": "K8",  "name": "הגדרות אתר",              "sel": "[data-area=\"K8\"]",  "where": "src/components/admin/SiteSettingsManager.tsx" },
 
-    { "code": "K9",  "name": "דרגות: מה כל דרגה פותחת", "sel": "[data-area=\"K9\"]",  "where": "src/pages/Admin.tsx · TiersManager.tsx" },
+    { "code": "K9",  "name": "דרגות: מה כל תכנית פותחת", "sel": "[data-area=\"K9\"]",  "where": "src/pages/Admin.tsx · TiersManager.tsx" },
 
     { "code": "K10", "name": "קטלוג הקורסים",           "sel": "[data-area=\"K10\"]", "where": "src/pages/Courses.tsx · CourseGrid.tsx" },
     { "code": "K11", "name": "דף קורס: כותרת",          "sel": "[data-area=\"K11\"]", "where": "src/pages/CoursePage.tsx" },
@@ -27,6 +27,9 @@
 
     { "code": "K20", "name": "סרגל עליון",              "sel": "header",              "where": "src/components/Header.tsx" },
     { "code": "K21", "name": "תחתית האתר",              "sel": "footer",              "where": "src/components/Footer.tsx" },
-    { "code": "K22", "name": "שורת החזרה",            "sel": "[data-area=\"K22\"]", "where": "src/components/Header.tsx" }
+    { "code": "K22", "name": "שורת החזרה",            "sel": "[data-area=\"K22\"]", "where": "src/components/Header.tsx" },
+    { "code": "K40", "name": "טבלת המשתמשים",           "sel": "[data-area=\"K40\"]", "where": "src/components/admin/UsersManager.tsx" },
+    { "code": "K41", "name": "חלונית משתמש",            "sel": "[data-area=\"K41\"]", "where": "src/components/admin/UsersManager.tsx" },
+    { "code": "K42", "name": "תכניות ומחירים",          "sel": "[data-area=\"K42\"]", "where": "src/components/admin/TiersManager.tsx" }
   ]
 }
