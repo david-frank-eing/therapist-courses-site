@@ -40,6 +40,7 @@ import {
   Trash2,
   Upload,
 } from "lucide-react";
+import { useConfirm } from "@/components/ConfirmDialog";
 
 type Course = Database["public"]["Tables"]["courses"]["Row"];
 
@@ -62,6 +63,7 @@ const CourseEditor = () => {
   const { id } = useParams<{ id: string }>();
   const { user, isAdmin, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
+  const confirm = useConfirm();
 
   const [course, setCourse] = useState<Course | null>(null);
   const [sections, setSections] = useState<Section[]>([]);
@@ -225,7 +227,7 @@ const CourseEditor = () => {
   };
 
   const deleteLesson = async (lesson: Lesson) => {
-    if (!confirm(`למחוק את "${lesson.title}"? ${lesson.file_path ? "הקובץ יימחק גם הוא." : ""}`)) return;
+    if (!(await confirm({ title: `למחוק את "${lesson.title}"?`, text: lesson.file_path ? "הקובץ יימחק גם הוא." : undefined, danger: true }))) return;
     const { error } = await db.from("course_resources").delete().eq("id", lesson.id);
     if (error) return fail("המחיקה נכשלה", error.message);
     if (lesson.file_path) await supabase.storage.from(BUCKET).remove([lesson.file_path]);
@@ -305,10 +307,11 @@ const CourseEditor = () => {
   const deleteSection = async (section: Section) => {
     const inside = lessonsOf(lessons, section.id).length;
     if (
-      !confirm(
-        `למחוק את הפרק "${section.title}"?` +
-          (inside ? ` ${inside} השיעורים שבו לא יימחקו. הם יעברו ל"ללא פרק".` : ""),
-      )
+      !(await confirm({
+        title: `למחוק את הפרק "${section.title}"?`,
+        text: inside ? `${inside} השיעורים שבו לא יימחקו. הם יעברו ל"ללא פרק".` : undefined,
+        danger: true,
+      }))
     )
       return;
     const { error } = await db.from("course_sections").delete().eq("id", section.id);

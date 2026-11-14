@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ListingFormDialog } from "@/components/board/ListingFormDialog";
 import { LISTING_CATEGORY_LABELS } from "@/lib/constants";
 import { Loader2, Pencil, Trash2, Eye, EyeOff } from "lucide-react";
+import { useConfirm } from "@/components/ConfirmDialog";
 
 type Listing = Database["public"]["Tables"]["listings"]["Row"];
 
@@ -19,6 +20,7 @@ export const ListingsManager = () => {
   const [editing, setEditing] = useState<Listing | null>(null);
   const [editOpen, setEditOpen] = useState(false);
   const { toast } = useToast();
+  const confirm = useConfirm();
 
   const fetchListings = async () => {
     setIsLoading(true);
@@ -49,7 +51,7 @@ export const ListingsManager = () => {
   };
 
   const handleDelete = async (listing: Listing) => {
-    if (!confirm(`למחוק את המודעה "${listing.title}"?`)) return;
+    if (!(await confirm({ title: `למחוק את המודעה "${listing.title}"?`, danger: true }))) return;
     const { error } = await supabase.from("listings").delete().eq("id", listing.id);
     if (error) {
       toast({ title: "מחיקה נכשלה", description: error.message, variant: "destructive" });

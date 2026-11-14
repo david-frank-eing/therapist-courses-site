@@ -46,7 +46,7 @@ export const Footer = () => {
               <li><Link to="/" className="text-primary-foreground/70 hover:text-primary transition-smooth">דף הבית</Link></li>
               <li><Link to="/courses" className="text-primary-foreground/70 hover:text-primary transition-smooth">כל הקורסים</Link></li>
               <li><Link to="/pricing" className="text-primary-foreground/70 hover:text-primary transition-smooth">תכניות מנויים</Link></li>
-              <li><a href="#about" className="text-primary-foreground/70 hover:text-primary transition-smooth">אודות</a></li>
+              <li><a href="/#about" className="text-primary-foreground/70 hover:text-primary transition-smooth">אודות</a></li>
             </ul>
           </div>
           
@@ -91,7 +91,7 @@ export const Footer = () => {
         </div>
         
         <div className="border-t border-primary-foreground/10 pt-8 text-center text-primary-foreground/50 text-sm">
-          <p>© 2025 מרחב למטפלים. כל הזכויות שמורות.</p>
+          <p>© {new Date().getFullYear()} הכול בידיים · מרחב למטפלים. כל הזכויות שמורות.</p>
         </div>
       </div>
     </footer>

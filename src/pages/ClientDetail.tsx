@@ -24,6 +24,7 @@ import {
   Trash2,
   Settings,
 } from "lucide-react";
+import { useConfirm } from "@/components/ConfirmDialog";
 
 const statusBadgeClass: Record<string, string> = {
   active: "bg-primary/10 text-primary hover:bg-primary/10",
@@ -35,6 +36,7 @@ const ClientDetail = () => {
   const { id } = useParams<{ id: string }>();
   const { user, isLoading: authLoading, can } = useAuth();
   const { toast } = useToast();
+  const confirm = useConfirm();
   const navigate = useNavigate();
 
   const { isConfigured } = useWhatsApp();
@@ -67,7 +69,7 @@ const ClientDetail = () => {
 
   const handleDelete = async () => {
     if (!client) return;
-    if (!confirm(`למחוק את "${client.full_name}" וכל הפגישות שלו?`)) return;
+    if (!(await confirm({ title: `למחוק את "${client.full_name}"?`, text: "כרטיס המטופל וכל הפגישות שלו יימחקו. אי אפשר לבטל.", danger: true }))) return;
     const { error } = await supabase.from("clients").delete().eq("id", client.id);
     if (error) {
       toast({ title: "מחיקה נכשלה", description: error.message, variant: "destructive" });

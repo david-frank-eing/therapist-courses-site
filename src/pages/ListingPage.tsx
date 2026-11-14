@@ -24,6 +24,7 @@ import {
   Pencil,
   Trash2,
 } from "lucide-react";
+import { useConfirm } from "@/components/ConfirmDialog";
 
 type Listing = Database["public"]["Tables"]["listings"]["Row"];
 
@@ -38,6 +39,7 @@ const ListingPage = () => {
   const { id } = useParams<{ id: string }>();
   const { user, isAdmin } = useAuth();
   const { toast } = useToast();
+  const confirm = useConfirm();
   const navigate = useNavigate();
 
   const [listing, setListing] = useState<Listing | null>(null);
@@ -82,7 +84,7 @@ const ListingPage = () => {
 
   const handleDelete = async () => {
     if (!listing) return;
-    if (!confirm(`למחוק את המודעה "${listing.title}"?`)) return;
+    if (!(await confirm({ title: `למחוק את המודעה "${listing.title}"?`, danger: true }))) return;
     const { error } = await supabase.from("listings").delete().eq("id", listing.id);
     if (error) {
       toast({ title: "מחיקה נכשלה", description: error.message, variant: "destructive" });

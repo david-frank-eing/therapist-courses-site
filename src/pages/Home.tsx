@@ -99,11 +99,57 @@ const Home = () => {
     canTasks
       ? { key: "tasks", icon: "⏰", title: "תזכורות", sub: "משימות ותזכורות", href: "/carlos-dashboard/#tasks", external: true }
       : { key: "tasks", icon: "⏰", title: "תזכורות", sub: "משימות ותזכורות", href: "/pricing", lockedTier: "שדרוג" },
-    canFinance
-      ? { key: "finance", icon: "💰", title: "כספים", sub: "הכנסות והוצאות", href: "/carlos-dashboard/#finance", external: true }
-      : { key: "finance", icon: "💰", title: "כספים", sub: "לא פעיל בחשבון שלך", href: "/pricing", lockedTier: "בהרשאה" },
+    // finance is a personal switch, not part of a plan, so when it is off it is simply not shown
+    ...(canFinance ? [{ key: "finance", icon: "💰", title: "כספים", sub: "הכנסות והוצאות", href: "/carlos-dashboard/#finance", external: true }] : []),
     { key: "board", icon: "🪑", title: "לוח יד שנייה", sub: "ציוד למטפלים", href: "/board" },
   ];
+
+  // what the plan opens comes first; what it does not open is one small line at the bottom
+  const open = items.filter((it) => !it.lockedTier);
+  const locked = items.filter((it) => it.lockedTier);
+
+  const lockedRow = locked.length > 0 && (
+    <p className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
+      <Lock size={14} className="text-amber-600" />
+      <span>לא כלול בתכנית שלך:</span>
+      {locked.map((it) => <span key={it.key}>{it.icon} {it.title}</span>)}
+      <Link to="/pricing" className="text-primary font-semibold">מה כלול בכל תכנית</Link>
+    </p>
+  );
+
+  const todayPanels = (
+    <div className="grid md:grid-cols-[1.5fr_1fr] gap-4">
+      <section className="rounded-2xl border bg-card p-4 shadow-sm">
+        <h2 className="font-bold mb-2">התורים להיום</h2>
+        {!canBooking ? (
+          <p className="text-sm text-muted-foreground">זימון תורים לא כלול בתכנית שלך. <Link className="text-primary font-semibold" to="/pricing">לתכניות</Link></p>
+        ) : appts.length === 0 ? (
+          <p className="text-sm text-muted-foreground">אין תורים היום.</p>
+        ) : (
+          appts.map((a) => (
+            <div key={a.id} className="flex gap-3 items-center py-2 border-t first:border-t-0">
+              <time className="font-bold text-primary min-w-[3rem]" dir="ltr">{(a.time || "").slice(0, 5)}</time>
+              <span>{a.patient_name || "מטופל"}</span>
+              <small className="mr-auto text-muted-foreground">{a.service}</small>
+            </div>
+          ))
+        )}
+      </section>
+      <section className="rounded-2xl border bg-card p-4 shadow-sm">
+        <h2 className="font-bold mb-2 flex justify-between">
+          <span>משימות פתוחות</span>
+          {canTasks && <a className="text-sm text-primary font-semibold" href="/carlos-dashboard/#tasks">הכול</a>}
+        </h2>
+        {!canTasks ? (
+          <p className="text-sm text-muted-foreground">תזכורות ומשימות לא כלולות בתכנית שלך.</p>
+        ) : tasks.length === 0 ? (
+          <p className="text-sm text-muted-foreground">אין משימות פתוחות.</p>
+        ) : (
+          tasks.map((t) => <div key={t.id} className="py-2 border-t first:border-t-0">{t.title}</div>)
+        )}
+      </section>
+    </div>
+  );
 
   const go = (it: Item, cls: string, children: React.ReactNode) =>
     it.external ? (
@@ -154,72 +200,40 @@ const Home = () => {
 
         {view === "tiles" && (
           <div data-area="K32" className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
-            {items.map((it) => go(it, tileCls(it), tileBody(it)))}
+            {open.map((it) => go(it, tileCls(it), tileBody(it)))}
           </div>
         )}
+        {view === "tiles" && lockedRow}
 
         {view === "day" && (
           <div data-area="K33">
-            <div className="grid md:grid-cols-[1.5fr_1fr] gap-4">
-              <section className="rounded-2xl border bg-card p-4 shadow-sm">
-                <h2 className="font-bold mb-2">התורים להיום</h2>
-                {!canBooking ? (
-                  <p className="text-sm text-muted-foreground">זימון תורים לא כלול בתכנית שלך. <Link className="text-primary font-semibold" to="/pricing">לתכניות</Link></p>
-                ) : appts.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">אין תורים היום.</p>
-                ) : (
-                  appts.map((a) => (
-                    <div key={a.id} className="flex gap-3 items-center py-2 border-t first:border-t-0">
-                      <time className="font-bold text-primary min-w-[3rem]" dir="ltr">{(a.time || "").slice(0, 5)}</time>
-                      <span>{a.patient_name || "מטופל"}</span>
-                      <small className="mr-auto text-muted-foreground">{a.service}</small>
-                    </div>
-                  ))
-                )}
-              </section>
-              <section className="rounded-2xl border bg-card p-4 shadow-sm">
-                <h2 className="font-bold mb-2 flex justify-between">
-                  <span>משימות פתוחות</span>
-                  {canTasks && <a className="text-sm text-primary font-semibold" href="/carlos-dashboard/#tasks">הכול</a>}
-                </h2>
-                {!canTasks ? (
-                  <p className="text-sm text-muted-foreground">תזכורות ומשימות לא כלולות בתכנית שלך.</p>
-                ) : tasks.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">אין משימות פתוחות.</p>
-                ) : (
-                  tasks.map((t) => <div key={t.id} className="py-2 border-t first:border-t-0">{t.title}</div>)
-                )}
-              </section>
-            </div>
+            {todayPanels}
             <div className="flex flex-wrap gap-3 mt-4">
-              {items.map((it) =>
-                go(it, `flex-1 basis-40 rounded-xl border px-4 py-2.5 font-semibold flex gap-2 items-center ${it.lockedTier ? "bg-muted text-muted-foreground" : "bg-card hover:border-primary"}`, (
-                  <>
-                    <span>{it.icon}</span>{it.title}
-                    {it.lockedTier && <em className="mr-auto text-xs not-italic text-amber-600">{it.lockedTier}</em>}
-                  </>
+              {open.map((it) =>
+                go(it, "flex-1 basis-40 rounded-xl border px-4 py-2.5 font-semibold flex gap-2 items-center bg-card hover:border-primary", (
+                  <><span>{it.icon}</span>{it.title}</>
                 ))
               )}
             </div>
+            {lockedRow}
           </div>
         )}
 
         {view === "side" && (
           <div data-area="K34" className="grid md:grid-cols-[14rem_1fr] gap-4">
             <nav className="rounded-2xl border bg-card p-3 flex md:flex-col gap-1 overflow-x-auto">
-              {items.map((it) =>
-                go(it, `flex gap-2 items-center px-3 py-2 rounded-lg whitespace-nowrap ${it.lockedTier ? "text-muted-foreground" : "font-semibold hover:bg-muted"}`, (
-                  <>
-                    <span>{it.icon}</span>{it.title}
-                    {it.lockedTier && <Lock size={13} className="mr-auto text-amber-600" />}
-                  </>
+              {open.map((it) =>
+                go(it, "flex gap-2 items-center px-3 py-2 rounded-lg whitespace-nowrap font-semibold hover:bg-muted", (
+                  <><span>{it.icon}</span>{it.title}</>
                 ))
               )}
             </nav>
-            <div>
+            <div className="space-y-4 min-w-0">
               <Link to="/courses" className="block rounded-2xl border bg-card p-4 shadow-sm hover:border-primary">
                 📚 <b>להמשיך ללמוד</b> <span className="text-sm text-muted-foreground">— לכל הקורסים</span>
               </Link>
+              {todayPanels}
+              {lockedRow}
             </div>
           </div>
         )}

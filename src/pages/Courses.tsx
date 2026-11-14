@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { CourseGrid } from "@/components/CourseGrid";
@@ -22,7 +23,13 @@ export interface Course {
 
 const Courses = () => {
   const [courses, setCourses] = useState<Course[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<CourseCategory | "all">("all");
+  // the category lives in the address (?category=ai), so the footer links and the back button keep it
+  const [params, setParams] = useSearchParams();
+  const fromUrl = params.get("category");
+  const selectedCategory: CourseCategory | "all" =
+    fromUrl === "business" || fromUrl === "ai" || fromUrl === "clinic_growth" ? fromUrl : "all";
+  const setSelectedCategory = (c: CourseCategory | "all") =>
+    setParams(c === "all" ? {} : { category: c }, { replace: true });
   const [isLoading, setIsLoading] = useState(true);
   const { canAccessTier } = useAuth();
 

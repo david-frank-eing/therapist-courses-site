@@ -16,12 +16,14 @@ import { UsersManager } from "@/components/admin/UsersManager";
 import { ListingsManager } from "@/components/admin/ListingsManager";
 import { SiteSettingsManager } from "@/components/admin/SiteSettingsManager";
 import { Loader2, Plus, Pencil, Trash2, ShieldAlert } from "lucide-react";
+import { useConfirm } from "@/components/ConfirmDialog";
 
 type Course = Database["public"]["Tables"]["courses"]["Row"];
 
 const Admin = () => {
   const { user, isAdmin, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
+  const confirm = useConfirm();
 
   const [courses, setCourses] = useState<Course[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -59,7 +61,7 @@ const Admin = () => {
   };
 
   const handleDelete = async (course: Course) => {
-    if (!confirm(`למחוק את הקורס "${course.title}"? כל הסרטונים והמשאבים המשויכים יימחקו גם הם.`))
+    if (!(await confirm({ title: `למחוק את הקורס "${course.title}"?`, text: "כל הסרטונים והחומרים של הקורס יימחקו גם הם. אי אפשר לבטל.", danger: true })))
       return;
     const { error } = await supabase.from("courses").delete().eq("id", course.id);
     if (error) {

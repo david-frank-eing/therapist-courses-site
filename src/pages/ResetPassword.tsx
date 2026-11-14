@@ -9,6 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { z } from "zod";
+import { authErrorHe } from "@/lib/authErrors";
 
 const passwordSchema = z.string().min(6, "הסיסמה חייבת להכיל לפחות 6 תווים");
 
@@ -76,7 +77,7 @@ const ResetPassword = () => {
     setIsSubmitting(false);
 
     if (error) {
-      toast({ title: "שגיאה", description: error.message, variant: "destructive" });
+      toast({ title: "לא הצלחנו", description: authErrorHe(error), variant: "destructive" });
       return;
     }
 

@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { z } from "zod";
+import { authErrorHe } from "@/lib/authErrors";
 
 type Mode = "login" | "signup" | "forgot";
 
@@ -77,7 +78,7 @@ const Auth = () => {
       if (mode === "forgot") {
         const { error } = await resetPassword(email);
         if (error) {
-          toast({ title: "שגיאה", description: error.message, variant: "destructive" });
+          toast({ title: "לא הצלחנו", description: authErrorHe(error), variant: "destructive" });
         } else {
           toast({
             title: "הקישור נשלח",
@@ -95,7 +96,7 @@ const Auth = () => {
               variant: "destructive",
             });
           } else {
-            toast({ title: "שגיאה", description: error.message, variant: "destructive" });
+            toast({ title: "לא הצלחנו", description: authErrorHe(error), variant: "destructive" });
           }
         } else {
           toast({ title: "התחברת בהצלחה!", description: "ברוכים הבאים למרחב למטפלים" });
@@ -111,7 +112,7 @@ const Auth = () => {
               variant: "destructive",
             });
           } else {
-            toast({ title: "שגיאה", description: error.message, variant: "destructive" });
+            toast({ title: "לא הצלחנו", description: authErrorHe(error), variant: "destructive" });
           }
         } else {
           toast({ title: "נרשמת בהצלחה!", description: "ברוכים הבאים למרחב למטפלים" });
