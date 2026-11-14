@@ -46,7 +46,7 @@ const today = () => {
 };
 
 const Home = () => {
-  const { user, profile, isLoading, isAdmin, hasPaidTools } = useAuth();
+  const { user, profile, isLoading, isAdmin, can } = useAuth();
   const [view, setView] = useState<View>(readView);
   const [appts, setAppts] = useState<Appt[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -57,7 +57,9 @@ const Home = () => {
     try { localStorage.setItem(VIEW_KEY, v); } catch { /* ignore */ }
   };
 
-  const premium = hasPaidTools;
+  const canClients = can("clients");
+  const canTasks = can("tasks");
+  const canBooking = can("booking");
 
   useEffect(() => {
     if (!user) return;
@@ -66,8 +68,8 @@ const Home = () => {
     (async () => {
       const day = today();
       const [ap, tk, fin] = await Promise.all([
-        premium ? db.from("appointments").select("id,patient_name,time,service").eq("user_id", user.id).eq("date", day).order("time") : Promise.resolve({}),
-        premium ? db.from("tasks").select("id,title,due_date").eq("user_id", user.id).eq("status", "pending").or(`due_date.is.null,due_date.lte.${day}`).limit(8) : Promise.resolve({}),
+        canBooking ? db.from("appointments").select("id,patient_name,time,service").eq("user_id", user.id).eq("date", day).order("time") : Promise.resolve({}),
+        canTasks ? db.from("tasks").select("id,title,due_date").eq("user_id", user.id).eq("status", "pending").or(`due_date.is.null,due_date.lte.${day}`).limit(8) : Promise.resolve({}),
         db.from("profiles").select("finance_enabled").eq("id", user.id).maybeSingle(),
       ]);
       if (!alive) return;
@@ -76,7 +78,7 @@ const Home = () => {
       setFinanceOn(!!fin?.data?.finance_enabled);
     })().catch(() => { /* the tiles do not depend on this data */ });
     return () => { alive = false; };
-  }, [user, premium]);
+  }, [user, canBooking, canTasks]);
 
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
@@ -88,15 +90,15 @@ const Home = () => {
 
   const items: Item[] = [
     { key: "courses", icon: "📚", title: "קורסים", sub: "ללמוד ולהתקדם", href: "/courses" },
-    premium
+    canClients
       ? { key: "clients", icon: "👥", title: "מטופלים", sub: "הרשימה והתיקים", href: "/crm" }
-      : { key: "clients", icon: "👥", title: "מטופלים", sub: "ניהול מטופלים", href: "/pricing", lockedTier: "דרגה גבוהה יותר" },
-    premium
+      : { key: "clients", icon: "👥", title: "מטופלים", sub: "ניהול מטופלים", href: "/pricing", lockedTier: "שדרוג" },
+    canBooking
       ? { key: "booking", icon: "📅", title: "תורים", sub: "היומן והזמנות", href: "/carlos-dashboard/#booking-mgmt", external: true }
-      : { key: "booking", icon: "📅", title: "תורים", sub: "זימון תורים", href: "/pricing", lockedTier: "דרגה גבוהה יותר" },
-    premium
+      : { key: "booking", icon: "📅", title: "תורים", sub: "זימון תורים", href: "/pricing", lockedTier: "שדרוג" },
+    canTasks
       ? { key: "tasks", icon: "⏰", title: "תזכורות", sub: "משימות ותזכורות", href: "/carlos-dashboard/#tasks", external: true }
-      : { key: "tasks", icon: "⏰", title: "תזכורות", sub: "משימות ותזכורות", href: "/pricing", lockedTier: "דרגה גבוהה יותר" },
+      : { key: "tasks", icon: "⏰", title: "תזכורות", sub: "משימות ותזכורות", href: "/pricing", lockedTier: "שדרוג" },
     canFinance
       ? { key: "finance", icon: "💰", title: "כספים", sub: "הכנסות והוצאות", href: "/carlos-dashboard/#finance", external: true }
       : { key: "finance", icon: "💰", title: "כספים", sub: "לא פעיל בחשבון שלך", href: "/pricing", lockedTier: "בהרשאה" },
@@ -161,8 +163,8 @@ const Home = () => {
             <div className="grid md:grid-cols-[1.5fr_1fr] gap-4">
               <section className="rounded-2xl border bg-card p-4 shadow-sm">
                 <h2 className="font-bold mb-2">התורים להיום</h2>
-                {!premium ? (
-                  <p className="text-sm text-muted-foreground">זימון תורים זמין בפרימיום. <Link className="text-primary font-semibold" to="/pricing">למחירים</Link></p>
+                {!canBooking ? (
+                  <p className="text-sm text-muted-foreground">זימון תורים לא כלול בתכנית שלך. <Link className="text-primary font-semibold" to="/pricing">לתכניות</Link></p>
                 ) : appts.length === 0 ? (
                   <p className="text-sm text-muted-foreground">אין תורים היום.</p>
                 ) : (
@@ -178,10 +180,10 @@ const Home = () => {
               <section className="rounded-2xl border bg-card p-4 shadow-sm">
                 <h2 className="font-bold mb-2 flex justify-between">
                   <span>משימות פתוחות</span>
-                  {premium && <a className="text-sm text-primary font-semibold" href="/carlos-dashboard/#tasks">הכול</a>}
+                  {canTasks && <a className="text-sm text-primary font-semibold" href="/carlos-dashboard/#tasks">הכול</a>}
                 </h2>
-                {!premium ? (
-                  <p className="text-sm text-muted-foreground">תזכורות ומשימות זמינות בפרימיום.</p>
+                {!canTasks ? (
+                  <p className="text-sm text-muted-foreground">תזכורות ומשימות לא כלולות בתכנית שלך.</p>
                 ) : tasks.length === 0 ? (
                   <p className="text-sm text-muted-foreground">אין משימות פתוחות.</p>
                 ) : (

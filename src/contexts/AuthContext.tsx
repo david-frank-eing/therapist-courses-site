@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { FEATURES, isAllowed, type AccessRow, type Feature } from "@/lib/tiers";
 
 type SubscriptionTier = "free" | "basic" | "premium" | "vip";
 
@@ -25,8 +26,10 @@ interface AuthContextType {
   resetPassword: (email: string) => Promise<{ error: Error | null }>;
   updatePassword: (newPassword: string) => Promise<{ error: Error | null }>;
   canAccessTier: (requiredTier: SubscriptionTier) => boolean;
-  /** the work tools (clients, reminders, bookings): set per tier in the admin "דרגות" tab (table tier_access) */
+  /** at least one work tool is open (clients, reminders, bookings, content): set per tier in the admin "דרגות" tab */
   hasPaidTools: boolean;
+  /** one work tool: set per tier in the admin "דרגות" tab (table tier_access); an admin can do everything */
+  can: (feature: Feature) => boolean;
 }
 
 const tierOrder: SubscriptionTier[] = ["free", "basic", "premium", "vip"];
@@ -39,7 +42,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [toolsRow, setToolsRow] = useState<boolean | null>(null);
+  const [accessRows, setAccessRows] = useState<AccessRow[]>([]);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -87,13 +90,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!error && data) {
       setProfile(data as Profile);
       // the permissions table; before its migration runs this fails and the old rule (premium/vip) applies
-      const { data: row, error: rowErr } = await (supabase as any)
+      const { data: rows, error: rowErr } = await (supabase as any)
         .from("tier_access")
-        .select("allowed")
-        .eq("feature", "paid_tools")
-        .eq("tier", (data as Profile).subscription_tier)
-        .maybeSingle();
-      setToolsRow(!rowErr && row ? !!row.allowed : null);
+        .select("feature,tier,allowed")
+        .eq("tier", (data as Profile).subscription_tier);
+      setAccessRows(!rowErr && rows ? rows : []);
     }
   };
 
@@ -138,7 +139,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setSession(null);
     setProfile(null);
     setIsAdmin(false);
-    setToolsRow(null);
+    setAccessRows([]);
   };
 
   const resetPassword = async (email: string) => {
@@ -162,6 +163,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return userTierIndex >= requiredTierIndex;
   };
 
+  const tier = profile?.subscription_tier ?? "";
+  const can = (feature: Feature): boolean => isAdmin || (!!profile && isAllowed(accessRows, feature, tier));
+
   return (
     <AuthContext.Provider
       value={{
@@ -176,8 +180,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         resetPassword,
         updatePassword,
         canAccessTier,
-        hasPaidTools:
-          isAdmin || (toolsRow ?? ["premium", "vip"].includes(profile?.subscription_tier ?? "")),
+        hasPaidTools: FEATURES.some((f) => can(f.id)),
+        can,
       }}
     >
       {children}

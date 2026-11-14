@@ -56,7 +56,7 @@ const exportCSV = (clients: Client[]) => {
 };
 
 const CRM = () => {
-  const { user, isLoading: authLoading, hasPaidTools } = useAuth();
+  const { user, isLoading: authLoading, can } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -67,7 +67,7 @@ const CRM = () => {
   const [editing, setEditing] = useState<Client | null>(null);
   const [importOpen, setImportOpen] = useState(false);
 
-  const hasAccess = !!user && hasPaidTools;
+  const hasAccess = !!user && can("clients");
 
   const fetchClients = async () => {
     setIsLoading(true);
@@ -156,13 +156,13 @@ const CRM = () => {
         <main className="container py-20">
           <div className="max-w-md mx-auto text-center">
             <Lock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h1 className="text-2xl font-bold text-foreground mb-2">ניהול מטופלים — פיצ'ר פרימיום</h1>
+            <h1 className="text-2xl font-bold text-foreground mb-2">ניהול מטופלים לא פתוח בחשבון שלך</h1>
             <p className="text-muted-foreground mb-6">
-              מערכת ניהול המטופלים זמינה למנויי פרימיום ו‑VIP. שדרגו כדי לנהל את המטופלים שלכם
-              במקום אחד, בצורה פרטית ומאובטחת.
+              ניהול המטופלים זמין בתכניות מסוימות. בדף התכניות רואים מה כל תכנית כוללת, וכך אפשר
+              לנהל את המטופלים במקום אחד, בצורה פרטית ומאובטחת.
             </p>
             <Button asChild>
-              <Link to="/pricing">שדרוג לפרימיום</Link>
+              <Link to="/pricing">לתכניות המנויים</Link>
             </Button>
           </div>
         </main>

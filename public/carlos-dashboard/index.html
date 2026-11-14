@@ -527,14 +527,21 @@
       }
       const { data: profile } = await window._supabase
         .from('profiles').select('subscription_tier, full_name, is_admin').eq('id', session.user.id).single();
-      // the permissions table (tier_access) decides; before its migration runs, the old rule (premium/vip) applies
-      let toolsAllowed = !!profile && ['premium','vip'].includes(profile.subscription_tier);
+      // the permissions table (tier_access, the admin "דרגות" tab) decides, per tool. Same rule as the database
+      // (has_feature): the tool's own row, else the older combined "paid_tools" row, else premium/vip.
+      const FEATURES = ['clients', 'tasks', 'booking', 'content'];
+      const features = {};
       if (profile) {
-        const { data: row, error: rowErr } = await window._supabase
-          .from('tier_access').select('allowed').eq('feature', 'paid_tools').eq('tier', profile.subscription_tier).maybeSingle();
-        if (!rowErr && row) toolsAllowed = !!row.allowed;
-        if (profile.is_admin) toolsAllowed = true;
+        const { data: rows, error: rowErr } = await window._supabase
+          .from('tier_access').select('feature, allowed').eq('tier', profile.subscription_tier);
+        const list = rowErr || !rows ? [] : rows;
+        const pick = f => list.find(r => r.feature === f);
+        for (const f of FEATURES) {
+          const r = pick(f) || pick('paid_tools');
+          features[f] = profile.is_admin === true || (r ? !!r.allowed : ['premium', 'vip'].includes(profile.subscription_tier));
+        }
       }
+      const toolsAllowed = FEATURES.some(f => features[f]);
       if (!profile || !toolsAllowed) {
         document.body.innerHTML = `
           <div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;direction:rtl;background:#f5f5f5">
@@ -554,6 +561,21 @@
       window._userName = profile.full_name || session.user.email;
       window._isAdmin = profile.is_admin === true;
       window._isPremium = true;
+      window._features = features;
+      // a tool the plan does not open is hidden (its data stays; saving there would be refused by the database)
+      const HIDE = {
+        clients: ['#contacts', '#crm-overlay'],
+        tasks: ['#tasks', '#tomorrow', '#habits', '#journal', '#tracking-mini'],
+        booking: ['#booking-mgmt', '#booking-alert-bar'],
+        content: ['#content'],
+      };
+      const hidden = FEATURES.filter(f => !features[f]).flatMap(f => HIDE[f]);
+      if (hidden.length) {
+        const st = document.createElement('style');
+        st.id = 'plan-hidden';
+        st.textContent = hidden.join(',') + '{display:none !important}';
+        document.head.appendChild(st);
+      }
       // Finance is its own permission (profiles.finance_enabled, set by the admin). Asked separately and
       // tolerantly: until that column exists in the database, finance stays what it was — admin only.
       window._financeEnabled = window._isAdmin;

@@ -22,7 +22,7 @@ const guestLinks = [
 const memberLinks = [
   { label: "הבית שלי", href: "/home" },
   { label: "קורסים", href: "/courses" },
-  { label: "מטופלים", href: "/crm", minTier: "premium" },
+  { label: "מטופלים", href: "/crm", feature: "clients" as const },
   { label: "לוח", href: "/board" },
 ];
 
@@ -46,8 +46,8 @@ const NO_BACK = ["/", "/home", "/auth", "/reset-password"];
 export const Header = () => {
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { user, profile, signOut, isAdmin, hasPaidTools } = useAuth();
-  const navLinks = user ? memberLinks.filter((l) => !l.minTier || hasPaidTools) : guestLinks;
+  const { user, profile, signOut, isAdmin, hasPaidTools, can } = useAuth();
+  const navLinks = user ? memberLinks.filter((l) => !l.feature || can(l.feature)) : guestLinks;
   const navigate = useNavigate();
 
   const showBack = !NO_BACK.includes(location.pathname);
