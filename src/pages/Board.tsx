@@ -11,6 +11,7 @@ import { Card } from "@/components/ui/card";
 import { ListingFormDialog } from "@/components/board/ListingFormDialog";
 import { LISTING_CATEGORY_OPTIONS, LISTING_CATEGORY_LABELS } from "@/lib/constants";
 import { Loader2, Plus, MapPin, Tag, ImageIcon } from "lucide-react";
+import { fetchAll } from "@/lib/fetchAll";
 
 type Listing = Database["public"]["Tables"]["listings"]["Row"];
 // Public list never reads contact columns (hidden from anon at the DB level)
@@ -35,6 +36,8 @@ const PUBLIC_COLS =
 export const imageUrl = (path: string | null): string | null =>
   path ? supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl : null;
 
+const PAGE = 24;
+
 const Board = () => {
   const { user } = useAuth();
   const [listings, setListings] = useState<PublicListing[]>([]);
@@ -44,12 +47,12 @@ const Board = () => {
 
   const fetchListings = async () => {
     setIsLoading(true);
-    const { data, error } = await supabase
-      .from("listings")
-      .select(PUBLIC_COLS)
-      .eq("is_active", true)
-      .order("created_at", { ascending: false });
-    if (!error && data) setListings(data as PublicListing[]);
+    // past 1000 listings a single request is cut off, so read in pages
+    const { data, error } = await fetchAll<PublicListing>((from, to) =>
+      supabase.from("listings").select(PUBLIC_COLS).eq("is_active", true)
+        .order("created_at", { ascending: false }).order("id").range(from, to) as any
+    );
+    if (!error) setListings(data);
     setIsLoading(false);
   };
 
@@ -59,6 +62,11 @@ const Board = () => {
 
   const filtered =
     category === "all" ? listings : listings.filter((l) => l.category === category);
+
+  // drawn 24 at a time (each card has a picture); a category narrows it first
+  const [shownCount, setShownCount] = useState(PAGE);
+  useEffect(() => setShownCount(PAGE), [category]);
+  const shown = filtered.slice(0, shownCount);
 
   return (
     <div className="min-h-screen bg-background">
@@ -124,7 +132,7 @@ const Board = () => {
           </div>
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {filtered.map((listing) => {
+            {shown.map((listing) => {
               const img = imageUrl(listing.image_path);
               return (
                 <Link key={listing.id} to={`/board/${listing.id}`}>
@@ -170,6 +178,12 @@ const Board = () => {
                 </Link>
               );
             })}
+          </div>
+        )}
+        {!isLoading && filtered.length > shown.length && (
+          <div className="flex flex-col items-center gap-1 pt-6">
+            <Button variant="outline" onClick={() => setShownCount((n) => n + PAGE)}>להציג עוד מודעות</Button>
+            <span className="text-xs text-muted-foreground">מוצגות {shown.length} מתוך {filtered.length}</span>
           </div>
         )}
       </main>
