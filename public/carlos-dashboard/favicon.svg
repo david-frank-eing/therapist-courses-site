@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <!-- The "הכול בידיים" family icon: a brown rounded square; Carlos keeps its blue letter, with the orange dot of the logo -->
-  <rect width="32" height="32" rx="8" fill="#6b2600"/>
+  <!-- The "הכול בידיים" family icon: Carlos navy square with its blue letter, with the orange dot of the logo -->
+  <rect width="32" height="32" rx="8" fill="#1b1b2f"/>
   <text x="15" y="23" font-family="Heebo, Segoe UI, Arial, sans-serif" font-size="20" font-weight="800" text-anchor="middle" fill="#a0b4ff">C</text>
   <circle cx="24.5" cy="8" r="3" fill="#ee8216"/>
 </svg>

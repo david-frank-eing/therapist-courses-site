@@ -5859,7 +5859,7 @@ function _showReminderPopup(task, overdue = false) {
   const isUrgent = !overdue && task.priority === 'urgent';
   const isRed    = isUrgent || overdue;
   const borderColor = isRed ? '#e07060' : '#4a6aee';
-  const bg          = isRed ? '#221515' : '#2b211b';
+  const bg          = isRed ? '#221515' : '#1e1d38';
   const btnBg       = isRed ? '#c0504a' : '#4a6aee';
   const badge = isUrgent
     ? '<span style="font-size:.72rem;background:#c0504a;color:#fff;padding:1px 7px;border-radius:10px;margin-right:6px;font-weight:700">דחוף!</span>'
