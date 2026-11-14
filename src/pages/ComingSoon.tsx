@@ -4,16 +4,17 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
 export default function ComingSoon() {
-  const { user, profile } = useAuth();
+  const { user, profile, isAdmin, isLoading, hasPaidTools } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (profile && ["premium", "vip"].includes(profile.subscription_tier)) {
+    // only after the admin check is done, and never for an admin
+    if (!isLoading && !isAdmin && profile && hasPaidTools) {
       window.location.href = "/carlos-dashboard/";
     }
-  }, [profile]);
+  }, [profile, isAdmin, isLoading, hasPaidTools]);
 
-  const isPending = user && profile && !["premium", "vip"].includes(profile.subscription_tier);
+  const isPending = user && profile && !hasPaidTools;
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background text-foreground px-4" dir="rtl">

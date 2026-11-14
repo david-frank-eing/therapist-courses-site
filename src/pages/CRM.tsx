@@ -56,7 +56,7 @@ const exportCSV = (clients: Client[]) => {
 };
 
 const CRM = () => {
-  const { user, isLoading: authLoading, canAccessTier } = useAuth();
+  const { user, isLoading: authLoading, hasPaidTools } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -67,7 +67,7 @@ const CRM = () => {
   const [editing, setEditing] = useState<Client | null>(null);
   const [importOpen, setImportOpen] = useState(false);
 
-  const hasAccess = !!user && canAccessTier("premium");
+  const hasAccess = !!user && hasPaidTools;
 
   const fetchClients = async () => {
     setIsLoading(true);

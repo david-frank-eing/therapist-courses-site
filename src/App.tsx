@@ -28,13 +28,17 @@ const queryClient = new QueryClient();
 const MAINTENANCE_MODE = true;
 
 function AppRoutes() {
-  const { isAdmin } = useAuth();
+  const { isAdmin, isLoading } = useAuth();
   const location = useLocation();
 
   const isPublicRoute =
     location.pathname === "/auth" ||
     location.pathname === "/reset-password" ||
     location.pathname.startsWith("/book/");
+
+  if (MAINTENANCE_MODE && isLoading && !isPublicRoute) {
+    return <div className="min-h-screen bg-background" />;
+  }
 
   if (MAINTENANCE_MODE && !isAdmin && !isPublicRoute) {
     return <ComingSoon />;

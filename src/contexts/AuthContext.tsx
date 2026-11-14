@@ -25,6 +25,8 @@ interface AuthContextType {
   resetPassword: (email: string) => Promise<{ error: Error | null }>;
   updatePassword: (newPassword: string) => Promise<{ error: Error | null }>;
   canAccessTier: (requiredTier: SubscriptionTier) => boolean;
+  /** the work tools (clients, reminders, bookings): set per tier in the admin "דרגות" tab (table tier_access) */
+  hasPaidTools: boolean;
 }
 
 const tierOrder: SubscriptionTier[] = ["free", "basic", "premium", "vip"];
@@ -37,6 +39,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [toolsRow, setToolsRow] = useState<boolean | null>(null);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -45,9 +48,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          setTimeout(() => {
-            fetchProfile(session.user.id);
-            checkAdminRole(session.user.id);
+          // keep "loading" until the profile AND the admin check are in: otherwise a signed-in admin is
+          // briefly treated as a plain premium user (and was bounced to the dashboard)
+          setIsLoading(true);
+          setTimeout(async () => {
+            await Promise.all([fetchProfile(session.user.id), checkAdminRole(session.user.id)]);
+            setIsLoading(false);
           }, 0);
         } else {
           setProfile(null);
@@ -80,6 +86,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     
     if (!error && data) {
       setProfile(data as Profile);
+      // the permissions table; before its migration runs this fails and the old rule (premium/vip) applies
+      const { data: row, error: rowErr } = await (supabase as any)
+        .from("tier_access")
+        .select("allowed")
+        .eq("feature", "paid_tools")
+        .eq("tier", (data as Profile).subscription_tier)
+        .maybeSingle();
+      setToolsRow(!rowErr && row ? !!row.allowed : null);
     }
   };
 
@@ -124,6 +138,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setSession(null);
     setProfile(null);
     setIsAdmin(false);
+    setToolsRow(null);
   };
 
   const resetPassword = async (email: string) => {
@@ -160,7 +175,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         signOut,
         resetPassword,
         updatePassword,
-        canAccessTier
+        canAccessTier,
+        hasPaidTools:
+          isAdmin || (toolsRow ?? ["premium", "vip"].includes(profile?.subscription_tier ?? "")),
       }}
     >
       {children}

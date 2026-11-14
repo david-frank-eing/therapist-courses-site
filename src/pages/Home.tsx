@@ -36,7 +36,6 @@ interface Item {
   sub: string;
   href: string;
   external?: boolean;
-  count?: number;
   lockedTier?: string; // shown when locked
 }
 
@@ -47,10 +46,8 @@ const today = () => {
 };
 
 const Home = () => {
-  const { user, profile, isLoading, isAdmin, canAccessTier } = useAuth();
+  const { user, profile, isLoading, isAdmin, hasPaidTools } = useAuth();
   const [view, setView] = useState<View>(readView);
-  const [courseCount, setCourseCount] = useState<number | null>(null);
-  const [clientCount, setClientCount] = useState<number | null>(null);
   const [appts, setAppts] = useState<Appt[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [financeOn, setFinanceOn] = useState(false);
@@ -60,7 +57,7 @@ const Home = () => {
     try { localStorage.setItem(VIEW_KEY, v); } catch { /* ignore */ }
   };
 
-  const premium = canAccessTier("premium" as Tier);
+  const premium = hasPaidTools;
 
   useEffect(() => {
     if (!user) return;
@@ -68,20 +65,16 @@ const Home = () => {
     const db = supabase as any;
     (async () => {
       const day = today();
-      const [c, cl, ap, tk, fin] = await Promise.all([
-        db.from("courses").select("id", { count: "exact", head: true }).eq("is_published", true),
-        premium ? db.from("clients").select("id", { count: "exact", head: true }).eq("user_id", user.id) : Promise.resolve({}),
+      const [ap, tk, fin] = await Promise.all([
         premium ? db.from("appointments").select("id,patient_name,time,service").eq("user_id", user.id).eq("date", day).order("time") : Promise.resolve({}),
         premium ? db.from("tasks").select("id,title,due_date").eq("user_id", user.id).eq("status", "pending").or(`due_date.is.null,due_date.lte.${day}`).limit(8) : Promise.resolve({}),
         db.from("profiles").select("finance_enabled").eq("id", user.id).maybeSingle(),
       ]);
       if (!alive) return;
-      setCourseCount(c?.count ?? 0);
-      setClientCount(cl?.count ?? null);
       setAppts(ap?.data ?? []);
       setTasks(tk?.data ?? []);
       setFinanceOn(!!fin?.data?.finance_enabled);
-    })().catch(() => { if (alive) setCourseCount(0); });
+    })().catch(() => { /* the tiles do not depend on this data */ });
     return () => { alive = false; };
   }, [user, premium]);
 
@@ -97,13 +90,13 @@ const Home = () => {
     { key: "courses", icon: "📚", title: "קורסים", sub: "ללמוד ולהתקדם", href: "/courses" },
     premium
       ? { key: "clients", icon: "👥", title: "מטופלים", sub: "הרשימה והתיקים", href: "/crm" }
-      : { key: "clients", icon: "👥", title: "מטופלים", sub: "ניהול מטופלים", href: "/pricing", lockedTier: "פרימיום" },
+      : { key: "clients", icon: "👥", title: "מטופלים", sub: "ניהול מטופלים", href: "/pricing", lockedTier: "דרגה גבוהה יותר" },
     premium
       ? { key: "booking", icon: "📅", title: "תורים", sub: "היומן והזמנות", href: "/carlos-dashboard/#booking-mgmt", external: true }
-      : { key: "booking", icon: "📅", title: "תורים", sub: "זימון תורים", href: "/pricing", lockedTier: "פרימיום" },
+      : { key: "booking", icon: "📅", title: "תורים", sub: "זימון תורים", href: "/pricing", lockedTier: "דרגה גבוהה יותר" },
     premium
       ? { key: "tasks", icon: "⏰", title: "תזכורות", sub: "משימות ותזכורות", href: "/carlos-dashboard/#tasks", external: true }
-      : { key: "tasks", icon: "⏰", title: "תזכורות", sub: "משימות ותזכורות", href: "/pricing", lockedTier: "פרימיום" },
+      : { key: "tasks", icon: "⏰", title: "תזכורות", sub: "משימות ותזכורות", href: "/pricing", lockedTier: "דרגה גבוהה יותר" },
     canFinance
       ? { key: "finance", icon: "💰", title: "כספים", sub: "הכנסות והוצאות", href: "/carlos-dashboard/#finance", external: true }
       : { key: "finance", icon: "💰", title: "כספים", sub: "לא פעיל בחשבון שלך", href: "/pricing", lockedTier: "בהרשאה" },
@@ -216,18 +209,12 @@ const Home = () => {
                 go(it, `flex gap-2 items-center px-3 py-2 rounded-lg whitespace-nowrap ${it.lockedTier ? "text-muted-foreground" : "font-semibold hover:bg-muted"}`, (
                   <>
                     <span>{it.icon}</span>{it.title}
-                    {it.count ? <span className="mr-auto min-w-[1.4rem] h-[1.4rem] px-1.5 rounded-full bg-primary text-primary-foreground text-xs font-bold grid place-items-center">{it.count}</span> : null}
                     {it.lockedTier && <Lock size={13} className="mr-auto text-amber-600" />}
                   </>
                 ))
               )}
             </nav>
             <div>
-              <div className="grid grid-cols-3 gap-3 mb-4">
-                <div className="rounded-xl border bg-card p-4 shadow-sm"><b className="text-2xl block">{courseCount ?? "–"}</b><span className="text-sm text-muted-foreground">קורסים</span></div>
-                <div className="rounded-xl border bg-card p-4 shadow-sm"><b className="text-2xl block">{premium ? appts.length : "–"}</b><span className="text-sm text-muted-foreground">תורים היום</span></div>
-                <div className="rounded-xl border bg-card p-4 shadow-sm"><b className="text-2xl block">{premium ? tasks.length : "–"}</b><span className="text-sm text-muted-foreground">משימות פתוחות</span></div>
-              </div>
               <Link to="/courses" className="block rounded-2xl border bg-card p-4 shadow-sm hover:border-primary">
                 📚 <b>להמשיך ללמוד</b> <span className="text-sm text-muted-foreground">— לכל הקורסים</span>
               </Link>

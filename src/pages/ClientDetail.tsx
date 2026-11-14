@@ -33,7 +33,7 @@ const statusBadgeClass: Record<string, string> = {
 
 const ClientDetail = () => {
   const { id } = useParams<{ id: string }>();
-  const { user, isLoading: authLoading, canAccessTier } = useAuth();
+  const { user, isLoading: authLoading, hasPaidTools } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -44,7 +44,7 @@ const ClientDetail = () => {
   const [editOpen, setEditOpen] = useState(false);
   const [waSettingsOpen, setWaSettingsOpen] = useState(false);
 
-  const hasAccess = !!user && canAccessTier("premium");
+  const hasAccess = !!user && hasPaidTools;
 
   const fetchAll = async () => {
     if (!id) return;

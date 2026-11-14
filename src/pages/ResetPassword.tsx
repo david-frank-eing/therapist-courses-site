@@ -82,9 +82,9 @@ const ResetPassword = () => {
 
     toast({
       title: isInvite ? "ברוך הבא! הסיסמה נקבעה" : "הסיסמה עודכנה",
-      description: isInvite ? "החשבון שלך מוכן. מיד תועבר לדאשבורד." : "הסיסמה החדשה נשמרה. אתם מחוברים.",
+      description: isInvite ? "החשבון שלך מוכן. מיד תועבר לדף הבית שלך." : "הסיסמה החדשה נשמרה. אתם מחוברים.",
     });
-    window.location.href = isInvite ? "/carlos-dashboard/" : "/";
+    window.location.href = "/home";
   };
 
   return (

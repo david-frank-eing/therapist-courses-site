@@ -1984,3 +1984,7 @@ body.lite-mode:not(.has-ai-briefing) #briefing { display: none !important; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
 }
+
+/* back to the therapist site */
+.site-back { display: inline-block; margin-bottom: 8px; padding: 4px 0; font-size: .9rem; color: var(--text-muted, #667); text-decoration: none; }
+.site-back:hover { text-decoration: underline; }

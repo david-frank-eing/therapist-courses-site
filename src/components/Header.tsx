@@ -46,8 +46,8 @@ const NO_BACK = ["/", "/home", "/auth", "/reset-password"];
 export const Header = () => {
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { user, profile, signOut, isAdmin, canAccessTier } = useAuth();
-  const navLinks = user ? memberLinks.filter((l) => !l.minTier || canAccessTier("premium")) : guestLinks;
+  const { user, profile, signOut, isAdmin, hasPaidTools } = useAuth();
+  const navLinks = user ? memberLinks.filter((l) => !l.minTier || hasPaidTools) : guestLinks;
   const navigate = useNavigate();
 
   const showBack = !NO_BACK.includes(location.pathname);
@@ -70,7 +70,7 @@ export const Header = () => {
         </Link>
 
         {/* Desktop Nav — Dashboard shortcut for premium users */}
-        {profile && ['premium','vip'].includes(profile.subscription_tier) && (
+        {profile && hasPaidTools && (
           <a
             href="/carlos-dashboard/"
             className="hidden md:flex items-center gap-1 px-3 py-1.5 text-sm font-medium bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-opacity ml-2"
@@ -119,7 +119,7 @@ export const Header = () => {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
                 {/* the profile settings live in the dashboard, which only premium/vip can open */}
-                {profile && ['premium','vip'].includes(profile.subscription_tier) && (
+                {profile && hasPaidTools && (
                   <DropdownMenuItem asChild>
                     <a href="/carlos-dashboard/" className="cursor-pointer">
                       <User size={16} className="ml-2" />
@@ -191,7 +191,7 @@ export const Header = () => {
                 </a>
               )
             ))}
-            {profile && ['premium','vip'].includes(profile.subscription_tier) && (
+            {profile && hasPaidTools && (
               <a
                 href="/carlos-dashboard/"
                 onClick={() => setIsMenuOpen(false)}

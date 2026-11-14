@@ -13,18 +13,10 @@ import {
 } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
 
-// "מה יש בכל דרגה": the courses part is editable here (each course has a minimum tier).
-// The feature rows are fixed in the code today and shown for reading only.
-const FEATURES: { name: string; from: SubscriptionTier | "admin" | "switch" }[] = [
-  { name: "לוח מודעות: צפייה ופרסום", from: "free" },
-  { name: "קורסים לפי הדרגה שנקבעה לכל קורס (למטה)", from: "free" },
-  { name: "ניהול מטופלים", from: "premium" },
-  { name: "דשבורד תזכורות ומשימות", from: "premium" },
-  { name: "זימון תורים (דף ציבורי משלך)", from: "premium" },
-  { name: "כספים", from: "switch" },
-];
+// "מה יש בכל דרגה": טבלת ההרשאות. השורה הראשונה נשמרת בטבלה tier_access ונאכפת במסד הנתונים
+// (has_paid_tier). שאר השורות מוצגות לקריאה: קורסים נקבעים לכל קורס (למטה), כספים במתג אישי.
 const TIERS: SubscriptionTier[] = ["free", "basic", "premium", "vip"];
-const rank = (t: SubscriptionTier) => TIERS.indexOf(t);
+const DEFAULT_TOOLS: Record<SubscriptionTier, boolean> = { free: false, basic: false, premium: true, vip: true };
 
 interface CourseRow { id: string; title: string; min_tier: SubscriptionTier; is_published: boolean }
 
@@ -33,8 +25,34 @@ export const TiersManager = () => {
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState<string | null>(null);
   const { toast } = useToast();
+  const [tools, setTools] = useState<Record<SubscriptionTier, boolean>>(DEFAULT_TOOLS);
+  const [toolsReady, setToolsReady] = useState<boolean | null>(null); // null = loading, false = migration missing
+  const [savingTier, setSavingTier] = useState<string | null>(null);
+
+  const toggleTool = async (tier: SubscriptionTier) => {
+    const next = !tools[tier];
+    setSavingTier(tier);
+    const { error } = await (supabase as any)
+      .from("tier_access")
+      .upsert({ feature: "paid_tools", tier, allowed: next }, { onConflict: "feature,tier" });
+    setSavingTier(null);
+    if (error) return toast({ title: "העדכון נכשל", description: error.message, variant: "destructive" });
+    setTools((t) => ({ ...t, [tier]: next }));
+    toast({ title: next ? `כלי העבודה נפתחו לדרגת ${TIER_LABELS[tier]}` : `כלי העבודה נסגרו לדרגת ${TIER_LABELS[tier]}` });
+  };
 
   useEffect(() => {
+    (async () => {
+      const { data: rows, error } = await (supabase as any)
+        .from("tier_access").select("tier,allowed").eq("feature", "paid_tools");
+      if (error) setToolsReady(false);
+      else {
+        setToolsReady(true);
+        const m = { ...DEFAULT_TOOLS };
+        (rows ?? []).forEach((r: { tier: SubscriptionTier; allowed: boolean }) => { m[r.tier] = r.allowed; });
+        setTools(m);
+      }
+    })();
     (async () => {
       const { data } = await supabase
         .from("courses")
@@ -57,10 +75,15 @@ export const TiersManager = () => {
   return (
     <div className="space-y-8 text-right">
       <section>
-        <h2 className="text-lg font-bold mb-1">מה כל דרגה פותחת</h2>
+        <h2 className="text-lg font-bold mb-1">טבלת הרשאות: מה כל דרגה פותחת</h2>
         <p className="text-sm text-muted-foreground mb-3">
-          הרשימה הזו קבועה בקוד כרגע, ולכן היא לקריאה בלבד. כדי לשנות אותה צריך שינוי בקוד. הקורסים, לעומת זאת, נקבעים כאן למטה.
+          סימון בשורה הראשונה נשמר מיד ונאכף גם במסד הנתונים. הורדת הרשאה לא מוחקת נתונים: המשתמש ממשיך לראות ולמחוק את מה שיצר, אבל לא יוכל להוסיף ולערוך. מנהל תמיד מורשה.
         </p>
+        {toolsReady === false && (
+          <Card className="p-3 mb-3 text-sm border-amber-500/40 bg-amber-500/5">
+            טבלת ההרשאות עוד לא קיימת במסד. צריך להריץ ב-Supabase את קובץ ה-SQL "טבלת הרשאות". עד אז הכלל הקבוע (פרימיום ו-VIP) פועל והסימונים לא נשמרים.
+          </Card>
+        )}
         <Card className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -70,16 +93,36 @@ export const TiersManager = () => {
               </tr>
             </thead>
             <tbody>
-              {FEATURES.map((f) => (
-                <tr key={f.name} className="border-b last:border-0">
-                  <td className="p-3">{f.name}</td>
-                  {TIERS.map((t) => (
-                    <td key={t} className="p-3 text-center">
-                      {f.from === "switch" ? "מתג אישי" : f.from === "admin" ? "—" : rank(t) >= rank(f.from) ? "✓" : "✗"}
-                    </td>
-                  ))}
-                </tr>
-              ))}
+              <tr className="border-b">
+                <td className="p-3">
+                  <b>כלי עבודה</b>
+                  <div className="text-xs text-muted-foreground">ניהול מטופלים, תזכורות ומשימות, זימון תורים</div>
+                </td>
+                {TIERS.map((t) => (
+                  <td key={t} className="p-3 text-center">
+                    <input
+                      type="checkbox"
+                      className="h-5 w-5 accent-[hsl(var(--primary))] cursor-pointer disabled:cursor-not-allowed"
+                      checked={tools[t]}
+                      disabled={toolsReady !== true || savingTier === t}
+                      onChange={() => toggleTool(t)}
+                      aria-label={`כלי עבודה לדרגת ${TIER_LABELS[t]}`}
+                    />
+                  </td>
+                ))}
+              </tr>
+              <tr className="border-b">
+                <td className="p-3">קורסים<div className="text-xs text-muted-foreground">נקבע לכל קורס בנפרד, בטבלה למטה</div></td>
+                <td colSpan={4} className="p-3 text-center text-muted-foreground">לפי הדרגה המינימלית של כל קורס</td>
+              </tr>
+              <tr className="border-b">
+                <td className="p-3">לוח מודעות<div className="text-xs text-muted-foreground">צפייה לכולם, פרסום לכל מחובר</div></td>
+                {TIERS.map((t) => <td key={t} className="p-3 text-center">✓</td>)}
+              </tr>
+              <tr>
+                <td className="p-3">כספים<div className="text-xs text-muted-foreground">מתג אישי לכל משתמש, לא לפי דרגה</div></td>
+                <td colSpan={4} className="p-3 text-center text-muted-foreground">מתג אישי</td>
+              </tr>
             </tbody>
           </table>
         </Card>
