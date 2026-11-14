@@ -132,7 +132,7 @@
     if ($('fm')) return;
     const el = document.createElement('div');
     el.id = 'fm'; el.className = 'fm hidden'; el.dir = 'rtl';
-    el.innerHTML = `<div class="fm-top"><b>💰 כספים</b><span id="fm-period" class="dim"></span><button class="fm-help" data-fm="help" aria-label="איך משתמשים">?</button><button class="fm-x" data-fm="close" aria-label="סגור">✕</button></div>
+    el.innerHTML = `<div class="fm-top"><b>💰 כספים</b><span id="fm-period" class="dim"></span><button class="fm-help" data-fm="help" aria-label="איך משתמשים">?</button><a class="fm-site" href="/home">למרחב למטפלים</a><button class="fm-x" data-fm="close" aria-label="סגור">✕</button></div>
       <div class="fm-tabs"><button data-fmtab="pkg">דברים לרואה חשבון</button><button data-fmtab="money">לאן הולך הכסף</button></div>
       <div class="fm-upload-wrap"><label class="fm-upload">📸 צלם / העלה קבלה<input id="fm-receipt" type="file" accept="image/*,application/pdf" multiple></label>
         <div id="fm-upload-status" class="fm-upload-status" role="status" aria-live="polite"></div></div>
