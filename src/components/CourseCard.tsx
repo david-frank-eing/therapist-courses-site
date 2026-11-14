@@ -19,7 +19,7 @@ export const CourseCard = ({
   participants,
 }: CourseCardProps) => {
   return (
-    <div className="bg-card rounded-xl overflow-hidden shadow-card hover:shadow-card-hover transition-smooth group">
+    <div className="bg-card rounded-3xl overflow-hidden shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-smooth group">
       <div className="relative aspect-video overflow-hidden">
         <img
           src={image}

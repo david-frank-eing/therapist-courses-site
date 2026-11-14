@@ -26,7 +26,7 @@
     --brand-orange: 30 86% 51%;
     --brand-brown: 21 100% 21%;
 
-    --background: 30 33% 99%;
+    --background: 33 50% 97%;
     --foreground: 24 69% 10%;
 
     --card: 0 0% 100%;
@@ -50,16 +50,17 @@
     --destructive: 0 84% 45%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 28 35% 90%;
+    --border: 30 40% 92%;
     --input: 28 35% 86%;
     --ring: 30 86% 51%;
 
-    --radius: 0.75rem;
+    --radius: 1rem;
 
     /* Custom tokens */
     --gradient-hero: linear-gradient(135deg, hsl(21 100% 21%), hsl(30 86% 51%));
-    --shadow-card: 0 4px 20px -4px hsl(24 69% 10% / 0.08);
-    --shadow-card-hover: 0 8px 30px -4px hsl(30 86% 51% / 0.2);
+    /* "בהיר ורגוע": white cards on cream, with a soft warm shadow instead of grey frames */
+    --shadow-card: 0 10px 40px -10px hsl(21 100% 21% / 0.10);
+    --shadow-card-hover: 0 18px 48px -10px hsl(21 100% 21% / 0.16);
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
     --sidebar-background: 0 0% 98%;

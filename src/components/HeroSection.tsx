@@ -6,7 +6,7 @@ import { useSiteSettings } from "@/hooks/useSiteSettings";
 export const HeroSection = () => {
   const s = useSiteSettings();
   return (
-    <section className="relative py-20 md:py-32 overflow-hidden" id="home">
+    <section className="relative py-20 md:py-28 overflow-hidden" id="home">
       {/* Background Elements */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-20 right-10 w-32 h-32 md:w-64 md:h-64 bg-brand-orange/10 rounded-full blur-3xl" />
@@ -29,13 +29,13 @@ export const HeroSection = () => {
           </p>
 
           <div className="flex flex-wrap justify-center md:justify-start gap-4 mb-12 animate-fade-in">
-            <Button size="lg" asChild className="gap-2">
+            <Button size="lg" variant="cta" asChild className="gap-2">
               <Link to="/courses">
                 <Play size={20} />
                 התחילו ללמוד
               </Link>
             </Button>
-            <Button size="lg" variant="outline" asChild className="gap-2">
+            <Button size="lg" variant="ghost" asChild className="gap-2 underline underline-offset-8 decoration-brand-orange decoration-2 hover:bg-transparent">
               <Link to="/pricing">
                 <BookOpen size={20} />
                 צפו בתכניות המנויים

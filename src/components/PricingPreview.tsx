@@ -21,13 +21,13 @@ interface PlanCardProps {
 export const PlanCard = ({ plan, tools, current, action }: PlanCardProps) => (
   <Card
     className={`relative overflow-hidden h-full flex flex-col ${
-      plan.highlighted ? "border-primary shadow-card-hover ring-2 ring-primary/20" : "shadow-card"
-    } ${current ? "ring-2 ring-amber-500/50" : ""}`}
+      plan.highlighted ? "border-brand-orange shadow-card-hover ring-2 ring-brand-orange/30" : ""
+    } ${current ? "ring-2 ring-primary/40" : ""}`}
   >
     {plan.highlighted && <div className="absolute top-0 right-0 left-0 h-1 gradient-hero" />}
     <CardHeader className="text-center pb-4">
       {current ? (
-        <div className="flex items-center justify-center gap-1 text-amber-600 text-sm font-bold mb-2">התכנית שלך</div>
+        <div className="flex items-center justify-center gap-1 text-secondary-foreground text-sm font-bold mb-2">התכנית שלך</div>
       ) : plan.highlighted ? (
         <div className="flex items-center justify-center gap-1 text-primary text-sm font-medium mb-2">
           <Crown size={16} />

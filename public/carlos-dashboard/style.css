@@ -35,22 +35,25 @@
   --overlay:      rgba(0,0,0,0.67);
 }
 body.light-mode {
-  --bg:           #f7f2ee;
+  /* "בהיר ורגוע" (14/11): cream ground, white cards with a soft warm shadow, blue stays Carlos's colour */
+  --bg:           #fbf8f4;
   --card:         #ffffff;
-  --card2:        #fbf7f3;
-  --input-bg:     #fffbf7;
-  --hover:        #f3eae2;
+  --card2:        #f7f3ee;
+  --input-bg:     #ffffff;
+  --hover:        #f5eee7;
   --text:         #2b1608;
   --text2:        #4a3424;
   --text-muted:   #6e5646;
-  --text-dim:     #9a8576;
-  --border:       #e3d6cb;
+  --text-dim:     #806a5a;
+  --border:       #efe6dd;
   --input-border: #e3d6cb;
-  --sep:          rgba(0,0,50,0.06);
-  --sep2:         rgba(0,0,50,0.10);
+  --sep:          rgba(107,38,0,0.06);
+  --sep2:         rgba(107,38,0,0.10);
   --accent:       #4a6aee;
-  --overlay:      rgba(0,0,0,0.50);
+  --overlay:      rgba(43,22,8,0.40);
 }
+body.light-mode .card, body.light-mode .sb-card { border-radius: 22px; box-shadow: 0 10px 40px -14px rgba(107,38,0,0.16); border: 1px solid #f1e9e1; }
+body.light-mode .dialog, body.light-mode .ui-confirm-box { border-radius: 22px; box-shadow: 0 20px 60px -10px rgba(43,22,8,0.25); }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 

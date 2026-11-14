@@ -168,8 +168,8 @@ const Home = () => {
     );
 
   const tileCls = (it: Item) =>
-    `relative block rounded-2xl border p-5 min-h-[7.5rem] text-right transition ${
-      it.lockedTier ? "bg-muted border-border" : "bg-card border-border hover:border-primary hover:-translate-y-0.5 shadow-sm"
+    `relative block rounded-3xl border p-5 min-h-[7.5rem] text-right transition ${
+      it.lockedTier ? "bg-muted border-border" : "bg-card border-transparent hover:border-brand-orange hover:-translate-y-0.5 shadow-card"
     }`;
 
   const tileBody = (it: Item) => (

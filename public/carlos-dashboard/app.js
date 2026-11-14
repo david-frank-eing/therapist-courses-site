@@ -4938,7 +4938,8 @@ document.getElementById('export-pdf-btn')?.addEventListener('click', () => {
 })();
 
 // ---------- Dark / Light Theme ----------
-let _darkMode = localStorage.getItem('carlos-theme') !== 'light';
+// light ("בהיר ורגוע") is the default since 14/11; only someone who chose dark stays dark
+let _darkMode = localStorage.getItem('carlos-theme') === 'dark';
 function applyTheme() {
   document.body.classList.toggle('light-mode', !_darkMode);
   const btn = document.getElementById('theme-btn');
