@@ -73,7 +73,7 @@ test('tier plans: seeded with today\'s pricing texts, everyone reads, only admin
   assert.match(sql, /FOR SELECT USING \(true\)/);
   assert.match(sql, /FOR ALL USING \(public\.has_role\(auth\.uid\(\), 'admin'\)\)/);
   for (const [tier, price] of [['free', 0], ['basic', 49], ['premium', 99], ['vip', 149]])
-    assert.match(sql, new RegExp("\\('" + tier + "', +'[^']+', +" + price + ","));
+    assert.match(sql, new RegExp("\\('" + tier + "', +U&'[^']+', +" + price + ","));
   assert.match(sql, /ON CONFLICT \(tier\) DO NOTHING/);
   // the pricing page no longer hard-codes the plans
   assert.ok(!read('src/components/PricingPreview.tsx').includes('const tiers = ['));
@@ -82,4 +82,15 @@ test('tier plans: seeded with today\'s pricing texts, everyone reads, only admin
 test('locked screens do not name a fixed tier (the admin decides which plan opens what)', () => {
   for (const f of ['src/pages/CRM.tsx', 'src/pages/Home.tsx'])
     assert.ok(!/פיצ'ר פרימיום|זמין בפרימיום|זמינות בפרימיום|שדרוג לפרימיום/.test(read(f)), f);
+});
+
+test('SQL from 15/11 on keeps Hebrew out of the data: letters are written as codes, so pasting cannot garble them', () => {
+  const dir = path.join(root, 'supabase/migrations');
+  for (const f of fs.readdirSync(dir).filter(f => f >= '20261115' && f.endsWith('.sql'))) {
+    const code = fs.readFileSync(path.join(dir, f), 'utf8').split(/\r?\n/).filter(l => !l.trim().startsWith('--')).join('\n');
+    assert.ok(!/[\u0590-\u05FF]/.test(code), f + ': Hebrew letters outside comments (write them as U& codes)');
+  }
+  const fix = read('supabase/migrations/20261115030000_tier_plans_fix_text.sql');
+  assert.ok(/^[\x00-\x7F]*$/.test(fix), 'the fix file must be plain ASCII');
+  assert.match(fix, /ON CONFLICT \(tier\) DO UPDATE SET/);
 });
