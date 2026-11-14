@@ -1,6 +1,6 @@
-import { Menu, X, User, LogOut, Crown } from "lucide-react";
+import { Menu, X, User, LogOut, Crown, ArrowRight } from "lucide-react";
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "./ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -33,11 +33,29 @@ const tierLabels: Record<string, string> = {
   vip: "VIP"
 };
 
+// where "back" goes when there is no earlier page in this tab (opened from a link or a refresh)
+const parentOf = (path: string, signedIn: boolean): string => {
+  if (path.startsWith("/admin/course/")) return "/admin";
+  if (path.startsWith("/course/")) return "/courses";
+  if (path.startsWith("/board/")) return "/board";
+  if (path.startsWith("/crm/")) return "/crm";
+  return signedIn ? "/home" : "/";
+};
+const NO_BACK = ["/", "/home", "/auth", "/reset-password"];
+
 export const Header = () => {
+  const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user, profile, signOut, isAdmin, canAccessTier } = useAuth();
   const navLinks = user ? memberLinks.filter((l) => !l.minTier || canAccessTier("premium")) : guestLinks;
   const navigate = useNavigate();
+
+  const showBack = !NO_BACK.includes(location.pathname);
+  const goBack = () => {
+    // react-router keeps the position inside this tab's history in history.state.idx
+    if ((window.history.state?.idx ?? 0) > 0) navigate(-1);
+    else navigate(parentOf(location.pathname, !!user));
+  };
 
   const handleSignOut = async () => {
     await signOut();
@@ -227,6 +245,20 @@ export const Header = () => {
             </div>
           </div>
         </nav>
+      )}
+      {showBack && (
+        <div className="border-t border-border bg-card/95" data-area="K22">
+          <div className="container h-10 flex items-center">
+            <button
+              type="button"
+              onClick={goBack}
+              className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-smooth"
+            >
+              <ArrowRight size={16} />
+              חזרה
+            </button>
+          </div>
+        </div>
       )}
     </header>
   );

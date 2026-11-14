@@ -11,6 +11,7 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CATEGORY_LABELS, TIER_LABELS } from "@/lib/constants";
 import type { Database } from "@/integrations/supabase/types";
+import { TiersManager } from "@/components/admin/TiersManager";
 import { UsersManager } from "@/components/admin/UsersManager";
 import { ListingsManager } from "@/components/admin/ListingsManager";
 import { SiteSettingsManager } from "@/components/admin/SiteSettingsManager";
@@ -112,6 +113,7 @@ const Admin = () => {
             <TabsTrigger value="courses">קורסים</TabsTrigger>
             <TabsTrigger value="listings">מודעות</TabsTrigger>
             <TabsTrigger value="users">משתמשים</TabsTrigger>
+            <TabsTrigger value="tiers">דרגות</TabsTrigger>
             <TabsTrigger value="settings">הגדרות אתר</TabsTrigger>
           </TabsList>
 
@@ -195,6 +197,10 @@ const Admin = () => {
 
           <TabsContent value="users" data-area="K7">
             <UsersManager />
+          </TabsContent>
+
+          <TabsContent value="tiers" data-area="K9">
+            <TiersManager />
           </TabsContent>
 
           <TabsContent value="settings" data-area="K8">

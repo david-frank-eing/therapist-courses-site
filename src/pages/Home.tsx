@@ -94,15 +94,15 @@ const Home = () => {
   const name = (profile?.full_name || "").split(" ")[0];
 
   const items: Item[] = [
-    { key: "courses", icon: "📚", title: "קורסים", sub: "ללמוד ולהתקדם", href: "/courses", count: courseCount ?? undefined },
+    { key: "courses", icon: "📚", title: "קורסים", sub: "ללמוד ולהתקדם", href: "/courses" },
     premium
-      ? { key: "clients", icon: "👥", title: "מטופלים", sub: "הרשימה והתיקים", href: "/crm", count: clientCount ?? undefined }
+      ? { key: "clients", icon: "👥", title: "מטופלים", sub: "הרשימה והתיקים", href: "/crm" }
       : { key: "clients", icon: "👥", title: "מטופלים", sub: "ניהול מטופלים", href: "/pricing", lockedTier: "פרימיום" },
     premium
-      ? { key: "booking", icon: "📅", title: "תורים", sub: appts.length ? `${appts.length} היום` : "אין תורים היום", href: "/carlos-dashboard/#booking-mgmt", external: true, count: appts.length || undefined }
+      ? { key: "booking", icon: "📅", title: "תורים", sub: "היומן והזמנות", href: "/carlos-dashboard/#booking-mgmt", external: true }
       : { key: "booking", icon: "📅", title: "תורים", sub: "זימון תורים", href: "/pricing", lockedTier: "פרימיום" },
     premium
-      ? { key: "tasks", icon: "⏰", title: "תזכורות", sub: tasks.length ? `${tasks.length} פתוחות` : "אין משימות פתוחות", href: "/carlos-dashboard/#tasks", external: true, count: tasks.length || undefined }
+      ? { key: "tasks", icon: "⏰", title: "תזכורות", sub: "משימות ותזכורות", href: "/carlos-dashboard/#tasks", external: true }
       : { key: "tasks", icon: "⏰", title: "תזכורות", sub: "משימות ותזכורות", href: "/pricing", lockedTier: "פרימיום" },
     canFinance
       ? { key: "finance", icon: "💰", title: "כספים", sub: "הכנסות והוצאות", href: "/carlos-dashboard/#finance", external: true }
@@ -127,9 +127,6 @@ const Home = () => {
       <div className={`text-3xl ${it.lockedTier ? "opacity-50" : ""}`}>{it.icon}</div>
       <b className={`block mt-2 text-lg ${it.lockedTier ? "opacity-50" : ""}`}>{it.title}</b>
       <span className="text-sm text-muted-foreground">{it.sub}</span>
-      {it.count ? (
-        <span className="absolute top-3 left-3 min-w-[1.6rem] h-[1.6rem] px-2 rounded-full bg-primary text-primary-foreground text-sm font-bold grid place-items-center">{it.count}</span>
-      ) : null}
       {it.lockedTier && (
         <span className="mt-2 flex items-center gap-1 text-sm font-bold text-amber-600"><Lock size={14} />זמין ב{it.lockedTier}</span>
       )}
