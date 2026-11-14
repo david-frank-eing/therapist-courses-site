@@ -285,7 +285,8 @@ async function allRows(url, serviceKey) {
       headers: { apikey: serviceKey, Authorization: 'Bearer ' + serviceKey, Range: `${from}-${from + 999}`, 'Range-Unit': 'items' }
     });
     if (!r.ok) { if (from === 0) throw new Error('HTTP ' + r.status); break; }
-    const batch = await r.json();
+    let batch;
+    try { batch = JSON.parse(await r.text()); } catch (_) { break; }
     if (!Array.isArray(batch)) break;
     rows.push(...batch);
     if (batch.length < 1000) break;
