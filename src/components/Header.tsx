@@ -1,5 +1,6 @@
 import { Menu, X, User, LogOut, Crown, ArrowRight } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "./ui/button";
 import { useAuth } from "@/contexts/AuthContext";
@@ -48,6 +49,15 @@ export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user, profile, signOut, isAdmin, hasPaidTools, can } = useAuth();
   const navLinks = user ? memberLinks.filter((l) => !l.feature || can(l.feature)) : guestLinks;
+  // Finance is a personal switch (profiles.finance_enabled), not part of a plan: asked separately,
+  // and an error (column missing) simply means no button
+  const [financeOn, setFinanceOn] = useState(false);
+  useEffect(() => {
+    if (!user) { setFinanceOn(false); return; }
+    (supabase as any).from("profiles").select("finance_enabled").eq("id", user.id).maybeSingle()
+      .then(({ data }: { data: { finance_enabled?: boolean } | null }) => setFinanceOn(!!data?.finance_enabled));
+  }, [user]);
+  const canFinance = !!user && (isAdmin || financeOn);
   const navigate = useNavigate();
 
   const showBack = !NO_BACK.includes(location.pathname);
@@ -76,6 +86,16 @@ export const Header = () => {
             className="hidden md:flex items-center gap-1 px-3 py-1.5 text-sm font-medium bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-opacity ml-2"
           >
             🎛️ דאשבורד
+          </a>
+        )}
+
+        {/* Straight to Carlos Finance (the dashboard opens it from #finance) */}
+        {canFinance && (
+          <a
+            href="/carlos-dashboard/#finance"
+            className="hidden md:flex items-center gap-1 px-3 py-1.5 text-sm font-medium bg-brand-orange text-foreground rounded-lg hover:opacity-90 transition-opacity ml-2"
+          >
+            💰 כספים
           </a>
         )}
 
@@ -195,6 +215,15 @@ export const Header = () => {
                 className="px-4 py-3 font-medium bg-primary text-primary-foreground rounded-lg text-center"
               >
                 🎛️ דאשבורד קרלוס
+              </a>
+            )}
+            {canFinance && (
+              <a
+                href="/carlos-dashboard/#finance"
+                onClick={() => setIsMenuOpen(false)}
+                className="px-4 py-3 font-medium bg-brand-orange text-foreground rounded-lg text-center"
+              >
+                💰 קרלוס כספים
               </a>
             )}
             <div className="mt-2 pt-2 border-t border-border">

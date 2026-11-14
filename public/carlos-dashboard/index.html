@@ -587,6 +587,17 @@
       } catch (e) {}
       // Trigger app startup now that auth is confirmed
       if (window._startApp) window._startApp();
+      // Straight to finance from the site ("כספים" in the site header, the finance tile on "הבית שלי"):
+      // /carlos-dashboard/#finance. The full screen runs on Carlos's own PC, so the admin on a wide screen
+      // goes there (a navigation, not window.open, which a browser blocks when no click started it).
+      if (location.hash === '#finance' && window._financeEnabled) {
+        history.replaceState(null, '', location.pathname);
+        if (window._isAdmin && !window.matchMedia('(max-width: 1024px)').matches) {
+          location.href = 'http://localhost:8090/finance.html';
+        } else {
+          setTimeout(() => { if (typeof openFinance === 'function') openFinance(); }, 300);
+        }
+      }
     })();
   </script>
   <script src="finance-mobile.js?v=11"></script>
