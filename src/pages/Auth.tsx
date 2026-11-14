@@ -139,9 +139,7 @@ const Auth = () => {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <a href="/" className="inline-flex items-center gap-2 mb-4">
-            <div className="w-12 h-12 rounded-lg gradient-hero flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-2xl">מ</span>
-            </div>
+            <img src="/logo.png" alt="הכול בידיים - מרכז מידע למטפלים במגע" className="h-24 w-auto" />
           </a>
           <h1 className="text-2xl font-bold text-foreground">מרחב למטפלים</h1>
           <p className="text-muted-foreground mt-2">פלטפורמת הקורסים למטפלים</p>

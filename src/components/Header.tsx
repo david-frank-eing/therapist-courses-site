@@ -66,10 +66,7 @@ export const Header = () => {
     <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-sm border-b border-border">
       <div className="container flex items-center justify-between h-16 md:h-20">
         <Link to="/" className="flex items-center gap-2">
-          <div className="w-10 h-10 rounded-lg gradient-hero flex items-center justify-center">
-            <span className="text-primary-foreground font-bold text-xl">מ</span>
-          </div>
-          <span className="font-bold text-xl text-foreground">מרחב למטפלים</span>
+          <img src="/logo.png" alt="הכול בידיים - מרכז מידע למטפלים במגע" className="h-12 md:h-16 w-auto" />
         </Link>
 
         {/* Desktop Nav — Dashboard shortcut for premium users */}

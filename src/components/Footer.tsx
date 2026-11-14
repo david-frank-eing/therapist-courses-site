@@ -17,10 +17,7 @@ export const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
           <div>
             <Link to="/" className="flex items-center gap-2 mb-6">
-              <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-xl">מ</span>
-              </div>
-              <span className="font-bold text-xl">מרחב למטפלים</span>
+              <span className="bg-white rounded-lg p-1.5 inline-flex"><img src="/logo.png" alt="הכול בידיים - מרכז מידע למטפלים במגע" className="h-14 w-auto" /></span>
             </Link>
             <p className="text-primary-foreground/70 mb-6">
               פלטפורמת קורסים מקצועית עבור מטפלים - מידע עסקי, כלי AI, ושיווק הקליניקה.
