@@ -27,6 +27,7 @@ import {
   Upload,
 } from "lucide-react";
 import { useConfirm } from "@/components/ConfirmDialog";
+import { fetchAll } from "@/lib/fetchAll";
 
 const statusBadgeClass: Record<string, string> = {
   active: "bg-primary/10 text-primary hover:bg-primary/10",
@@ -56,6 +57,8 @@ const exportCSV = (clients: Client[]) => {
   URL.revokeObjectURL(url);
 };
 
+const PAGE = 50;
+
 const CRM = () => {
   const { user, isLoading: authLoading, can } = useAuth();
   const { toast } = useToast();
@@ -73,11 +76,11 @@ const CRM = () => {
 
   const fetchClients = async () => {
     setIsLoading(true);
-    const { data, error } = await supabase
-      .from("clients")
-      .select("*")
-      .order("created_at", { ascending: false });
-    if (!error && data) setClients(data);
+    // past 1000 patients a single request is cut off, so read in pages
+    const { data, error } = await fetchAll<Client>((from, to) =>
+      supabase.from("clients").select("*").order("created_at", { ascending: false }).order("id").range(from, to) as any
+    );
+    if (!error) setClients(data);
     setIsLoading(false);
   };
 
@@ -95,6 +98,11 @@ const CRM = () => {
         .some((v) => v!.toLowerCase().includes(q))
     );
   }, [clients, search]);
+
+  // a long list is drawn 50 at a time; search narrows it first
+  const [shownCount, setShownCount] = useState(PAGE);
+  useEffect(() => setShownCount(PAGE), [search]);
+  const shown = filtered.slice(0, shownCount);
 
   const stats = useMemo(
     () => ({
@@ -253,7 +261,7 @@ const CRM = () => {
           </Card>
         ) : (
           <div className="space-y-2">
-            {filtered.map((client) => (
+            {shown.map((client) => (
               <Card
                 key={client.id}
                 className="flex flex-col md:flex-row md:items-center justify-between gap-3 p-4 cursor-pointer hover:bg-muted/40 transition-colors"
@@ -322,6 +330,12 @@ const CRM = () => {
                 </div>
               </Card>
             ))}
+            {filtered.length > shown.length && (
+              <div className="flex flex-col items-center gap-1 pt-3">
+                <Button variant="outline" onClick={() => setShownCount((n) => n + PAGE)}>להציג עוד</Button>
+                <span className="text-xs text-muted-foreground">מוצגים {shown.length} מתוך {filtered.length}. אפשר גם לחפש.</span>
+              </div>
+            )}
           </div>
         )}
       </main>
