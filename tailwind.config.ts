@@ -14,7 +14,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        assistant: ["Assistant", "sans-serif"],
+        heebo: ["Heebo", "Assistant", "system-ui", "sans-serif"],
+        assistant: ["Heebo", "Assistant", "system-ui", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -22,6 +23,10 @@ export default {
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
+        brand: {
+          orange: "hsl(var(--brand-orange))",
+          brown: "hsl(var(--brand-brown))",
+        },
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
