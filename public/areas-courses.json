@@ -34,6 +34,9 @@
     { "code": "K14", "name": "דף קורס: ההתקדמות שלי",     "sel": "[data-area=\"K14\"]", "where": "src/pages/CoursePage.tsx" },
     { "code": "K35", "name": "הקורסים שלי",             "sel": "[data-area=\"K35\"]", "where": "src/pages/MyCourses.tsx" },
     { "code": "K36", "name": "החשבון שלי",              "sel": "[data-area=\"K36\"]", "where": "src/pages/Account.tsx" },
-    { "code": "K43", "name": "דף הבית: הלוגו בעיגול",     "sel": "[data-area=\"K43\"]", "where": "src/components/HeroSection.tsx" }
+    { "code": "K43", "name": "דף הבית: הלוגו בעיגול",     "sel": "[data-area=\"K43\"]", "where": "src/components/HeroSection.tsx" },
+    { "code": "K44", "name": "דף נחיתה: פתיחה והסבר",    "sel": "[data-area=\"K44\"]", "where": "src/pages/Welcome.tsx" },
+    { "code": "K45", "name": "דף נחיתה: טופס השארת פרטים", "sel": "[data-area=\"K45\"]", "where": "src/pages/Welcome.tsx" },
+    { "code": "K46", "name": "ניהול פניות",              "sel": "[data-area=\"K46\"]", "where": "src/components/admin/LeadsManager.tsx" }
   ]
 }

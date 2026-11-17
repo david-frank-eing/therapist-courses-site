@@ -18,6 +18,7 @@ import BookingPage from "./pages/BookingPage";
 import Pricing from "./pages/Pricing";
 import CourseEditor from "./pages/CourseEditor";
 import Home from "./pages/Home";
+import Welcome from "./pages/Welcome";
 import MyCourses from "./pages/MyCourses";
 import Account from "./pages/Account";
 import ComingSoon from "./pages/ComingSoon";
@@ -37,6 +38,7 @@ function AppRoutes() {
   const isPublicRoute =
     location.pathname === "/auth" ||
     location.pathname === "/reset-password" ||
+    location.pathname === "/welcome" ||
     location.pathname.startsWith("/book/");
 
   if (MAINTENANCE_MODE && isLoading && !isPublicRoute) {
@@ -61,6 +63,7 @@ function AppRoutes() {
       <Route path="/admin" element={<Admin />} />
       <Route path="/admin/course/:id" element={<CourseEditor />} />
       <Route path="/home" element={<Home />} />
+      <Route path="/welcome" element={<Welcome />} />
       <Route path="/book/:slug" element={<BookingPage />} />
       <Route path="/pricing" element={<Pricing />} />
       {/* until there is a real "my courses" page (planned: progress per tier) */}

@@ -15,6 +15,7 @@ import { TiersManager } from "@/components/admin/TiersManager";
 import { UsersManager } from "@/components/admin/UsersManager";
 import { ListingsManager } from "@/components/admin/ListingsManager";
 import { SiteSettingsManager } from "@/components/admin/SiteSettingsManager";
+import { LeadsManager } from "@/components/admin/LeadsManager";
 import { Loader2, Plus, Pencil, Trash2, ShieldAlert } from "lucide-react";
 import { useConfirm } from "@/components/ConfirmDialog";
 
@@ -28,6 +29,7 @@ const Admin = () => {
   const [courses, setCourses] = useState<Course[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
+  const [newLeads, setNewLeads] = useState(0);
   const navigate = useNavigate();
 
   const fetchCourses = async () => {
@@ -42,6 +44,16 @@ const Admin = () => {
 
   useEffect(() => {
     if (isAdmin) fetchCourses();
+  }, [isAdmin]);
+
+  // the number on the "פניות" tab: leads nobody handled yet (the table may not exist before the SQL was run)
+  useEffect(() => {
+    if (!isAdmin) return;
+    (supabase as any)
+      .from("leads")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "new")
+      .then(({ count }: { count: number | null }) => setNewLeads(count ?? 0));
   }, [isAdmin]);
 
   // a new course starts as a draft and opens straight in the editor (/admin/course/:id)
@@ -116,6 +128,7 @@ const Admin = () => {
             <TabsTrigger value="listings">מודעות</TabsTrigger>
             <TabsTrigger value="users">משתמשים</TabsTrigger>
             <TabsTrigger value="tiers">דרגות</TabsTrigger>
+            <TabsTrigger value="leads">{newLeads > 0 ? `פניות (${newLeads})` : "פניות"}</TabsTrigger>
             <TabsTrigger value="settings">הגדרות אתר</TabsTrigger>
           </TabsList>
 
@@ -203,6 +216,10 @@ const Admin = () => {
 
           <TabsContent value="tiers" data-area="K9">
             <TiersManager />
+          </TabsContent>
+
+          <TabsContent value="leads">
+            <LeadsManager onNewCount={setNewLeads} />
           </TabsContent>
 
           <TabsContent value="settings" data-area="K8">
