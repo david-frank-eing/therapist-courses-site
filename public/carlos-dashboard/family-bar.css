@@ -1,0 +1,20 @@
+/* The family bar (17/11/2026): one strip at the top of Carlos reminders and Carlos finance, same look as the
+   site's ProductSwitcher. Copies: H:\carlos\dashboard and public\carlos-dashboard. Change all together. */
+.fam{--fb-bg:#ffffff;--fb-fg:#1f2430;--fb-muted:#4b5263;--fb-pill:#f1f2f5;
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 16px;background:var(--fb-bg);color:var(--fb-fg);
+  border-bottom:3px solid #EE8216;font-family:Heebo,system-ui,sans-serif;direction:rtl}
+body:not(.light-mode) .fam{--fb-bg:#23233a;--fb-fg:#eceef6;--fb-muted:#c3c6d8;--fb-pill:#2d2d48}
+.fam a{text-decoration:none;color:inherit}
+.fam-brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:15px}
+.fam-logo{width:38px;height:38px;border-radius:50%;border:2px solid #EE8216;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden;flex:none}
+.fam-logo img{width:30px;height:30px;object-fit:contain}
+.fam-tabs{display:flex;gap:4px;margin-inline-start:auto;padding:3px;border-radius:999px;background:var(--fb-pill)}
+.fam-tabs a{white-space:nowrap;display:inline-flex;align-items:center;min-height:36px;padding:0 12px;border-radius:999px;font-size:13.5px;font-weight:700;color:var(--fb-muted)}
+.fam-tabs a:hover{color:var(--fb-fg)}
+.fam-tabs a:focus-visible,.fam-brand:focus-visible{outline:2px solid #EE8216;outline-offset:2px}
+.fam-tabs a[aria-current="page"]{color:#fff}
+.fam-tabs a[data-p="site"][aria-current="page"]{background:#6B2500}
+.fam-tabs a[data-p="rem"][aria-current="page"]{background:#3f5bd6}
+.fam-tabs a[data-p="fin"][aria-current="page"]{background:#1d6647}
+@media (max-width:560px){.fam{padding:8px 10px}.fam-brand-name{display:none}.fam-tabs{margin-inline-start:0;flex:1}.fam-tabs a{flex:1;justify-content:center;min-height:44px;padding:0 4px;font-size:12.5px}}
+@media print{.fam{display:none}}

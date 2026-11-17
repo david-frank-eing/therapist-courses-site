@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { Badge } from "./ui/badge";
+import { ProductSwitcher } from "./ProductSwitcher";
 
 // up to 5 items: guests see courses / board / pricing; signed-in users see their home first.
 // "אודות" and "צור קשר" stay in the footer; "ניהול" moved into the personal menu.
@@ -79,25 +80,12 @@ export const Header = () => {
           <img src="/logo.png" alt="הכול בידיים - מרכז מידע למטפלים במגע" className="h-12 md:h-16 w-auto" />
         </Link>
 
-        {/* Desktop Nav — Dashboard shortcut for premium users */}
-        {profile && hasPaidTools && (
-          <a
-            href="/carlos-dashboard/"
-            className="hidden md:flex items-center gap-1 px-3 py-1.5 text-sm font-medium bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-opacity ml-2"
-          >
-            🎛️ דאשבורד
-          </a>
-        )}
-
-        {/* Straight to Carlos Finance (the dashboard opens it from #finance) */}
-        {canFinance && (
-          <a
-            href="/carlos-dashboard/#finance"
-            className="hidden md:flex items-center gap-1 px-3 py-1.5 text-sm font-medium bg-brand-orange text-foreground rounded-lg hover:opacity-90 transition-opacity ml-2"
-          >
-            💰 כספים
-          </a>
-        )}
+        {/* The family bar: site / reminders / finance. Reminders for paid tools, finance for the personal switch. */}
+        <ProductSwitcher
+          className="hidden md:flex ml-2"
+          showReminders={!!profile && hasPaidTools}
+          showFinance={canFinance}
+        />
 
         {/* Desktop Nav */}
         <nav className="hidden md:flex items-center gap-1">
@@ -208,24 +196,12 @@ export const Header = () => {
                 </a>
               )
             ))}
-            {profile && hasPaidTools && (
-              <a
-                href="/carlos-dashboard/"
-                onClick={() => setIsMenuOpen(false)}
-                className="px-4 py-3 font-medium bg-primary text-primary-foreground rounded-lg text-center"
-              >
-                🎛️ דאשבורד קרלוס
-              </a>
-            )}
-            {canFinance && (
-              <a
-                href="/carlos-dashboard/#finance"
-                onClick={() => setIsMenuOpen(false)}
-                className="px-4 py-3 font-medium bg-brand-orange text-foreground rounded-lg text-center"
-              >
-                💰 קרלוס כספים
-              </a>
-            )}
+            <ProductSwitcher
+              className="self-start"
+              showReminders={!!profile && hasPaidTools}
+              showFinance={canFinance}
+              onNavigate={() => setIsMenuOpen(false)}
+            />
             <div className="mt-2 pt-2 border-t border-border">
               {user ? (
                 <>
