@@ -18,3 +18,9 @@ body:not(.light-mode) .fam{--fb-bg:#23233a;--fb-fg:#eceef6;--fb-muted:#c3c6d8;--
 .fam-tabs a[data-p="fin"][aria-current="page"]{background:#1d6647}
 @media (max-width:560px){.fam{padding:8px 10px}.fam-brand-name{display:none}.fam-tabs{margin-inline-start:0;flex:1}.fam-tabs a{flex:1;justify-content:center;min-height:44px;padding:0 4px;font-size:12.5px}}
 @media print{.fam{display:none}}
+
+/* admin: the names overlay button (17/11/2026) */
+.fam-areas{min-height:36px;padding:0 12px;border-radius:999px;border:1px dashed #EE8216;background:transparent;color:var(--fb-fg);font:inherit;font-size:13px;font-weight:700;cursor:pointer}
+.fam-areas:hover{background:var(--fb-pill)}
+.fam-areas:focus-visible{outline:2px solid #EE8216;outline-offset:2px}
+@media (max-width:560px){.fam-areas{display:none}}

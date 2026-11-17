@@ -68,6 +68,9 @@ export const Header = () => {
     else navigate(parentOf(location.pathname, !!user));
   };
 
+  // admin only: the names overlay (AreaNamesToggle listens for this event)
+  const showAreaNames = () => window.dispatchEvent(new Event("carlos-areas-toggle"));
+
   const handleSignOut = async () => {
     await signOut();
     navigate("/");
@@ -140,6 +143,11 @@ export const Header = () => {
                 {isAdmin && (
                   <DropdownMenuItem asChild>
                     <Link to="/admin" className="cursor-pointer">⚙️ ניהול</Link>
+                  </DropdownMenuItem>
+                )}
+                {isAdmin && (
+                  <DropdownMenuItem onClick={showAreaNames} className="cursor-pointer">
+                    🏷 הצג שמות אזורים
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuSeparator />
@@ -219,6 +227,15 @@ export const Header = () => {
                     >
                       ⚙️ ניהול
                     </Link>
+                  )}
+                  {isAdmin && (
+                    <button
+                      type="button"
+                      onClick={() => { showAreaNames(); setIsMenuOpen(false); }}
+                      className="block w-full px-4 py-2 text-start hover:bg-accent rounded-lg"
+                    >
+                      🏷 הצג שמות אזורים
+                    </button>
                   )}
                   <div className="px-4 py-2 text-sm text-muted-foreground">
                     {profile?.full_name || user.email}

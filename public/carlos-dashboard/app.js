@@ -5542,6 +5542,15 @@ function _initApp() {
       const b = document.getElementById(id);
       if (b) b.style.display = '';
     }
+    // the rail is hidden under 1024px and the drawer button only exists on phones: a third place, in the top bar
+    const fam = document.getElementById('family-bar');
+    if (fam && window.CarlosAreas && !document.getElementById('areas-bar-btn')) {
+      const ab = document.createElement('button');
+      ab.type = 'button'; ab.id = 'areas-bar-btn'; ab.className = 'fam-areas'; ab.textContent = '🏷 הצג שמות';
+      ab.title = 'מציג על כל אזור את הקוד והשם שלו. Esc מכבה';
+      fam.appendChild(ab);
+      window.CarlosAreas.bind(ab);
+    }
   }
   // Finance has its own switch (profiles.finance_enabled), separate from being the admin
   if (window._financeEnabled) {

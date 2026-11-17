@@ -56,6 +56,21 @@ test('only an admin gets the button, in both places', () => {
   const app = read('public/carlos-dashboard/app.js');
   const block = app.slice(app.indexOf('if (window._isAdmin) {\n    const adminBtn'), app.indexOf('// Admin modal close'));
   assert.ok(block.includes("'areas-rail-btn'") && block.includes("'areas-mnav-btn'"));
+  // the rail is hidden under 1024px: the admin also gets the button in the top bar, inside the same admin block
+  assert.ok(block.includes('areas-bar-btn') && block.includes('family-bar'));
+});
+
+test('the site user menu has the names item for admins only, and the toggle listens for it', () => {
+  const header = read('src/components/Header.tsx');
+  assert.ok(header.includes('carlos-areas-toggle'));
+  assert.ok(/\{isAdmin && \(\s*<DropdownMenuItem onClick=\{showAreaNames\}/.test(header));
+  assert.ok(read('src/components/AreaNamesToggle.tsx').includes('"carlos-areas-toggle"'));
+});
+
+test('the local dashboard uses the same area registry as the cloud one (same D codes)', () => {
+  const local = fs.readFileSync('H:/carlos/dashboard/areas.json', 'utf8');
+  assert.strictEqual(local, read('public/carlos-dashboard/areas.json'));
+  assert.ok(fs.readFileSync('H:/carlos/dashboard/index.html', 'utf8').includes('data-registry="areas.json"'));
 });
 
 test('the engine draws a layer and never touches storage or the network beyond its registry', () => {

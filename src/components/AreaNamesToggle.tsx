@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 
 // "הצג שמות" — admin only. Sticks a small label (K3 · רשימת הקורסים) on every named area of the
@@ -31,9 +31,8 @@ const loadEngine = () =>
 export const AreaNamesToggle = () => {
   const { isAdmin } = useAuth();
   const [on, setOn] = useState(false);
-  if (!isAdmin) return null;
 
-  const toggle = async () => {
+  const toggle = useCallback(async () => {
     try {
       const engine = await loadEngine();
       engine.use("/areas-courses.json");
@@ -41,7 +40,17 @@ export const AreaNamesToggle = () => {
     } catch {
       setOn(false);
     }
-  };
+  }, []);
+
+  // The same switch from the user menu (Header.tsx): a menu item fires this event, so the button is easy to find
+  // and does not depend on the floating one in the corner.
+  useEffect(() => {
+    if (!isAdmin) return;
+    window.addEventListener("carlos-areas-toggle", toggle);
+    return () => window.removeEventListener("carlos-areas-toggle", toggle);
+  }, [isAdmin, toggle]);
+
+  if (!isAdmin) return null;
 
   return (
     <button
