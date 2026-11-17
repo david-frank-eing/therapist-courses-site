@@ -46,13 +46,18 @@ async function _sbGetState(sb, uid) {
     sb.from('sync_data').select('*').eq('user_id', uid).eq('key', 'calendar-upcoming'),
     sb.from('sync_data').select('*').eq('user_id', uid).eq('key', 'last-refresh'),
     sb.from('dashboard_config').select('*').eq('user_id', uid),
-    sb.from('availability_slots').select('*').eq('user_id', uid).order('date').order('time'),
-    sb.from('appointments').select('*').eq('user_id', uid).order('date').order('time'),
+    // מהחדש לישן (17/11/2026): המסד מחזיר עד 1000 שורות. בסדר עולה, אחרי 1000 זימונים נחתכו דווקא החדשים.
+    // אחרי הטעינה הרשימות מתהפכות חזרה לסדר עולה, כך שהתצוגה לא משתנה.
+    sb.from('availability_slots').select('*').eq('user_id', uid).order('date', { ascending: false }).order('time', { ascending: false }).limit(1000),
+    sb.from('appointments').select('*').eq('user_id', uid).order('date', { ascending: false }).order('time', { ascending: false }).limit(1000),
     sb.from('booking_notifs').select('*').eq('user_id', uid).order('created_at', { ascending: false }).limit(20),
     sb.from('publishing_log').select('*').eq('user_id', uid).gte('published_at', ninetyAgo),
     sb.from('booking_profiles').select('slug').eq('user_id', uid).maybeSingle(),
     sb.from('playbooks').select('*').eq('user_id', uid)
   ]);
+
+  if (slotsRes.data) slotsRes.data.reverse();
+  if (apptsRes.data) apptsRes.data.reverse();
 
   // Build habits in expected format: { habits: [{id, emoji, label}], completions: {'YYYY-MM-DD': [id,...]} }
   const habitDefs = habitDefsRes.data || [];
