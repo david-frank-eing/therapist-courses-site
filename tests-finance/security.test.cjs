@@ -177,7 +177,7 @@ test('set_finance before the migration: a clear message, and the user list keeps
 test('dashboard: finance buttons follow the finance switch, and fall back to admin-only until the column exists', () => {
   const app = fs.readFileSync(path.join(__dirname, '../public/carlos-dashboard/app.js'), 'utf8');
   const html = fs.readFileSync(path.join(__dirname, '../public/carlos-dashboard/index.html'), 'utf8');
-  assert.match(app, /function openFinance\(\) \{\s*if \(!window\._financeEnabled\) return;/);
+  assert.match(app, /function openFinance\(\) \{\s*if \(!window\._financeEnabled\) \{ toast\([^;]*; return; \}/);   // closed for this account: says so, opens nothing
   assert.match(app, /if \(window\._financeEnabled\) \{\s*for \(const id of \['finance-rail-btn', 'finance-mnav-btn'\]\)/);
   assert.ok(html.indexOf('window._financeEnabled = window._isAdmin;') < html.indexOf(".select('finance_enabled')"));
   assert.ok(!/select\('[^']*is_admin[^']*finance_enabled/.test(html));   // never in the query that decides access

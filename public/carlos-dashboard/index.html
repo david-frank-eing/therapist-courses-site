@@ -445,7 +445,7 @@
     <button class="ic ic-expand" id="open-tracking-rail-btn"><span class="ic-icon">⊞</span><span class="ic-lbl">מעקב ויעדים</span></button>
     <div class="ic-sep"></div>
     <div class="rail-label">כלים</div>
-    <button class="ic" id="collapse-all-btn"><span class="ic-icon">⊟</span><span class="ic-lbl">כווץ הכל</span></button>
+    <button class="ic" id="collapse-all-btn"><span class="ic-icon">⊟</span><span class="ic-lbl">כווץ/הרחב עמודות</span></button>
     <button class="ic" id="theme-btn"><span class="ic-icon">🌙</span><span class="ic-lbl">מצב כהה/בהיר</span></button>
     <button class="ic" id="export-pdf-btn"><span class="ic-icon">📄</span><span class="ic-lbl">ייצוא PDF</span></button>
     <div class="ic-sep"></div>
@@ -604,7 +604,7 @@
   </script>
   <script src="finance-mobile.js?v=12"></script>
   <script src="supabase-api.js?v=4"></script>
-  <script src="app.js?v=135"></script>
+  <script src="app.js?v=136"></script>
   <script src="mobile-home.js?v=4"></script>
   <script src="/areas-engine.js?v=1" data-registry="areas.json" data-button="#areas-rail-btn"></script>
 
@@ -646,7 +646,7 @@
     <div id="mnav-drawer-panel">
       <a class="mnav-drawer-btn" href="/home" style="display:block;text-decoration:none">→ חזרה למרחב למטפלים</a>
       <button class="mnav-drawer-btn" onclick="_mnavClose();document.getElementById('theme-btn')?.click()">🌙 מצב כהה/בהיר</button>
-      <button class="mnav-drawer-btn" onclick="_mnavClose();document.getElementById('collapse-all-btn')?.click()">⊟ כווץ הכל</button>
+      <button class="mnav-drawer-btn" onclick="_mnavClose();document.getElementById('collapse-all-btn')?.click()">⊟ כווץ/הרחב עמודות</button>
       <button class="mnav-drawer-btn" onclick="_mnavClose();document.getElementById('export-pdf-btn')?.click()">📄 ייצוא PDF</button>
       <button class="mnav-drawer-btn" onclick="_mnavClose();document.getElementById('help-btn')?.click()">❓ עזרה ומדריך</button>
       <button class="mnav-drawer-btn" id="finance-mnav-btn" style="display:none" onclick="_mnavClose();openFinance()">💰 כספים</button>
@@ -654,6 +654,6 @@
       <button class="mnav-drawer-btn" style="color:#e07070" onclick="_mnavClose();document.getElementById('logout-btn')?.click()">🚪 התנתק</button>
     </div>
   </div>
-  <script src="family-bar.js?v=1"></script>
+  <script src="family-bar.js?v=2"></script>
 </body>
 </html>

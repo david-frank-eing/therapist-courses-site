@@ -16,4 +16,13 @@
   bar.innerHTML = '<a class="fam-brand" href="' + L.site + '" aria-label="הכול בידיים, למרחב למטפלים"><span class="fam-logo"><img src="' + L.logo +
     '" alt=""></span><span class="fam-brand-name">הכול בידיים</span></a><nav class="fam-tabs" aria-label="המוצרים של הכול בידיים">' + tabs + '</nav>';
   document.body.insertBefore(bar, document.body.firstChild);
+  // On the site copy the reminders page IS /carlos-dashboard/, so a link to /carlos-dashboard/#finance only changes the hash
+  // and nothing happens (the #finance hash is read once, at load). From the reminders page, open finance the way its own
+  // button does (openFinance: the full screen on the admin's PC, the cloud view on a phone). From any other page the link works.
+  if (!local) {
+    bar.addEventListener('click', function (e) {
+      var a = e.target.closest && e.target.closest('a[data-p="fin"]');
+      if (a && typeof window.openFinance === 'function') { e.preventDefault(); window.openFinance(); }
+    });
+  }
 })();

@@ -2844,7 +2844,7 @@ function initSectionToggles() {
     const cIcon = collapseAllBtn.querySelector('.ic-icon');
     const emoji = anyExpanded ? '⊟' : '⊞';
     if (cIcon) cIcon.textContent = emoji; else collapseAllBtn.textContent = emoji;
-    collapseAllBtn.title = anyExpanded ? 'כווץ את כל החלונות' : 'הרחב את כל החלונות';
+    collapseAllBtn.title = anyExpanded ? 'כווץ את כל העמודות' : 'הרחב את כל העמודות';
   };
   collapseAllBtn.addEventListener('click', () => {
     const sections = document.querySelectorAll('.card.collapsible');
@@ -5720,7 +5720,7 @@ function _mnavClose() { document.getElementById('mnav-drawer').style.display = '
 
 // ---------- Finance (runs on Carlos's PC only) ----------
 function openFinance() {
-  if (!window._financeEnabled) return;
+  if (!window._financeEnabled) { toast('הכספים עוד לא נטענו, או שלא הופעלו בחשבון שלך. אם הם אמורים להיות פתוחים, פנה למנהל', false, 5000); return; }
   // The full screen lives on the admin's own computer (localhost). Everyone else gets the cloud view.
   if (!window._isAdmin || window.matchMedia('(max-width: 1024px)').matches) {
     if (window.FinanceMobile) window.FinanceMobile.open();
