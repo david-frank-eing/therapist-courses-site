@@ -569,10 +569,18 @@ window._sbApi = async function(url, body) {
   }
 
   if (url === '/api/booking/profile/update') {
-    const { error } = await sb.from('booking_profiles').upsert(
-      { user_id: uid, ...body, updated_at: new Date().toISOString() },
+    const save = (row) => sb.from('booking_profiles').upsert(
+      { user_id: uid, ...row, updated_at: new Date().toISOString() },
       { onConflict: 'user_id' }
     );
+    let { error } = await save(body);
+    // logo_url arrived with a migration (17/11/2026). Until it runs, the profile still saves, without the logo.
+    if (error && /logo_url/.test(String(error.message || '')) && 'logo_url' in body) {
+      const { logo_url, ...rest } = body;
+      ({ error } = await save(rest));
+      if (error) throw error;
+      return { ok: true, logo_skipped: true };
+    }
     if (error) throw error;
     return { ok: true };
   }

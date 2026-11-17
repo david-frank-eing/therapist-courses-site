@@ -5312,6 +5312,14 @@ function renderBooking(data) {
   updatePreview();
 }
 
+// The avatars bucket takes images only, up to 2MB (17/11/2026); check before uploading so the message is clear.
+const _BKP_IMAGE_EXT = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp', 'image/gif': 'gif' };
+function _bkpImageProblem(file) {
+  if (!_BKP_IMAGE_EXT[file.type]) return 'הקובץ חייב להיות תמונה: PNG, JPG, WEBP או GIF';
+  if (file.size > 2 * 1024 * 1024) return 'הקובץ גדול מדי: עד 2MB';
+  return '';
+}
+
 function openBookingProfileModal() {
   api('/api/booking/profile').then(prof => {
     const modal = document.getElementById('settings-modal');
@@ -5346,6 +5354,19 @@ function openBookingProfileModal() {
           </div>
         </div>
         <input type="hidden" id="bkp-photo" value="${_esc(prof.photo_url || '')}">
+        <label style="color:var(--text-muted);font-size:.85rem">לוגו (מוצג בראש דף ההזמנות)</label>
+        <div style="display:flex;align-items:center;gap:12px">
+          <div id="bkp-logo-box" style="min-width:96px;min-height:64px;display:flex;align-items:center;justify-content:center;border:1px dashed var(--border);border-radius:10px;padding:4px;background:#fff">
+            ${prof.logo_url ? `<img id="bkp-logo-preview" src="${_esc(prof.logo_url)}" alt="הלוגו שלך" style="max-width:140px;max-height:60px;object-fit:contain">` : '<span id="bkp-logo-preview" style="font-size:.75rem;color:#6b7280">אין לוגו</span>'}
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <label style="cursor:pointer;background:var(--accent);color:#fff;padding:6px 14px;border-radius:8px;font-size:.85rem;display:inline-block" for="bkp-logo-file">🖼️ העלה לוגו</label>
+            <input type="file" id="bkp-logo-file" accept="image/png,image/jpeg,image/webp,image/gif" style="display:none">
+            <button type="button" id="bkp-logo-remove" style="background:none;border:0;padding:0;color:var(--text-muted);font:inherit;font-size:.78rem;text-align:start;cursor:pointer;text-decoration:underline">הסר לוגו</button>
+            <span id="bkp-logo-status" style="font-size:.75rem;color:var(--text-muted)">PNG, JPG, WEBP או GIF, עד 2MB</span>
+          </div>
+        </div>
+        <input type="hidden" id="bkp-logo" value="${_esc(prof.logo_url || '')}">
         <button id="bkp-save" style="margin-top:8px;background:var(--accent);color:#fff;border:none;padding:8px 20px;border-radius:8px;cursor:pointer;font-size:.95rem">💾 שמור</button>
       </div>`;
     modal.classList.remove('hidden');
@@ -5354,9 +5375,11 @@ function openBookingProfileModal() {
       const file = e.target.files[0];
       if (!file) return;
       const status = document.getElementById('bkp-photo-status');
+      const bad = _bkpImageProblem(file);
+      if (bad) { status.textContent = '❌ ' + bad; e.target.value = ''; return; }
       status.textContent = '⏳ מעלה...';
       try {
-        const ext = file.name.split('.').pop();
+        const ext = _BKP_IMAGE_EXT[file.type];
         const path = `profile-${Date.now()}.${ext}`;
         const { data, error } = await window._supabase.storage.from('avatars').upload(path, file, { upsert: true, contentType: file.type });
         if (error) throw error;
@@ -5369,6 +5392,33 @@ function openBookingProfileModal() {
         status.textContent = '❌ שגיאה בהעלאה';
         console.error(err);
       }
+    });
+
+    // the therapist's logo (17/11/2026): shown at the top of the public booking page. Same bucket and limits as the photo.
+    document.getElementById('bkp-logo-file')?.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const status = document.getElementById('bkp-logo-status');
+      const bad = _bkpImageProblem(file);
+      if (bad) { status.textContent = '❌ ' + bad; e.target.value = ''; return; }
+      status.textContent = '⏳ מעלה...';
+      try {
+        const path = `logo-${Date.now()}.${_BKP_IMAGE_EXT[file.type]}`;
+        const { error } = await window._supabase.storage.from('avatars').upload(path, file, { contentType: file.type });
+        if (error) throw error;
+        const { data: { publicUrl } } = window._supabase.storage.from('avatars').getPublicUrl(path);
+        document.getElementById('bkp-logo').value = publicUrl;
+        document.getElementById('bkp-logo-preview').outerHTML = `<img id="bkp-logo-preview" src="${_esc(publicUrl)}" alt="הלוגו שלך" style="max-width:140px;max-height:60px;object-fit:contain">`;
+        status.textContent = '✓ הועלה. לחץ "שמור" כדי שיופיע בדף';
+      } catch (err) {
+        status.textContent = '❌ שגיאה בהעלאה';
+        console.error(err);
+      }
+    });
+    document.getElementById('bkp-logo-remove')?.addEventListener('click', () => {
+      document.getElementById('bkp-logo').value = '';
+      document.getElementById('bkp-logo-preview').outerHTML = '<span id="bkp-logo-preview" style="font-size:.75rem;color:#6b7280">אין לוגו</span>';
+      document.getElementById('bkp-logo-status').textContent = 'הלוגו יוסר אחרי "שמור"';
     });
 
     document.getElementById('bkp-save')?.addEventListener('click', async () => {
@@ -5386,11 +5436,12 @@ function openBookingProfileModal() {
         bio: document.getElementById('bkp-bio').value.trim(),
         services: document.getElementById('bkp-services').value.split('\n').map(s => s.trim()).filter(Boolean),
         location: document.getElementById('bkp-location').value.trim(),
-        photo_url: document.getElementById('bkp-photo').value.trim()
+        photo_url: document.getElementById('bkp-photo').value.trim(),
+        logo_url: document.getElementById('bkp-logo').value.trim()
       };
-      await api('/api/booking/profile/update', updated);
+      const saved = await api('/api/booking/profile/update', updated);
       modal.classList.add('hidden');
-      toast('פרופיל עודכן ✓');
+      toast(saved && saved.logo_skipped ? 'הפרופיל נשמר, אבל הלוגו עדיין לא נתמך במסד (צריך להריץ את ה-SQL של הלוגו)' : 'פרופיל עודכן ✓', !(saved && saved.logo_skipped));
       loadState();
     });
   });

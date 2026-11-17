@@ -12,6 +12,7 @@ interface BookingProfile {
   services: string[];
   location: string;
   photo_url?: string;
+  logo_url?: string;
 }
 
 interface Slot {
@@ -224,6 +225,14 @@ export default function BookingPage() {
       <div className="max-w-2xl mx-auto px-4 py-6 md:py-10">
         {/* Profile header */}
         <div className="text-center mb-8">
+          {/* The therapist's own logo (17/11/2026). Nothing is drawn when there is none, so the page looks as before. */}
+          {profile.logo_url && (
+            <img
+              src={profile.logo_url}
+              alt={`הלוגו של ${profile.name}`}
+              className="mx-auto mb-5 max-h-20 max-w-[220px] w-auto object-contain"
+            />
+          )}
           {profile.photo_url && (
             <img src={profile.photo_url} alt={profile.name} className="w-24 h-24 rounded-full mx-auto mb-4 object-cover" />
           )}
