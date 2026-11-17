@@ -265,15 +265,24 @@ window._sbApi = async function(url, body) {
   // ── Habits ────────────────────────────────────────────────────────────────
   if (url === '/api/habit') {
     const habitId = body.id;
+    // a past day is allowed (17/11/2026): a real YYYY-MM-DD, never in the future, up to 28 days back
     const today = _ilDate();
+    let date = today;
+    if (body.date != null && body.date !== '') {
+      const ok = typeof body.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(body.date)
+        && new Date(body.date + 'T12:00:00Z').toISOString().slice(0, 10) === body.date
+        && body.date <= today && body.date >= _ilDate(-28);
+      if (!ok) throw new Error('bad_date');
+      date = body.date;
+    }
     const { data: existing } = await sb.from('habits_log')
-      .select('id, done').eq('user_id', uid).eq('habit_id', habitId).eq('date', today).maybeSingle();
+      .select('id, done').eq('user_id', uid).eq('habit_id', habitId).eq('date', date).maybeSingle();
     if (existing) {
       const { error } = await sb.from('habits_log').update({ done: !existing.done }).eq('id', existing.id);
       if (error) throw error;
     } else {
       const { error } = await sb.from('habits_log')
-        .insert({ user_id: uid, habit_id: habitId, date: today, done: true });
+        .insert({ user_id: uid, habit_id: habitId, date, done: true });
       if (error) throw error;
     }
     return { ok: true };

@@ -2627,33 +2627,49 @@ $('#cal-link').addEventListener('click', (e) => {
   window.open('https://calendar.google.com/calendar/r/agenda', '_blank');
 });
 
-// ---------- Habits history — last 7 days grid ----------
+// ---------- Habits history: a week grid you can edit (17/11/2026) ----------
+// A cell toggles that habit on that day, so a habit forgotten yesterday can be ticked now. The arrows move a week
+// at a time, up to HH_MAX_BACK_DAYS back (the data layers load about a month), and never into the future.
+// Drawn in two places that share one state: the habits panel and the tracking tab.
+let _hhWeekOffset = 0;
+const HH_MAX_BACK_DAYS = 28;
+const HH_CONTAINERS = ['habit-week-grid', 'habits-history-grid'];
 function renderHabitsHistory(habits, todayKey) {
-  const container = document.getElementById('habits-history-grid');
-  if (!container) return;
+  const containers = HH_CONTAINERS.map(id => document.getElementById(id)).filter(Boolean);
+  if (!containers.length) return;
   const completions = habits.completions || {};
   const todayUtc = new Date(todayKey + 'T12:00:00Z');
+  const lastDay = new Date(todayUtc); lastDay.setUTCDate(lastDay.getUTCDate() - _hhWeekOffset * 7);
 
-  // Build last 7 days (today included as rightmost)
+  // 7 days ending at lastDay (rightmost)
   const days = [];
   for (let i = 6; i >= 0; i--) {
-    const d = new Date(todayUtc); d.setUTCDate(d.getUTCDate() - i);
+    const d = new Date(lastDay); d.setUTCDate(d.getUTCDate() - i);
     const key = d.toISOString().slice(0, 10);
-    const label = d.toLocaleDateString('he-IL', { weekday: 'short' });
-    days.push({ key, label, isToday: key === todayKey });
+    const back = Math.round((todayUtc - d) / 864e5);
+    days.push({ key, label: d.toLocaleDateString('he-IL', { weekday: 'short' }), dm: `${d.getUTCDate()}/${d.getUTCMonth() + 1}`,
+      isToday: key === todayKey, ok: back >= 0 && back <= HH_MAX_BACK_DAYS });
   }
+  const canOlder = _hhWeekOffset * 7 + 13 <= HH_MAX_BACK_DAYS + 7 - 1 && days[0].ok;
+  const nav = `<div class="hh-nav">
+    <button type="button" class="hh-nav-btn" data-hh-nav="1" ${canOlder ? '' : 'disabled'}>שבוע קודם</button>
+    <span class="hh-range">${days[0].dm} עד ${days[6].dm}</span>
+    <button type="button" class="hh-nav-btn" data-hh-nav="-1" ${_hhWeekOffset > 0 ? '' : 'disabled'}>שבוע הבא</button>
+  </div>`;
 
   const headRow = `<tr>
     <th></th>
-    ${days.map(d => `<th class="${d.isToday ? 'hh-label-today' : ''}">${d.label}</th>`).join('')}
+    ${days.map(d => `<th class="${d.isToday ? 'hh-label-today' : ''}">${d.label}<br><small>${d.dm}</small></th>`).join('')}
     <th class="hh-sum">סה"כ</th>
   </tr>`;
 
   const bodyRows = habits.habits.map(h => {
     const cells = days.map(d => {
       const done = (completions[d.key] || []).includes(h.id);
-      const cls = d.isToday ? 'hh-dot-today' : (done ? 'hh-dot-done' : 'hh-dot-miss');
-      return `<td class="hh-dot ${cls}"><span>${done ? '✓' : '·'}</span></td>`;
+      const cls = done ? 'hh-dot-done' : (d.isToday ? 'hh-dot-today' : 'hh-dot-miss');
+      const name = `${h.label} ב-${d.dm}: ${done ? 'בוצע, לחיצה מבטלת' : 'לא בוצע, לחיצה מסמנת'}`;
+      return `<td class="hh-dot ${cls}"><button type="button" class="hh-btn" data-hh-habit="${h.id}" data-hh-date="${d.key}"
+        aria-pressed="${done}" aria-label="${name}" title="${name}" ${d.ok ? '' : 'disabled'}><span>${done ? '✓' : '·'}</span></button></td>`;
     });
     const total = days.filter(d => (completions[d.key] || []).includes(h.id)).length;
     const sumCls = total >= 5 ? 'hh-sum-good' : '';
@@ -2664,7 +2680,18 @@ function renderHabitsHistory(habits, todayKey) {
     </tr>`;
   }).join('');
 
-  container.innerHTML = `<table class="hh-table"><thead>${headRow}</thead><tbody>${bodyRows}</tbody></table>`;
+  const html = `${nav}<table class="hh-table"><thead>${headRow}</thead><tbody>${bodyRows}</tbody></table>`;
+  containers.forEach(c => {
+    c.innerHTML = html;
+    c.onclick = async ev => {
+      const navBtn = ev.target.closest('[data-hh-nav]');
+      if (navBtn && !navBtn.disabled) { _hhWeekOffset = Math.max(0, _hhWeekOffset + Number(navBtn.dataset.hhNav)); return renderHabitsHistory(habits, todayKey); }
+      const b = ev.target.closest('.hh-btn');
+      if (!b || b.disabled) return;
+      b.disabled = true;
+      try { await api('/api/habit', { id: b.dataset.hhHabit, date: b.dataset.hhDate }); } finally { loadState(); }
+    };
+  });
 }
 
 // ---------- Sidebar — Focus (editable) ----------
