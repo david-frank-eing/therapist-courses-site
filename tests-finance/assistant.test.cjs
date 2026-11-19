@@ -83,6 +83,8 @@ test('the system prompt keeps the business-only rule and puts the owner text aft
   for (const w of ['GUIDE-X', 'BANK-X', 'EX-X']) assert.ok(s.includes(w), w);
   assert.match(s, /ולא מבטל אותם/);
   assert.match(s, /שאלות קליניות/);
+  assert.match(s, /לעולם אל תשאל ואל תציע עבודה אונליין/, 'hands-on professions are never offered online work');
+  assert.ok(!/אזור או אונליין/.test(s), 'the old "area or online" question is gone');
   assert.ok(!buildChatSystem({}).includes('מידע מהבעלים'), 'no owner block when nothing is written');
   assert.match(turnNote(5, 'open'), /ready/);
   assert.match(turnNote(1, 'done', { channel: 'c', business_summary: 's' }), /reply/);
