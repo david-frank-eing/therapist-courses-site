@@ -22,7 +22,9 @@ const titles: Record<Mode, { title: string; description: string }> = {
 };
 
 const Auth = () => {
-  const [mode, setMode] = useState<Mode>("login");
+  const [searchParams] = useSearchParams();
+  // /auth?mode=signup opens straight on the sign-up form (used by the /welcome page)
+  const [mode, setMode] = useState<Mode>(searchParams.get("mode") === "signup" ? "signup" : "login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -32,7 +34,6 @@ const Auth = () => {
 
   const { user, signIn, signUp, resetPassword } = useAuth();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const redirectTo = searchParams.get("redirect") || "/home";
   const { toast } = useToast();
 

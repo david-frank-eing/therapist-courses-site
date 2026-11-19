@@ -111,9 +111,17 @@ const Welcome = () => {
               בלימודים לימדו אתכם לטפל. אף אחד לא לימד איך להביא מטופלים, איך לפרסם, ואיך לנהל את הכסף והיומן.
               כאן מרוכז הצד העסקי של הקליניקה, בעברית ובשפה פשוטה.
             </p>
-            <Button size="lg" variant="cta" onClick={scrollToForm}>
-              השאירו פרטים ואחזור אליכם
-            </Button>
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              <Button size="lg" variant="cta" onClick={scrollToForm}>
+                השאירו פרטים ואחזור אליכם
+              </Button>
+              <Button size="lg" variant="outline" asChild>
+                <Link to="/assistant">נסו את העוזר העסקי בחינם</Link>
+              </Button>
+              <Button size="lg" variant="outline" asChild>
+                <Link to="/auth?mode=signup&redirect=/assistant">הרשמה חינם</Link>
+              </Button>
+            </div>
           </div>
         </section>
 

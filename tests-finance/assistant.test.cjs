@@ -379,6 +379,13 @@ test('guests save through sign-in (the plan waits in the browser), signed-in use
   assert.match(read('src/components/assistant/ChatPanel.tsx'), /שיחה חדשה/);
 });
 
+test('/welcome offers the assistant and a free sign-up that opens on the sign-up form', () => {
+  const w = read('src/pages/Welcome.tsx');
+  assert.match(w, /<Link to="\/assistant">נסו את העוזר העסקי בחינם<\/Link>/);
+  assert.match(w, /<Link to="\/auth\?mode=signup&redirect=\/assistant">הרשמה חינם<\/Link>/);
+  assert.match(read('src/pages/Auth.tsx'), /searchParams\.get\("mode"\) === "signup" \? "signup" : "login"/);
+});
+
 test('the lib never writes conversations from the browser', () => {
   const lib = read('src/lib/assistant.ts');
   assert.ok(!/from\("assistant_conversations"\)\.(insert|update|upsert)/.test(lib));
