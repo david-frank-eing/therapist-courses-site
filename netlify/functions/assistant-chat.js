@@ -80,12 +80,13 @@ const PLAN_RULES = `אתה כותב תוכנית קצרה ומעשית למטפ�
 
 כתוב בעברית פשוטה, מעשית וחמה, בניסוח ניטרלי למגדר ככל האפשר, בלי הבטחות לתוצאות ובלי טענות על ריפוי, ובלי פרטים מזהים של מטופלים. התאם הכול למה שהמטפל סיפר, ואל תמציא פרטים שלא נאמרו.
 החזר JSON לפי הסכימה:
-- business_summary: סיכום עסקי קצר של המצב (2 עד 3 משפטים).
-- channel: ערוץ אחד בלבד להתחיל ממנו (ביטוי קצר).
-- why: למה הערוץ הזה מתאים דווקא לו (עד 3 משפטים).
-- actions: בדיוק שלוש פעולות קונקרטיות לשבוע הקרוב, כל אחת משפט אחד עם הערכת זמן.
-- outreach_message: נוסח לפנייה הראשונה, בגוף ראשון, 60 עד 90 מילים, מוכן להעתקה.
-- next_step: צעד אחד קטן שאפשר לעשות ב-24 השעות הקרובות.`;
+- business_summary: סיכום עסקי של המצב, עד 2 משפטים קצרים.
+- channel: ערוץ אחד בלבד להתחיל ממנו (ביטוי קצר, עד 12 מילים).
+- why: למה הערוץ הזה מתאים דווקא לו, עד 2 משפטים קצרים.
+- actions: בדיוק שלוש פעולות קונקרטיות לשבוע הקרוב, כל אחת משפט אחד של עד 25 מילים, עם הערכת זמן.
+- outreach_message: נוסח לפנייה הראשונה, בגוף ראשון, 45 עד 65 מילים, מוכן להעתקה.
+- next_step: צעד אחד קטן שאפשר לעשות ב-24 השעות הקרובות, משפט אחד.
+היה תמציתי: כל מילה מיותרת מאריכה את ההמתנה של המטפל.`;
 
 const CHAT_SCHEMA = {
   type: 'object',
@@ -322,7 +323,7 @@ exports.handler = async (event) => {
           model: process.env.ASSISTANT_MODEL_PLAN || MODEL_PLAN_DEFAULT,
           system: PLAN_RULES + ownerBlock({ guidelines: cfg.guidelines, examples: cfg.examples }),
           messages: [{ role: 'user', content: '<transcript>\n' + transcript + '\n</transcript>\nכתוב את התוכנית.' }],
-          schema: PLAN_SCHEMA, maxTokens: 1800, effort: 'medium', thinkingOff: false,
+          schema: PLAN_SCHEMA, maxTokens: 1500, effort: 'low', thinkingOff: false,
         });
         plan = validatePlan(out);
       }
