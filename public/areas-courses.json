@@ -37,6 +37,12 @@
     { "code": "K43", "name": "דף הבית: הלוגו בעיגול",     "sel": "[data-area=\"K43\"]", "where": "src/components/HeroSection.tsx" },
     { "code": "K44", "name": "דף נחיתה: פתיחה והסבר",    "sel": "[data-area=\"K44\"]", "where": "src/pages/Welcome.tsx" },
     { "code": "K45", "name": "דף נחיתה: טופס השארת פרטים", "sel": "[data-area=\"K45\"]", "where": "src/pages/Welcome.tsx" },
-    { "code": "K46", "name": "ניהול פניות",              "sel": "[data-area=\"K46\"]", "where": "src/components/admin/LeadsManager.tsx" }
+    { "code": "K46", "name": "ניהול פניות",              "sel": "[data-area=\"K46\"]", "where": "src/components/admin/LeadsManager.tsx" },
+    { "code": "K47", "name": "העוזר העסקי: השיחה",        "sel": "[data-area=\"K47\"]", "where": "src/components/assistant/ChatPanel.tsx" },
+    { "code": "K48", "name": "העוזר העסקי: התוכנית שהתקבלה", "sel": "[data-area=\"K48\"]", "where": "src/components/assistant/ChatPanel.tsx" },
+    { "code": "K49", "name": "העוזר העסקי: התוכניות שלי",  "sel": "[data-area=\"K49\"]", "where": "src/components/assistant/SavedPlans.tsx" },
+    { "code": "K50", "name": "העוזר העסקי: השיחות שלי",   "sel": "[data-area=\"K50\"]", "where": "src/components/assistant/MyConversations.tsx" },
+    { "code": "K51", "name": "ניהול העוזר: הנחיות ודוגמאות", "sel": "[data-area=\"K51\"]", "where": "src/components/admin/AssistantManager.tsx" },
+    { "code": "K52", "name": "ניהול העוזר: שאלות שנשאלו",  "sel": "[data-area=\"K52\"]", "where": "src/components/admin/AssistantManager.tsx" }
   ]
 }

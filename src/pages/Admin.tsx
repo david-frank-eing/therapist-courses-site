@@ -16,6 +16,7 @@ import { UsersManager } from "@/components/admin/UsersManager";
 import { ListingsManager } from "@/components/admin/ListingsManager";
 import { SiteSettingsManager } from "@/components/admin/SiteSettingsManager";
 import { LeadsManager } from "@/components/admin/LeadsManager";
+import { AssistantManager } from "@/components/admin/AssistantManager";
 import { Loader2, Plus, Pencil, Trash2, ShieldAlert } from "lucide-react";
 import { useConfirm } from "@/components/ConfirmDialog";
 
@@ -129,6 +130,7 @@ const Admin = () => {
             <TabsTrigger value="users">משתמשים</TabsTrigger>
             <TabsTrigger value="tiers">דרגות</TabsTrigger>
             <TabsTrigger value="leads">{newLeads > 0 ? `פניות (${newLeads})` : "פניות"}</TabsTrigger>
+            <TabsTrigger value="assistant">העוזר</TabsTrigger>
             <TabsTrigger value="settings">הגדרות אתר</TabsTrigger>
           </TabsList>
 
@@ -220,6 +222,10 @@ const Admin = () => {
 
           <TabsContent value="leads">
             <LeadsManager onNewCount={setNewLeads} />
+          </TabsContent>
+
+          <TabsContent value="assistant">
+            <AssistantManager />
           </TabsContent>
 
           <TabsContent value="settings" data-area="K8">

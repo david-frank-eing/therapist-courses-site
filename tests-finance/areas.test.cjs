@@ -43,7 +43,9 @@ test('courses: every data-area code in the registry is on a component, and the o
     'src/pages/CourseEditor.tsx', 'src/pages/Home.tsx', 'src/components/Header.tsx',
     'src/components/admin/UsersManager.tsx', 'src/components/admin/TiersManager.tsx',
     'src/pages/MyCourses.tsx', 'src/pages/Account.tsx', 'src/components/HeroSection.tsx',
-    'src/pages/Welcome.tsx', 'src/components/admin/LeadsManager.tsx'].map(read).join('\n');
+    'src/pages/Welcome.tsx', 'src/components/admin/LeadsManager.tsx',
+    'src/components/assistant/ChatPanel.tsx', 'src/components/assistant/SavedPlans.tsx',
+    'src/components/assistant/MyConversations.tsx', 'src/components/admin/AssistantManager.tsx'].map(read).join('\n');
   const marked = new Set((files.match(/data-area="K\d+"/g) || []).map(m => m.slice(11, -1)));
   const wanted = new Set(courses.areas.filter(a => /data-area/.test(a.sel || '')).map(a => a.code));
   assert.deepStrictEqual([...marked].sort(), [...wanted].sort());

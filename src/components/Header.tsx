@@ -20,12 +20,14 @@ const guestLinks = [
   { label: "קורסים", href: "/courses" },
   { label: "לוח", href: "/board" },
   { label: "מחירים", href: "/pricing" },
+  { label: "העוזר העסקי", href: "/assistant" },
 ];
 const memberLinks = [
   { label: "הבית שלי", href: "/home" },
   { label: "קורסים", href: "/courses" },
   { label: "מטופלים", href: "/crm", feature: "clients" as const },
   { label: "לוח", href: "/board" },
+  { label: "העוזר העסקי", href: "/assistant" },
 ];
 
 const tierLabels: Record<string, string> = {
