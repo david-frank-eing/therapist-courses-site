@@ -169,9 +169,17 @@ async function callClaude({ model, system, messages, schema, maxTokens, effort, 
       return r;
     } finally { clearTimeout(timer); }
   };
+  const t0 = Date.now();
   let r = await once(true);
+  let tuned = true;
   // the tuning parameters (effort / caching / thinking) are optional: if the API rejects the request, retry once plain
-  if (r.status === 400) r = await once(false);
+  if (r.status === 400) {
+    // log only the API's own reason (it names a parameter, it never contains what the person wrote)
+    try { const e = await r.clone().json(); console.error('[assistant-chat] tuned request rejected:', String((e && e.error && e.error.message) || '').slice(0, 240)); } catch { /* no body */ }
+    tuned = false;
+    r = await once(false);
+  }
+  console.log(`[assistant-chat] claude ${model} status=${r.status} tuned=${tuned} ms=${Date.now() - t0}`);
   if (!r.ok) { const e = new Error('claude HTTP ' + r.status); e.code = 'claude_http'; e.status = r.status; throw e; }
   const data = await r.json();
   if (data.stop_reason === 'refusal') { const e = new Error('refusal'); e.code = 'refusal'; throw e; }
