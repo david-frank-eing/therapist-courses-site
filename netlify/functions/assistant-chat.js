@@ -265,26 +265,32 @@ exports.handler = async (event) => {
   if (!env) { console.error('[assistant-chat] Missing Supabase env vars'); return json(500, { error: 'משהו השתבש, נסו שוב בעוד רגע' }); }
   if (!process.env.ANTHROPIC_API_KEY) return json(503, { error: 'העוזר עדיין לא זמין. נסו שוב מאוחר יותר', code: 'unavailable' });
 
+  // The usage row is written while the model thinks (not before it), and always awaited in `finally`:
+  // each round trip to the database costs ~0.7s from here, and the whole function must stay well under 10s.
+  let usageP = Promise.resolve();
   try {
     const who = await identify(env, event);
     const isUser = !!who.userId;
     if (!isUser && !guestToken) return json(400, { error: 'הבקשה לא תקינה' });
     const subject = isUser ? who.userId : 'ip:' + who.ipHash;
 
-    // ---- usage limits (counted from our own table) ----
+    // ---- usage limits, the conversation and the owner's instructions: one parallel round trip ----
     const dayAgo = encodeURIComponent(new Date(Date.now() - 24 * 3600 * 1000).toISOString());
-    const used = await sbCount(env, `assistant_usage?select=id&created_at=gte.${dayAgo}&subject=eq.${encodeURIComponent(subject)}`);
+    const [used, total, convRows, cfgRows] = await Promise.all([
+      sbCount(env, `assistant_usage?select=id&created_at=gte.${dayAgo}&subject=eq.${encodeURIComponent(subject)}`),
+      sbCount(env, `assistant_usage?select=id&created_at=gte.${dayAgo}`),
+      convId ? sbGet(env, `assistant_conversations?id=eq.${convId}&select=*`) : Promise.resolve([]),
+      sbGet(env, 'assistant_config?id=eq.1&select=guidelines,question_bank,examples').catch(() => []),
+    ]);
     if (used >= (isUser ? USER_PER_DAY : GUEST_PER_DAY)) {
       return json(429, { error: isUser ? 'הגעת למגבלה היומית של ההודעות. אפשר להמשיך מחר' : 'הגעתם למגבלה היומית. הירשמו חינם כדי להמשיך', code: isUser ? 'daily_limit' : 'guest_limit' });
     }
-    const total = await sbCount(env, `assistant_usage?select=id&created_at=gte.${dayAgo}`);
     if (total >= TOTAL_PER_DAY) return json(429, { error: 'העוזר עמוס כרגע. נסו שוב מחר', code: 'busy' });
 
-    // ---- the conversation: load (and check it belongs to this caller) or start ----
+    // ---- the conversation: check it belongs to this caller, or start one ----
     let conv = null;
     if (convId) {
-      const rows = await sbGet(env, `assistant_conversations?id=eq.${convId}&select=*`);
-      conv = rows[0] || null;
+      conv = convRows[0] || null;
       const mine = conv && (isUser ? conv.user_id === who.userId : (conv.user_id == null && conv.guest_hash === sha256(guestToken)));
       if (!mine) return json(404, { error: 'השיחה לא נמצאה. אפשר להתחיל שיחה חדשה', code: 'not_found' });
     }
@@ -300,10 +306,9 @@ exports.handler = async (event) => {
       return json(403, { error: isUser ? 'השיחה ארוכה מדי. אפשר להתחיל שיחה חדשה' : 'סיימנו את השיחה הזאת. הירשמו חינם כדי להמשיך', code: 'too_long', conversation_id: conv.id });
     }
 
-    const cfgRows = await sbGet(env, 'assistant_config?id=eq.1&select=guidelines,question_bank,examples').catch(() => []);
     const cfg = cfgRows[0] || {};
     const now = new Date().toISOString();
-    await sbInsert(env, 'assistant_usage', { subject, kind: action });   // counted before the call: a failing call still costs
+    usageP = sbInsert(env, 'assistant_usage', { subject, kind: action }).catch((e) => console.error('[assistant-chat] usage row failed:', e && e.message));   // started before the call, so a failing call still costs
 
     // =============================== write the plan (one stronger-model call) ===============================
     if (action === 'plan') {
@@ -356,14 +361,16 @@ exports.handler = async (event) => {
     const asstMsg = { role: 'assistant', text: out.text, kind: out.kind, at: new Date().toISOString() };
     if (offTopic) asstMsg.topic = false;
     const locked = offTopic && offCount >= OFF_TOPIC_LOCK;
-    await sbPatch(env, 'assistant_conversations', `id=eq.${conv.id}`, {
-      messages: messages.concat([userMsg, asstMsg]),
-      turns: offTopic ? conv.turns || 0 : turns,
-      off_topic_count: offCount,
-      status: locked ? 'locked' : conv.status,
-      updated_at: new Date().toISOString(),
-    });
-    if (offTopic) await sbInsert(env, 'assistant_usage', Array.from({ length: OFF_TOPIC_WEIGHT - 1 }, () => ({ subject, kind: 'off_topic' }))).catch(() => {});
+    await Promise.all([
+      sbPatch(env, 'assistant_conversations', `id=eq.${conv.id}`, {
+        messages: messages.concat([userMsg, asstMsg]),
+        turns: offTopic ? conv.turns || 0 : turns,
+        off_topic_count: offCount,
+        status: locked ? 'locked' : conv.status,
+        updated_at: new Date().toISOString(),
+      }),
+      offTopic ? sbInsert(env, 'assistant_usage', Array.from({ length: OFF_TOPIC_WEIGHT - 1 }, () => ({ subject, kind: 'off_topic' }))).catch(() => {}) : Promise.resolve(),
+    ]);
 
     return json(200, {
       conversation_id: conv.id,
@@ -380,6 +387,8 @@ exports.handler = async (event) => {
     if (err && err.code === 'refusal') return json(200, { kind: 'off_topic', text: 'את השאלה הזאת אני לא יכול לעזור בה. אפשר לשאול אותי על השגת לקוחות לקליניקה.', options: [] });
     if (err && err.name === 'AbortError') return json(504, { error: 'לקח יותר מדי זמן. נסו שוב', code: 'timeout' });
     return json(500, { error: 'משהו השתבש, נסו שוב בעוד רגע', code: 'error' });
+  } finally {
+    await usageP;
   }
 };
 
