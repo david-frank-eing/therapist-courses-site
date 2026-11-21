@@ -144,7 +144,7 @@ const Auth = () => {
             <img src="/logo.png" alt="הכול בידיים - מרכז מידע למטפלים במגע" className="h-24 w-auto" />
           </a>
           <h1 className="text-2xl font-bold text-foreground">מרחב למטפלים</h1>
-          <p className="text-muted-foreground mt-2">פלטפורמת הקורסים למטפלים</p>
+          <p className="text-muted-foreground mt-2">הצד העסקי של הקליניקה</p>
         </div>
 
         <Card className="shadow-card">
@@ -214,6 +214,7 @@ const Auth = () => {
                     />
                     <button
                       type="button"
+                      aria-label={showPassword ? "הסתר סיסמה" : "הצג סיסמה"}
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                     >

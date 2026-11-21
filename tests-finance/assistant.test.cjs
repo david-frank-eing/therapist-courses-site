@@ -490,6 +490,15 @@ test('the daily cleanup deletes conversations after 90 days and leaves saved pla
   } finally { global.fetch = real; delete process.env.SUPABASE_URL; delete process.env.SUPABASE_SERVICE_KEY; }
 });
 
+test('a new member who lands on "coming soon" is offered the assistant, and the wording matches the business message', () => {
+  const cs = read('src/pages/ComingSoon.tsx');
+  assert.strictEqual((cs.match(/navigate\("\/assistant"\)/g) || []).length, 2, 'guest and waiting member both get the button');
+  assert.match(cs, /נסו את העוזר העסקי בחינם/);
+  assert.ok(!/פלטפורמת קורסים מקצועית|פלטפורמת הקורסים/.test(read('src/components/Footer.tsx') + read('src/pages/Auth.tsx') + read('src/hooks/useSiteSettings.ts')), 'no "course platform" wording');
+  assert.match(read('src/pages/Auth.tsx'), /aria-label=\{showPassword \? "הסתר סיסמה" : "הצג סיסמה"\}/);
+  assert.match(read('src/pages/Pricing.tsx'), /<h1 className="sr-only">/);
+});
+
 test('the link preview carries the business message and our own image, nothing from the template', () => {
   const html = read('index.html');
   assert.ok(!/lovable/i.test(html), 'no template branding in the preview');

@@ -9,6 +9,7 @@ const Pricing = () => {
     <div className="min-h-screen bg-background">
       <Header />
       <main>
+        <h1 className="sr-only">תכניות ומחירים</h1>
         <PricingPreview />
         <div className="container pb-16 -mt-6 text-center">
           <p className="text-muted-foreground max-w-xl mx-auto">

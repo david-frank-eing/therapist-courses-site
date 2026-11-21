@@ -20,7 +20,7 @@ export const Footer = () => {
               <span className="w-28 h-28 rounded-full bg-brand-orange p-2 inline-flex shrink-0"><span className="w-full h-full rounded-full bg-white flex items-center justify-center"><img src="/logo.png" alt="הכול בידיים - מרכז מידע למטפלים במגע" className="w-[72%] h-auto" /></span></span>
             </Link>
             <p className="text-primary-foreground/70 mb-6">
-              פלטפורמת קורסים מקצועית עבור מטפלים - מידע עסקי, כלי AI, ושיווק הקליניקה.
+              הצד העסקי של הקליניקה: מידע עסקי, כלי AI ושיווק, בעברית ובשפה פשוטה.
             </p>
             {socials.length > 0 && (
               <div className="flex gap-3">

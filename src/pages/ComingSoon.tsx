@@ -28,7 +28,10 @@ export default function ComingSoon() {
 
         {!user && (
           <div className="flex flex-col gap-3 items-center">
-            <Button onClick={() => navigate("/auth")} size="lg" className="px-8 w-full max-w-xs">
+            <Button onClick={() => navigate("/assistant")} size="lg" variant="cta" className="px-8 w-full max-w-xs">
+              נסו את העוזר העסקי בחינם
+            </Button>
+            <Button onClick={() => navigate("/auth")} size="lg" variant="outline" className="px-8 w-full max-w-xs">
               כניסה
             </Button>
             <Button
@@ -47,6 +50,9 @@ export default function ComingSoon() {
             <div className="bg-muted rounded-xl px-6 py-4 text-sm text-muted-foreground">
               מחכים לאישור גישה — נחזור אליך בקרוב 👋
             </div>
+            <Button onClick={() => navigate("/assistant")} size="lg" variant="cta" className="px-8 w-full max-w-xs">
+              נסו את העוזר העסקי בחינם
+            </Button>
             <Button
               variant="outline"
               size="sm"
