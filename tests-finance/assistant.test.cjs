@@ -494,6 +494,9 @@ test('a new member who lands on "coming soon" is offered the assistant, and the 
   const cs = read('src/pages/ComingSoon.tsx');
   assert.strictEqual((cs.match(/navigate\("\/assistant"\)/g) || []).length, 2, 'guest and waiting member both get the button');
   assert.match(cs, /נסו את העוזר העסקי בחינם/);
+  assert.match(cs, /<h1[^>]*>העוזר העסקי פתוח עכשיו<\/h1>/, 'the screen leads with the open assistant');
+  assert.match(cs, /ייפתחו בקרוב/, 'and says plainly that the rest opens later');
+  assert.ok(!/מחכים לאישור גישה|שלבי בנייה סופיים/.test(cs), 'no confusing "waiting for approval" wording');
   assert.ok(!/פלטפורמת קורסים מקצועית|פלטפורמת הקורסים/.test(read('src/components/Footer.tsx') + read('src/pages/Auth.tsx') + read('src/hooks/useSiteSettings.ts')), 'no "course platform" wording');
   assert.match(read('src/pages/Auth.tsx'), /aria-label=\{showPassword \? "הסתר סיסמה" : "הצג סיסמה"\}/);
   assert.match(read('src/pages/Pricing.tsx'), /<h1 className="sr-only">/);
