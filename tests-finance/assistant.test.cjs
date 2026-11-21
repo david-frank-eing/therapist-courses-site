@@ -84,6 +84,9 @@ test('the system prompt keeps the business-only rule and puts the owner text aft
   for (const w of ['GUIDE-X', 'BANK-X', 'EX-X']) assert.ok(s.includes(w), w);
   assert.match(s, /ולא מבטל אותם/);
   assert.match(s, /שאלות קליניות/);
+  assert.match(s, /אל תשתמש בהם ואל תחזור עליהם[^]*לא נחשב מחוץ לתחום/, 'patient details are ignored, not treated as off-topic');
+  assert.match(s, /באותה צורה בכל התשובות[^]*לא בצורות עם לוכסן/, 'one consistent form of address');
+  assert.match(fn.PLAN_RULES_FOR_TEST || '', /באותה צורה/, 'the plan keeps the same form of address');
   assert.match(s, /לעולם אל תשאל ואל תציע עבודה אונליין/, 'hands-on professions are never offered online work');
   assert.ok(!/אזור או אונליין/.test(s), 'the old "area or online" question is gone');
   assert.ok(!buildChatSystem({}).includes('מידע מהבעלים'), 'no owner block when nothing is written');
