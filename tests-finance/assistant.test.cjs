@@ -6,6 +6,7 @@ const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 
+process.env.ASSISTANT_RETRY_MS = '0';   // no real pause before the one retry in tests
 const root = path.join(__dirname, '..');
 const read = f => fs.readFileSync(path.join(root, f), 'utf8');
 const fn = require(path.join(root, 'netlify/functions/assistant-chat.js'));
@@ -93,14 +94,21 @@ test('the system prompt keeps the business-only rule and puts the owner text aft
 // ------------------------------------------------------------------ the function, with a fake database and a fake model
 const SB = 'https://db.example';
 function fakeWorld({ modelChat, modelPlan, counts = {} } = {}) {
-  const w = { convs: {}, usage: [], claude: [], cfg: { guidelines: '', question_bank: '', examples: '' }, logged: [], modelChat, modelPlan };
+  const w = { convs: {}, usage: [], claude: [], telegram: [], claudeFail: null, cfg: { guidelines: '', question_bank: '', examples: '' }, logged: [], modelChat, modelPlan };
   w.fetch = async (url, opt = {}) => {
     url = String(url);
     const method = opt.method || 'GET';
     const ok = (data, extra = {}) => ({ ok: true, status: 200, headers: { get: (h) => (extra[h.toLowerCase()] ?? null) }, json: async () => data });
+    if (url.startsWith('https://api.telegram.org')) { w.telegram.push(JSON.parse(opt.body)); return ok({}); }
     if (url.startsWith('https://api.anthropic.com')) {
       const body = JSON.parse(opt.body);
       w.claude.push(body);
+      const failure = w.claudeFail && w.claudeFail(w.claude.length);   // {status, message} or null
+      if (failure) {
+        const res = { ok: false, status: failure.status, headers: { get: () => null }, json: async () => ({ error: { message: failure.message } }) };
+        res.clone = () => res;
+        return res;
+      }
       const isPlan = body.output_config.format.schema.properties.actions;
       const out = (isPlan ? w.modelPlan : w.modelChat)(body);
       return ok({ stop_reason: 'end_turn', content: [{ type: 'text', text: JSON.stringify(out) }] });
@@ -112,6 +120,7 @@ function fakeWorld({ modelChat, modelPlan, counts = {} } = {}) {
     }
     if (url.includes('/rest/v1/assistant_usage')) {
       if (method === 'POST') { [].concat(JSON.parse(opt.body)).forEach((r) => w.usage.push(r)); return ok(null); }
+      if (url.includes('kind=eq.alert')) return ok(null, { 'content-range': `0-0/${w.usage.filter((u) => u.kind === 'alert').length}` });
       const subj = /subject=eq\.([^&]+)/.exec(url);
       const n = subj ? (counts[decodeURIComponent(subj[1])] ?? w.usage.filter((u) => u.subject === decodeURIComponent(subj[1])).length) : (counts.total ?? w.usage.length);
       return ok(null, { 'content-range': `0-0/${n}` });
@@ -328,9 +337,47 @@ test('a broken model answer is retried once, then reported; nothing the person w
   w2.fetch = async (u, o) => (String(u).startsWith('https://api.anthropic.com') ? { ok: false, status: 500, headers: { get: () => null }, json: async () => ({}) } : orig(u, o));
   await withWorld(w2, async () => {
     const r = await post({ action: 'message', text: 'סוד-נוסף', guest_token: GT });
-    assert.strictEqual(r.statusCode, 500);
+    assert.strictEqual(r.statusCode, 503, 'an API 500 is treated as a passing overload');
     assert.ok(!w2.logged.join('\n').includes('סוד-נוסף'));
   });
+});
+
+test('a passing overload is retried once; a lasting one is reported as busy', async () => {
+  const w = fakeWorld({ modelChat: () => q() });
+  w.claudeFail = (n) => (n === 1 ? { status: 529, message: 'Overloaded' } : null);
+  await withWorld(w, async () => {
+    assert.strictEqual((await post({ action: 'message', text: 'שלום עולם', guest_token: GT })).statusCode, 200, 'second try works');
+    assert.strictEqual(w.claude.length, 2);
+  });
+  const w2 = fakeWorld({ modelChat: () => q() });
+  w2.claudeFail = () => ({ status: 429, message: 'rate limit' });
+  await withWorld(w2, async () => {
+    const r = await post({ action: 'message', text: 'שלום עולם', guest_token: GT });
+    assert.strictEqual(r.statusCode, 503);
+    assert.strictEqual(JSON.parse(r.body).code, 'ai_busy');
+    assert.strictEqual(w2.claude.length, 2, 'exactly one retry');
+    assert.strictEqual(w2.telegram.length, 0, 'a passing overload does not bother the owner');
+  });
+});
+
+test('no credit or a bad key: the person sees "unavailable" and the owner gets one Telegram message an hour', async () => {
+  for (const failure of [{ status: 400, message: 'Your credit balance is too low to access the Anthropic API.' }, { status: 401, message: 'invalid x-api-key' }]) {
+    const w = fakeWorld({ modelChat: () => q() });
+    w.claudeFail = () => failure;
+    await withWorld(w, async () => {
+      process.env.TELEGRAM_BOT_TOKEN = 't'; process.env.TELEGRAM_CHAT_ID = '1';
+      try {
+        const r1 = await post({ action: 'message', text: 'שלום עולם', guest_token: GT });
+        assert.strictEqual(r1.statusCode, 503);
+        assert.strictEqual(JSON.parse(r1.body).code, 'unavailable');
+        assert.strictEqual(w.telegram.length, 1, 'the owner was told');
+        assert.ok(!/sk-|key/i.test(r1.body), 'nothing about the key reaches the visitor');
+        await post({ action: 'message', text: 'שוב', guest_token: GT });
+        assert.strictEqual(w.telegram.length, 1, 'not again within the hour');
+        assert.strictEqual(w.claude.length, failure.status === 400 ? 2 : 2, 'no pointless retries');
+      } finally { delete process.env.TELEGRAM_BOT_TOKEN; delete process.env.TELEGRAM_CHAT_ID; }
+    });
+  }
 });
 
 test('the model rejecting the optional tuning parameters is retried once without them', async () => {
@@ -386,6 +433,70 @@ test('/welcome offers the assistant and a free sign-up that opens on the sign-up
   assert.match(w, /<Link to="\/assistant">נסו את העוזר העסקי בחינם<\/Link>/);
   assert.match(w, /<Link to="\/auth\?mode=signup&redirect=\/assistant">הרשמה חינם<\/Link>/);
   assert.match(read('src/pages/Auth.tsx'), /searchParams\.get\("mode"\) === "signup" \? "signup" : "login"/);
+});
+
+test('the counters: closed table, admin-only funnel numbers, only the two public pages are counted', async () => {
+  const sql = read('supabase/migrations/20261121000000_assistant_stats.sql');
+  const code = sql.replace(/--.*$/gm, '');
+  assert.ok(!/[֐-׿]/.test(sql), 'no Hebrew in SQL that David pastes');
+  assert.match(code, /ALTER TABLE public\.page_views ENABLE ROW LEVEL SECURITY/);
+  assert.match(code, /REVOKE ALL ON public\.page_views FROM anon, authenticated/);
+  assert.match(code, /CHECK \(page IN \('welcome', 'assistant'\)\)/);
+  assert.match(code, /admin_assistant_stats[\s\S]*?has_role\(auth\.uid\(\), 'admin'\)/);
+  assert.ok(!/user_id\s*,|SELECT[^;]*\bemail\b/i.test(code.replace(/user_id IS (NOT )?NULL/g, '')), 'no identity in the numbers');
+  assert.ok(!/DROP TABLE|TRUNCATE|DELETE FROM/i.test(code));
+
+  const { validateView, handler } = require(path.join(root, 'netlify/functions/page-view.js'));
+  assert.deepStrictEqual(validateView({ page: 'welcome', src: 'WhatsApp<x>' }), { page: 'welcome', src: 'whatsappx' });
+  assert.strictEqual(validateView({ page: 'admin' }), null, 'only the two public pages');
+  assert.strictEqual(validateView({ page: 'welcome', src: 'x'.repeat(80) }).src.length, 20);
+  assert.strictEqual((await handler({ httpMethod: 'GET' })).statusCode, 405);
+  assert.strictEqual((await handler({ httpMethod: 'POST', body: 'x'.repeat(500) })).statusCode, 413);
+  assert.strictEqual((await handler({ httpMethod: 'POST', body: JSON.stringify({ page: 'nope' }) })).statusCode, 400);
+
+  // a good view is stored with the page and the tag only (no headers, no address)
+  const real = global.fetch; const sent = [];
+  process.env.SUPABASE_URL = SB; process.env.SUPABASE_SERVICE_KEY = 'svc';
+  global.fetch = async (u, o = {}) => { sent.push({ u: String(u), o }); return { ok: true, status: 200, headers: { get: () => '0-0/0' }, json: async () => [] }; };
+  try {
+    const r = await handler({ httpMethod: 'POST', headers: { 'x-nf-client-connection-ip': '9.9.9.9' }, body: JSON.stringify({ page: 'assistant', src: 'wa' }) });
+    assert.strictEqual(r.statusCode, 200);
+    const ins = sent.find(s => s.o.method === 'POST');
+    assert.deepStrictEqual(JSON.parse(ins.o.body), { page: 'assistant', src: 'wa' });
+    assert.ok(!JSON.stringify(sent).includes('9.9.9.9'), 'the address never leaves the function');
+  } finally { global.fetch = real; delete process.env.SUPABASE_URL; delete process.env.SUPABASE_SERVICE_KEY; }
+
+  assert.match(read('src/pages/Welcome.tsx'), /trackPage\("welcome"\)/);
+  assert.match(read('src/pages/BusinessAssistant.tsx'), /trackPage\("assistant"\)/);
+  assert.ok(!/document\.cookie|localStorage/.test(read('src/lib/track.ts').replace(/\/\/.*$/gm, '')), 'no cookies, no persistent storage');
+});
+
+test('the daily cleanup deletes conversations after 90 days and leaves saved plans alone', async () => {
+  const cleanup = require(path.join(root, 'netlify/functions/assistant-cleanup.js'));
+  assert.strictEqual(cleanup.LIMITS.CONVERSATION_DAYS, 90);
+  assert.match(read('netlify.toml'), /\[functions\."assistant-cleanup"\]\s+schedule = "[^"]+"/);
+  const real = global.fetch; const calls = [];
+  process.env.SUPABASE_URL = SB; process.env.SUPABASE_SERVICE_KEY = 'svc';
+  global.fetch = async (u, o = {}) => { calls.push({ u: String(u), m: o.method }); return { ok: true, status: 200, json: async () => [{ id: 1 }, { id: 2 }] }; };
+  try {
+    const res = await cleanup.handler();
+    assert.strictEqual(res.statusCode, 200);
+    assert.deepStrictEqual(calls.map(c => c.m), ['DELETE', 'DELETE', 'DELETE']);
+    assert.ok(calls.every(c => /created_at=lt\./.test(c.u)), 'only by age');
+    assert.ok(!calls.some(c => /business_plans/.test(c.u)), 'a saved plan is never deleted by age');
+    const conv = new Date(decodeURIComponent(/created_at=lt\.([^&]+)/.exec(calls[0].u)[1]));
+    const ageDays = (Date.now() - conv.getTime()) / 86400000;
+    assert.ok(ageDays > 89.9 && ageDays < 90.1, 'the cutoff is 90 days');
+  } finally { global.fetch = real; delete process.env.SUPABASE_URL; delete process.env.SUPABASE_SERVICE_KEY; }
+});
+
+test('the link preview carries the business message and our own image, nothing from the template', () => {
+  const html = read('index.html');
+  assert.ok(!/lovable/i.test(html), 'no template branding in the preview');
+  assert.match(html, /<title>הכול בידיים \| הצד העסקי של הקליניקה<\/title>/);
+  assert.match(html, /og:image" content="https:\/\/[^"]+\/og-image\.png"/);
+  assert.ok(fs.existsSync(path.join(root, 'public/og-image.png')), 'the preview image exists');
+  assert.ok(!/סרטונים|פרקטיקה הטיפולית/.test(html), 'the old "videos and professional resources" wording is gone');
 });
 
 test('the lib never writes conversations from the browser', () => {

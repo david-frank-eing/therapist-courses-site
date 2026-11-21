@@ -43,6 +43,7 @@
     { "code": "K49", "name": "העוזר העסקי: התוכניות שלי",  "sel": "[data-area=\"K49\"]", "where": "src/components/assistant/SavedPlans.tsx" },
     { "code": "K50", "name": "העוזר העסקי: השיחות שלי",   "sel": "[data-area=\"K50\"]", "where": "src/components/assistant/MyConversations.tsx" },
     { "code": "K51", "name": "ניהול העוזר: הנחיות ודוגמאות", "sel": "[data-area=\"K51\"]", "where": "src/components/admin/AssistantManager.tsx" },
-    { "code": "K52", "name": "ניהול העוזר: שאלות שנשאלו",  "sel": "[data-area=\"K52\"]", "where": "src/components/admin/AssistantManager.tsx" }
+    { "code": "K52", "name": "ניהול העוזר: שאלות שנשאלו",  "sel": "[data-area=\"K52\"]", "where": "src/components/admin/AssistantManager.tsx" },
+    { "code": "K53", "name": "ניהול העוזר: סטטיסטיקה",     "sel": "[data-area=\"K53\"]", "where": "src/components/admin/AssistantManager.tsx" }
   ]
 }

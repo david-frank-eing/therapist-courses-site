@@ -9,6 +9,7 @@ import { ChatPanel } from "@/components/assistant/ChatPanel";
 import { SavedPlans } from "@/components/assistant/SavedPlans";
 import { MyConversations } from "@/components/assistant/MyConversations";
 import { clearPending, insertPlan, loadPending, type ConversationRow } from "@/lib/assistant";
+import { trackPage } from "@/lib/track";
 
 // "/assistant" (M51): "העוזר העסקי לקליניקה". Open to guests too (they finish a conversation and get the result free);
 // a signed-in user also gets "השיחות שלי" and "התוכניות שלי". The assistant itself runs on the server (assistant-chat).
@@ -23,6 +24,8 @@ const BusinessAssistant = () => {
   const [opened, setOpened] = useState<ConversationRow | null>(null);
   const [plansKey, setPlansKey] = useState(0);
   const [pending, setPending] = useState(() => loadPending());
+
+  useEffect(() => { trackPage("assistant"); }, []);
 
   // a guest who saved the plan and then signed up / logged in: offer to save it (never silently)
   useEffect(() => { if (user) setPending(loadPending()); }, [user]);

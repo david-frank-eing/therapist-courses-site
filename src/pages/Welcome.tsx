@@ -1,4 +1,5 @@
-import { useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
+import { trackPage } from "@/lib/track";
 import { Link, useSearchParams } from "react-router-dom";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { Button } from "@/components/ui/button";
@@ -56,6 +57,8 @@ const Welcome = () => {
   const [error, setError] = useState("");
   const [sending, setSending] = useState(false);
   const [done, setDone] = useState(false);
+
+  useEffect(() => { trackPage("welcome"); }, []);
 
   const scrollToForm = () => formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
 

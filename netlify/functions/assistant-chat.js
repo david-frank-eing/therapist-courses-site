@@ -23,6 +23,7 @@ const USER_PER_DAY = 100;
 const TOTAL_PER_DAY = 600;            // circuit breaker for the whole system (budget protection)
 const OFF_TOPIC_WEIGHT = 3;           // an off-topic message counts 3 times against the daily limit
 const CLAUDE_TIMEOUT_MS = 22000;
+const RETRY_DELAY_MS = Number(process.env.ASSISTANT_RETRY_MS ?? 1500);   // pause before the one retry on a rate limit / overload
 const MODEL_CHAT_DEFAULT = 'claude-haiku-5-5';
 const MODEL_PLAN_DEFAULT = 'claude-sonnet-5-5';
 
@@ -171,18 +172,37 @@ async function callClaude({ model, system, messages, schema, maxTokens, effort, 
       return r;
     } finally { clearTimeout(timer); }
   };
+  // the API's own error text (it names a parameter or a limit, it never contains what the person wrote)
+  const errText = async (resp) => { try { const e = await resp.clone().json(); return String((e && e.error && e.error.message) || '').slice(0, 240); } catch { return ''; } };
+  // what a failure means for us: the owner must act (key, credit), or it is a passing overload
+  const classify = (status, msg) => {
+    if (status === 401 || status === 403) return 'auth';
+    if (/credit balance|billing/i.test(msg)) return 'no_credit';
+    if (status === 429) return 'rate_limit';
+    if (status === 500 || status === 502 || status === 503 || status === 529) return 'overloaded';
+    return null;
+  };
+  const fail = (code, status) => { const e = new Error('claude ' + code); e.code = code; e.status = status; return e; };
   const t0 = Date.now();
   let r = await once(true);
   let tuned = true;
   // the tuning parameters (effort / caching / thinking) are optional: if the API rejects the request, retry once plain
   if (r.status === 400) {
-    // log only the API's own reason (it names a parameter, it never contains what the person wrote)
-    try { const e = await r.clone().json(); console.error('[assistant-chat] tuned request rejected:', String((e && e.error && e.error.message) || '').slice(0, 240)); } catch { /* no body */ }
+    const msg = await errText(r);
+    if (classify(400, msg) === 'no_credit') throw fail('no_credit', 400);
+    console.error('[assistant-chat] tuned request rejected:', msg);
     tuned = false;
     r = await once(false);
   }
+  let kind = r.ok ? null : classify(r.status, await errText(r));
+  // a passing overload or rate limit: one more try after a short pause
+  if (kind === 'rate_limit' || kind === 'overloaded') {
+    await new Promise((res) => setTimeout(res, RETRY_DELAY_MS));
+    r = await once(tuned);
+    kind = r.ok ? null : classify(r.status, await errText(r));
+  }
   console.log(`[assistant-chat] claude ${model} status=${r.status} tuned=${tuned} ms=${Date.now() - t0}`);
-  if (!r.ok) { const e = new Error('claude HTTP ' + r.status); e.code = 'claude_http'; e.status = r.status; throw e; }
+  if (!r.ok) throw fail(kind || 'claude_http', r.status);
   const data = await r.json();
   if (data.stop_reason === 'refusal') { const e = new Error('refusal'); e.code = 'refusal'; throw e; }
   if (data.stop_reason === 'max_tokens') { const e = new Error('truncated'); e.code = 'truncated'; throw e; }
@@ -240,6 +260,19 @@ async function identify(env, event) {
 }
 
 const sha256 = (s) => crypto.createHash('sha256').update(s).digest('hex');
+
+// A message to the owner on Telegram when the assistant itself is broken. Stateless function: the "once an hour"
+// memory is a row in assistant_usage (subject "system", kind "alert"). Never throws.
+async function alertOwner(env, text) {
+  const token = process.env.TELEGRAM_BOT_TOKEN, chat = process.env.TELEGRAM_CHAT_ID;
+  if (!token || !chat) return;
+  try {
+    const hourAgo = encodeURIComponent(new Date(Date.now() - 3600 * 1000).toISOString());
+    if (await sbCount(env, `assistant_usage?select=id&created_at=gte.${hourAgo}&kind=eq.alert`) > 0) return;
+    await sbInsert(env, 'assistant_usage', { subject: 'system', kind: 'alert' });
+    await fetch(`https://api.telegram.org/bot${token}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: chat, text }) });
+  } catch { console.error('[assistant-chat] owner alert failed'); }
+}
 
 // ---------------------------------------------------------------------------------------------------------------
 // the handler
@@ -387,6 +420,14 @@ exports.handler = async (event) => {
     // never log what the person wrote, only the reason
     console.error('[assistant-chat] failed:', err && (err.code || err.message));
     if (err && err.code === 'refusal') return json(200, { kind: 'off_topic', text: 'את השאלה הזאת אני לא יכול לעזור בה. אפשר לשאול אותי על השגת לקוחות לקליניקה.', options: [] });
+    // the owner has to do something (credit ran out, key expired or wrong): tell him on Telegram, at most once an hour
+    if (err && (err.code === 'no_credit' || err.code === 'auth')) {
+      await alertOwner(env, err.code === 'no_credit'
+        ? '⚠️ העוזר העסקי לא עובד: היתרה ב-Anthropic נגמרה. אפשר לטעון ב-console.anthropic.com ← Billing.'
+        : '⚠️ העוזר העסקי לא עובד: המפתח של Anthropic לא תקין או פג. צריך מפתח חדש ב-console.anthropic.com ועדכון ב-Netlify (ANTHROPIC_API_KEY).');
+      return json(503, { error: 'העוזר לא זמין כרגע. נסו שוב מאוחר יותר', code: 'unavailable' });
+    }
+    if (err && (err.code === 'rate_limit' || err.code === 'overloaded')) return json(503, { error: 'העוזר עמוס כרגע. נסו שוב בעוד רגע', code: 'ai_busy' });
     if (err && err.name === 'AbortError') return json(504, { error: 'לקח יותר מדי זמן. נסו שוב', code: 'timeout' });
     return json(500, { error: 'משהו השתבש, נסו שוב בעוד רגע', code: 'error' });
   } finally {

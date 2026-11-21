@@ -10,6 +10,10 @@
 [functions."task-reminders"]
   schedule = "*/5 * * * *"
 
+# Scheduled function: delete business-assistant conversations older than 90 days (the promise in the privacy text)
+[functions."assistant-cleanup"]
+  schedule = "30 3 * * *"
+
 [dev]
   command = "npm run dev"
   targetPort = 8080

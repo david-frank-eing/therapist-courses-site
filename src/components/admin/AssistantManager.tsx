@@ -16,7 +16,20 @@ import type { StoredMessage } from "@/lib/assistant";
 //  K52: the questions that were asked, WITHOUT who asked (the function admin_assistant_questions does not return user_id).
 
 const TOTAL_MAX = 8000;
-type Part = "guide" | "asked";
+type Part = "guide" | "asked" | "stats";
+
+// the funnel (K53): from the function admin_assistant_stats, no personal data
+const STAT_LABELS: [string, string][] = [
+  ["welcome_views", "כניסות לדף /welcome"],
+  ["assistant_views", "כניסות לדף העוזר"],
+  ["chats_guest", "שיחות שהתחילו (אורחים)"],
+  ["chats_registered", "שיחות שהתחילו (רשומים)"],
+  ["plans_made", "תוכניות שהתקבלו"],
+  ["plans_saved", "תוכניות שנשמרו בחשבון"],
+  ["signups", "הרשמות לאתר"],
+  ["leads", "פניות מהטופס"],
+  ["off_topic_messages", "הודעות מחוץ לנושא"],
+];
 
 interface Cfg { guidelines: string; question_bank: string; examples: string }
 interface Asked { id: string; created_at: string; track: string; status: string; turns: number; off_topic_count: number; is_registered: boolean; messages: StoredMessage[] }
@@ -56,6 +69,17 @@ export const AssistantManager = () => {
   };
   useEffect(() => { if (part === "asked" && asked === null) void loadAsked(0); }, [part]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const [days, setDays] = useState(7);
+  const [stats, setStats] = useState<Record<string, number> | null>(null);
+  useEffect(() => {
+    if (part !== "stats") return;
+    setStats(null);
+    (supabase as any).rpc("admin_assistant_stats", { p_days: days }).then(({ data, error }: any) => {
+      if (error) { toast({ title: "הסטטיסטיקה לא נטענה", description: error.message, variant: "destructive" }); setStats({}); return; }
+      setStats(Object.fromEntries((data ?? []).map((r: { metric: string; value: number }) => [r.metric, Number(r.value)])));
+    });
+  }, [part, days]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const total = cfg.guidelines.length + cfg.question_bank.length + cfg.examples.length;
   const dirty = !!saved && (saved.guidelines !== cfg.guidelines || saved.question_bank !== cfg.question_bank || saved.examples !== cfg.examples);
 
@@ -89,7 +113,38 @@ export const AssistantManager = () => {
       <div className="flex gap-2">
         <Button type="button" variant={part === "guide" ? "default" : "outline"} size="sm" onClick={() => setPart("guide")}>הנחיות ודוגמאות</Button>
         <Button type="button" variant={part === "asked" ? "default" : "outline"} size="sm" onClick={() => setPart("asked")}>שאלות שנשאלו</Button>
+        <Button type="button" variant={part === "stats" ? "default" : "outline"} size="sm" onClick={() => setPart("stats")}>סטטיסטיקה</Button>
       </div>
+
+      {part === "stats" && (
+        <Card className="p-5 space-y-4" data-area="K53">
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-sm text-muted-foreground">המסלול מהכניסה לדף ועד הרשמה. בלי עוגיות ובלי מידע אישי.</p>
+            <select className="h-10 rounded-md border border-input bg-background px-3 text-sm" value={days} onChange={(e) => setDays(Number(e.target.value))} aria-label="טווח זמן">
+              <option value={1}>היום האחרון</option>
+              <option value={7}>7 ימים</option>
+              <option value={30}>30 ימים</option>
+            </select>
+          </div>
+          {stats === null ? <Loader2 className="h-5 w-5 animate-spin" /> : (
+            <>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {STAT_LABELS.map(([key, label]) => (
+                  <div key={key} className="rounded-lg border border-border p-4 text-right">
+                    <p className="text-3xl font-bold text-foreground">{stats[key] ?? 0}</p>
+                    <p className="text-sm text-muted-foreground">{label}</p>
+                  </div>
+                ))}
+              </div>
+              {(stats.assistant_views ?? 0) > 0 && (
+                <p className="text-sm text-muted-foreground text-right">
+                  מי שנכנס לדף העוזר והתחיל שיחה: {Math.round((((stats.chats_guest ?? 0) + (stats.chats_registered ?? 0)) / stats.assistant_views) * 100)}%
+                </p>
+              )}
+            </>
+          )}
+        </Card>
+      )}
 
       {part === "guide" && (
         <Card className="p-5 space-y-4" data-area="K51">
