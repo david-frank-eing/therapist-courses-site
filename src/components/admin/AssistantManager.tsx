@@ -80,6 +80,18 @@ export const AssistantManager = () => {
     });
   }, [part, days]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // earlier versions of the instructions (table assistant_config_history, filled by a database trigger on every save)
+  const [versions, setVersions] = useState<(Cfg & { id: number; created_at: string })[] | null>(null);
+  const [showHistory, setShowHistory] = useState(false);
+  useEffect(() => {
+    if (!showHistory || versions !== null) return;
+    (supabase as any).from("assistant_config_history").select("id,created_at,guidelines,question_bank,examples").order("id", { ascending: false }).limit(30)
+      .then(({ data, error }: any) => {
+        if (error) { toast({ title: "ההיסטוריה לא נטענה", description: error.message, variant: "destructive" }); setVersions([]); return; }
+        setVersions(data ?? []);
+      });
+  }, [showHistory, versions]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const total = cfg.guidelines.length + cfg.question_bank.length + cfg.examples.length;
   const dirty = !!saved && (saved.guidelines !== cfg.guidelines || saved.question_bank !== cfg.question_bank || saved.examples !== cfg.examples);
 
@@ -90,6 +102,7 @@ export const AssistantManager = () => {
     setSaving(false);
     if (error) return toast({ title: "השמירה נכשלה", description: error.message, variant: "destructive" });
     setSaved(cfg);
+    setVersions(null); // the save added a version: reload the history next time it is opened
     toast({ title: "ההנחיות נשמרו. הן נכנסות לשיחות הבאות" });
   };
 
@@ -174,6 +187,35 @@ export const AssistantManager = () => {
               </div>
             </>
           )}
+        </Card>
+      )}
+
+      {part === "guide" && saved && (
+        <Card className="p-5 space-y-3">
+          <button type="button" className="w-full flex items-center justify-between text-right" onClick={() => setShowHistory((v) => !v)} aria-expanded={showHistory}>
+            <span className="font-bold text-foreground">היסטוריית גרסאות של ההנחיות</span>
+            <span className="text-sm text-muted-foreground">{showHistory ? "הסתר" : "הצג"}</span>
+          </button>
+          {showHistory && (versions === null ? <Loader2 className="h-5 w-5 animate-spin" /> : versions.length === 0 ? (
+            <p className="text-sm text-muted-foreground">עוד אין גרסאות שמורות.</p>
+          ) : (
+            <ul className="space-y-2">
+              {versions.map((v, i) => (
+                <li key={v.id} className="rounded-lg border border-border p-3 flex items-start justify-between gap-3">
+                  <div className="text-right min-w-0">
+                    <p className="text-sm font-medium text-foreground">{fmt(v.created_at)}{i === 0 && " · הגרסה הנוכחית"}</p>
+                    <p className="text-xs text-muted-foreground truncate">{(v.guidelines || v.question_bank || v.examples || "(ריק)").slice(0, 90)}</p>
+                    <p className="text-xs text-muted-foreground">{v.guidelines.length + v.question_bank.length + v.examples.length} תווים</p>
+                  </div>
+                  {i > 0 && (
+                    <Button type="button" size="sm" variant="outline" onClick={() => { setCfg({ guidelines: v.guidelines, question_bank: v.question_bank, examples: v.examples }); toast({ title: "הגרסה נטענה לעורך. לחצו שמור כדי להחזיר אותה" }); }}>
+                      טען לעורך
+                    </Button>
+                  )}
+                </li>
+              ))}
+            </ul>
+          ))}
         </Card>
       )}
 

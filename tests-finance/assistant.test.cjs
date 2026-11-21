@@ -502,6 +502,30 @@ test('a new member who lands on "coming soon" is offered the assistant, and the 
   assert.match(read('src/pages/Pricing.tsx'), /<h1 className="sr-only">/);
 });
 
+test('the instructions history: admin-only, written only by a trigger, last 100 kept, loadable into the editor', () => {
+  const raw = read('supabase/migrations/20261121010000_assistant_config_history.sql');
+  const code = raw.replace(/--.*$/gm, '');
+  assert.ok(!/[֐-׿]/.test(raw), 'no Hebrew in SQL that David pastes');
+  assert.match(code, /ALTER TABLE public\.assistant_config_history ENABLE ROW LEVEL SECURITY/);
+  assert.match(code, /REVOKE ALL ON public\.assistant_config_history FROM anon/);
+  assert.match(code, /FOR SELECT USING \(public\.has_role\(auth\.uid\(\), 'admin'\)\)/);
+  assert.ok(!/FOR (INSERT|UPDATE|DELETE|ALL)/i.test(code), 'no write policy: only the trigger writes');
+  assert.match(code, /SECURITY DEFINER/);
+  assert.match(code, /AFTER INSERT OR UPDATE ON public\.assistant_config/);
+  assert.match(code, /LIMIT 100/);
+  assert.match(code, /IS NOT DISTINCT FROM OLD\.guidelines/, 'an unchanged save adds no version');
+  const ui = read('src/components/admin/AssistantManager.tsx');
+  assert.match(ui, /from\("assistant_config_history"\)/);
+  assert.match(ui, /טען לעורך/);
+  assert.ok(!/assistant_config_history"\)\.(insert|update|delete)/.test(ui), 'the screen never writes the history');
+});
+
+test('the changelog exists and covers the launch preparation', () => {
+  const log = read('docs/CHANGELOG.he.md');
+  for (const part of ['21/11/2026', '19/11/2026', '18/11/2026']) assert.ok(log.includes(part), part);
+  assert.match(log, /החלטות שעדיין פתוחות/);
+});
+
 test('the link preview carries the business message and our own image, nothing from the template', () => {
   const html = read('index.html');
   assert.ok(!/lovable/i.test(html), 'no template branding in the preview');
