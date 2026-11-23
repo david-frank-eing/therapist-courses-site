@@ -173,7 +173,6 @@ test('the pop-up: a button the visitor presses (never opens by itself), consent 
   assert.match(p, /ws-website/, 'honeypot field');
   assert.ok(!/setTimeout|setInterval/.test(p), 'nothing opens on a timer');
   assert.ok(!/useEffect\(\(\) => \{\s*setOpen\(true\)/.test(p), 'nothing opens on load');
-  assert.match(p, /<Link to="\/privacy"/);
   for (const page of ['src/pages/Index.tsx', 'src/pages/Welcome.tsx']) assert.match(read(page), /<WorkshopPopup \/>/, page);
 });
 

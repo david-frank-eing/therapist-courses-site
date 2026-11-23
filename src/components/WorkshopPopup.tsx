@@ -1,5 +1,4 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -134,9 +133,7 @@ export const WorkshopPopup = () => {
                   אני מאשר/ת ליצור איתי קשר בטלפון ובמייל ולשלוח לי מידע.
                 </Label>
               </div>
-              <p className="text-xs text-muted-foreground">
-                אפשר לבטל את ההסכמה בכל עת. הפרטים נשמרים ומעובדים לפי <Link to="/privacy" className="underline" onClick={() => setOpen(false)}>מדיניות הפרטיות</Link>.
-              </p>
+              <p className="text-xs text-muted-foreground">אפשר לבטל את ההסכמה בכל עת.</p>
               {error && <p className="text-destructive text-sm" role="alert">{error}</p>}
               <Button type="submit" variant="cta" size="lg" className="w-full" disabled={sending}>
                 {sending ? <Loader2 className="animate-spin" size={20} /> : workshop.popup_submit}
