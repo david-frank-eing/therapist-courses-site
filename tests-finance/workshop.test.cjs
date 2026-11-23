@@ -144,6 +144,16 @@ test('the changelog is kept up to date and says where the readable copy is', () 
   assert.match(log, /היסטוריה שבתוך כל לשונית בניהול/);
 });
 
+test('the "where do I change what" guide covers every admin tab', () => {
+  const guide = read('docs/WHERE-TO-CHANGE.he.md');
+  const tabs = [...read('src/pages/Admin.tsx').matchAll(/<TabsTrigger value="[a-z]+">([^<{]+)<\/TabsTrigger>/g)].map(m => m[1].trim());
+  assert.ok(tabs.length >= 8, 'found the admin tabs: ' + tabs.join(', '));
+  for (const tab of tabs) assert.ok(guide.includes(`**${tab}:**`), `the guide explains the tab "${tab}"`);
+  assert.ok(guide.includes('**פניות:**'), 'the leads tab (its label carries a counter in the code)');
+  assert.match(guide, /ANTHROPIC_API_KEY/);
+  assert.match(guide, /19\/12\/2026/);
+});
+
 test('plan names are not shown to the public: home, hero, guest menu, footer', () => {
   assert.ok(!/PricingPreview/.test(read('src/pages/Index.tsx')), 'no plans section on the home page');
   assert.ok(!/\/pricing/.test(read('src/components/HeroSection.tsx')), 'no plans button in the hero');
