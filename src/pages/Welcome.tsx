@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { trackPage } from "@/lib/track";
+import { WorkshopPopup } from "@/components/WorkshopPopup";
 import { Link, useSearchParams } from "react-router-dom";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { Button } from "@/components/ui/button";
@@ -247,6 +248,7 @@ const Welcome = () => {
           </div>
         </div>
       </footer>
+      <WorkshopPopup />
     </div>
   );
 };

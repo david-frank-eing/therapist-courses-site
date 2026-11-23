@@ -532,7 +532,10 @@ test('the changelog exists and covers the launch preparation', () => {
 test('the link preview carries the business message and our own image, nothing from the template', () => {
   const html = read('index.html');
   assert.ok(!/lovable/i.test(html), 'no template branding in the preview');
-  assert.match(html, /<title>הכול בידיים \| הצד העסקי של הקליניקה<\/title>/);
+  assert.match(html, /<title>הכול בידיים \| הצד העסקי של הקליניקה, למטפלים עצמאיים<\/title>/);
+  assert.match(html, /name="description" content="הצד העסקי של הקליניקה, בעברית ובשפה פשוטה\. ידע, כלים וליווי למטפלים עצמאיים/);
+  assert.match(html, /og:title" content="יש לכם מה לתת\. הגיע הזמן שאנשים ידעו שאתם קיימים\."/);
+  assert.match(html, /og:description" content="סדנה פרונטלית למטפלים עצמאיים · 29\.12\.26 · 79 ₪ בהרשמה מוקדמת\./);
   assert.match(html, /og:image" content="https:\/\/[^"]+\/og-image\.png"/);
   assert.ok(fs.existsSync(path.join(root, 'public/og-image.png')), 'the preview image exists');
   assert.ok(!/סרטונים|פרקטיקה הטיפולית/.test(html), 'the old "videos and professional resources" wording is gone');

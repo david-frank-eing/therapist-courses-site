@@ -45,7 +45,6 @@ export const Footer = () => {
             <ul className="space-y-3">
               <li><Link to="/" className="text-primary-foreground/70 hover:text-brand-orange transition-smooth">דף הבית</Link></li>
               <li><Link to="/courses" className="text-primary-foreground/70 hover:text-brand-orange transition-smooth">כל הקורסים</Link></li>
-              <li><Link to="/pricing" className="text-primary-foreground/70 hover:text-brand-orange transition-smooth">תכניות מנויים</Link></li>
               <li><a href="/#about" className="text-primary-foreground/70 hover:text-brand-orange transition-smooth">אודות</a></li>
             </ul>
           </div>

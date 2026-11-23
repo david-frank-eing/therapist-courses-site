@@ -19,7 +19,6 @@ import { ProductSwitcher } from "./ProductSwitcher";
 const guestLinks = [
   { label: "קורסים", href: "/courses" },
   { label: "לוח", href: "/board" },
-  { label: "מחירים", href: "/pricing" },
   { label: "העוזר העסקי", href: "/assistant" },
 ];
 const memberLinks = [

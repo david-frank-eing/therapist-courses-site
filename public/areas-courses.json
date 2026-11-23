@@ -44,6 +44,10 @@
     { "code": "K50", "name": "העוזר העסקי: השיחות שלי",   "sel": "[data-area=\"K50\"]", "where": "src/components/assistant/MyConversations.tsx" },
     { "code": "K51", "name": "ניהול העוזר: הנחיות ודוגמאות", "sel": "[data-area=\"K51\"]", "where": "src/components/admin/AssistantManager.tsx" },
     { "code": "K52", "name": "ניהול העוזר: שאלות שנשאלו",  "sel": "[data-area=\"K52\"]", "where": "src/components/admin/AssistantManager.tsx" },
-    { "code": "K53", "name": "ניהול העוזר: סטטיסטיקה",     "sel": "[data-area=\"K53\"]", "where": "src/components/admin/AssistantManager.tsx" }
+    { "code": "K53", "name": "ניהול העוזר: סטטיסטיקה",     "sel": "[data-area=\"K53\"]", "where": "src/components/admin/AssistantManager.tsx" },
+    { "code": "K54", "name": "דף הבית: הסדנה הקרובה",       "sel": "[data-area=\"K54\"]", "where": "src/components/WorkshopSection.tsx" },
+    { "code": "K55", "name": "דף הבית: מי אני",             "sel": "[data-area=\"K55\"]", "where": "src/components/WorkshopSection.tsx" },
+    { "code": "K56", "name": "ניהול: עריכת הסדנה",          "sel": "[data-area=\"K56\"]", "where": "src/components/admin/WorkshopManager.tsx" },
+    { "code": "K57", "name": "הכפתור הצף וחלון המידע על הסדנה", "sel": "[data-area=\"K57\"]", "where": "src/components/WorkshopPopup.tsx" }
   ]
 }

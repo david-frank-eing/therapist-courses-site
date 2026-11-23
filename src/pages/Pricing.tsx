@@ -2,7 +2,8 @@ import { Header } from "@/components/Header";
 import { PricingPreview } from "@/components/PricingPreview";
 import { Footer } from "@/components/Footer";
 
-// "/pricing" is linked from the hero, the footer, locked courses and the CRM upgrade notice.
+// "/pricing" is linked from locked courses, the CRM upgrade notice and the signed-in home. Since 24/11/2026 it is NOT
+// shown to visitors on the home page, the hero, the guest menu or the footer (David's decision: no plan names in public).
 // Tiers are set by hand by the site admin (no online payment), so the page says how to join.
 const Pricing = () => {
   return (

@@ -2,8 +2,9 @@ import { useEffect } from "react";
 import { Header } from "@/components/Header";
 import { HeroSection } from "@/components/HeroSection";
 import { FeaturedCourses } from "@/components/FeaturedCourses";
+import { WorkshopSection, AboutDavidSection } from "@/components/WorkshopSection";
 import { AboutSection } from "@/components/AboutSection";
-import { PricingPreview } from "@/components/PricingPreview";
+import { WorkshopPopup } from "@/components/WorkshopPopup";
 import { Footer } from "@/components/Footer";
 
 const Index = () => {
@@ -19,11 +20,13 @@ const Index = () => {
       <Header />
       <main>
         <HeroSection />
+        <WorkshopSection />
+        <AboutDavidSection />
         <FeaturedCourses />
         <AboutSection />
-        <PricingPreview />
       </main>
       <Footer />
+      <WorkshopPopup />
     </div>
   );
 };

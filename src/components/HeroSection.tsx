@@ -1,6 +1,6 @@
 import { Button } from "./ui/button";
 import { Link } from "react-router-dom";
-import { Play, BookOpen, Briefcase, Bot, TrendingUp } from "lucide-react";
+import { Play, Briefcase, Bot, TrendingUp } from "lucide-react";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 
 export const HeroSection = () => {
@@ -33,12 +33,6 @@ export const HeroSection = () => {
               <Link to="/courses">
                 <Play size={20} />
                 התחילו ללמוד
-              </Link>
-            </Button>
-            <Button size="lg" variant="ghost" asChild className="gap-2 underline underline-offset-8 decoration-brand-orange decoration-2 hover:bg-transparent">
-              <Link to="/pricing">
-                <BookOpen size={20} />
-                צפו בתכניות המנויים
               </Link>
             </Button>
           </div>
