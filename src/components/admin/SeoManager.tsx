@@ -53,12 +53,26 @@ export const SeoManager = () => {
   const row = rows[page];
   const set = (k: (typeof KEYS)[number], v: string) => setRows((r) => ({ ...r, [page]: { ...r[page], [k]: v } }));
 
+  // earlier versions of this page's texts (table site_seo_history, filled by a database trigger on every change)
+  const [versions, setVersions] = useState<{ id: number; created_at: string; snapshot: SeoRow }[] | null>(null);
+  const [showHistory, setShowHistory] = useState(false);
+  useEffect(() => { setVersions(null); }, [page]);
+  useEffect(() => {
+    if (!showHistory || versions !== null) return;
+    (supabase as any).from("site_seo_history").select("id,created_at,snapshot").eq("page", page).order("id", { ascending: false }).limit(20)
+      .then(({ data, error }: any) => {
+        if (error) { toast({ title: "ההיסטוריה לא נטענה", description: error.message, variant: "destructive" }); setVersions([]); return; }
+        setVersions(data ?? []);
+      });
+  }, [showHistory, versions, page]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const save = async () => {
     setSaving(true);
     const payload = SEO_PAGES.map(({ page: p }) => ({ page: p, ...Object.fromEntries(KEYS.map((k) => [k, rows[p][k].trim()])), updated_at: new Date().toISOString() }));
     const { error } = await (supabase as any).from("site_seo").upsert(payload);
     setSaving(false);
     if (error) return toast({ title: "השמירה נכשלה", description: error.message, variant: "destructive" });
+    setVersions(null); // the save added a version: reload the history next time it is opened
     toast({ title: "נשמר. התצוגה בגוגל ובוואטסאפ תתעדכן בדקות הקרובות" });
   };
 
@@ -124,6 +138,31 @@ export const SeoManager = () => {
           </div>
         </Card>
       </div>
+      <Card className="p-5 space-y-3">
+        <button type="button" className="w-full flex items-center justify-between text-right" onClick={() => setShowHistory((v) => !v)} aria-expanded={showHistory}>
+          <span className="font-bold text-foreground">היסטוריית גרסאות: {meta.label}</span>
+          <span className="text-sm text-muted-foreground">{showHistory ? "הסתר" : "הצג"}</span>
+        </button>
+        {showHistory && (versions === null ? <Loader2 className="h-5 w-5 animate-spin" /> : versions.length === 0 ? (
+          <p className="text-sm text-muted-foreground">עוד אין גרסאות שמורות לדף הזה. כל שמירה מעכשיו תירשם כאן.</p>
+        ) : (
+          <ul className="space-y-2">
+            {versions.map((v, i) => (
+              <li key={v.id} className="rounded-lg border border-border p-3 flex items-start justify-between gap-3">
+                <div className="text-right min-w-0">
+                  <p className="text-sm font-medium text-foreground">{new Date(v.created_at).toLocaleString("he-IL", { dateStyle: "medium", timeStyle: "short" })}{i === 0 && " · הגרסה הנוכחית"}</p>
+                  <p className="text-xs text-muted-foreground truncate">{v.snapshot.title}</p>
+                </div>
+                {i > 0 && (
+                  <Button type="button" size="sm" variant="outline" onClick={() => { setRows((r) => ({ ...r, [page]: { ...r[page], title: v.snapshot.title, description: v.snapshot.description, og_title: v.snapshot.og_title, og_description: v.snapshot.og_description } })); toast({ title: "הגרסה נטענה לעורך. לחצו שמור כדי להחזיר אותה" }); }}>
+                    טען לעורך
+                  </Button>
+                )}
+              </li>
+            ))}
+          </ul>
+        ))}
+      </Card>
       <p className="text-xs text-muted-foreground text-right">התמונה בתצוגת הקישור קבועה כרגע (מכילה את התאריך 29.12.26). בסדנה הבאה היא צריכה החלפה.</p>
     </div>
   );

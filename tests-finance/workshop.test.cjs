@@ -113,6 +113,37 @@ test('Google and link previews are editable: tables, edge function, pure rewrite
   assert.ok(seo.includes('הכול בידיים | הצד העסקי של הקליניקה, למטפלים עצמאיים') && html.includes('הכול בידיים | הצד העסקי של הקליניקה, למטפלים עצמאיים'));
 });
 
+test('history of the workshop and of the Google texts: admin-only, written only by triggers, loadable into the editor', () => {
+  const raw = read('supabase/migrations/20261124000000_site_workshop.sql');
+  const sql = raw.replace(/--.*$/gm, '');
+  assert.ok(!/[֐-׿]/.test(raw), 'no Hebrew in SQL that David pastes');
+  for (const t of ['site_workshop_history', 'site_seo_history']) {
+    assert.match(sql, new RegExp(`ALTER TABLE public\\.${t} ENABLE ROW LEVEL SECURITY`), t);
+    assert.match(sql, new RegExp(`REVOKE ALL ON public\\.${t} FROM anon`), t);
+    assert.match(sql, new RegExp(`ON public\\.${t}\\s+FOR SELECT USING \\(public\\.has_role\\(auth\\.uid\\(\\), 'admin'\\)\\)`), t + ' is admin-only');
+  }
+  assert.ok(!/ON public\.site_(workshop|seo)_history\s+FOR (INSERT|UPDATE|DELETE|ALL)/i.test(sql), 'no write policy on a history table');
+  assert.match(sql, /AFTER INSERT OR UPDATE ON public\.site_seo/);
+  assert.match(sql, /LIMIT 200/);
+  assert.match(sql, /IS NOT DISTINCT FROM OLD\.title/, 'a save that changes nothing adds no version');
+  assert.match(sql, /NEW\.title = '' AND NEW\.description = ''/, 'the empty rows made by the file are not history');
+  for (const [file, table] of [['src/components/admin/WorkshopManager.tsx', 'site_workshop_history'], ['src/components/admin/SeoManager.tsx', 'site_seo_history']]) {
+    const ui = read(file);
+    assert.match(ui, new RegExp(`from\\("${table}"\\)`), file);
+    assert.match(ui, /טען לעורך/, file);
+    assert.match(ui, /הגרסה הנוכחית/, file);
+    assert.ok(!new RegExp(`${table}"\\)\\.(insert|update|delete|upsert)`).test(ui), file + ' never writes the history');
+  }
+});
+
+test('the changelog is kept up to date and says where the readable copy is', () => {
+  const log = read('docs/CHANGELOG.he.md');
+  assert.match(log, /## 24\/11\/2026: הסדנה בדף הראשי/);
+  assert.match(log, /דוחות קרלוס/);
+  assert.match(log, /build_changelog\.py/);
+  assert.match(log, /היסטוריה שבתוך כל לשונית בניהול/);
+});
+
 test('plan names are not shown to the public: home, hero, guest menu, footer', () => {
   assert.ok(!/PricingPreview/.test(read('src/pages/Index.tsx')), 'no plans section on the home page');
   assert.ok(!/\/pricing/.test(read('src/components/HeroSection.tsx')), 'no plans button in the hero');

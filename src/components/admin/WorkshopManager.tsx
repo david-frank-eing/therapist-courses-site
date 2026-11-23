@@ -84,6 +84,18 @@ export const WorkshopManager = () => {
 
   const set = <K extends keyof Workshop>(k: K, v: Workshop[K]) => setForm((f) => ({ ...f, [k]: v }));
 
+  // earlier workshops and wordings (table site_workshop_history, filled by a database trigger on every save)
+  const [versions, setVersions] = useState<{ id: number; created_at: string; snapshot: Partial<Workshop> }[] | null>(null);
+  const [showHistory, setShowHistory] = useState(false);
+  useEffect(() => {
+    if (!showHistory || versions !== null) return;
+    (supabase as any).from("site_workshop_history").select("id,created_at,snapshot").order("id", { ascending: false }).limit(20)
+      .then(({ data, error }: any) => {
+        if (error) { toast({ title: "ההיסטוריה לא נטענה", description: error.message, variant: "destructive" }); setVersions([]); return; }
+        setVersions(data ?? []);
+      });
+  }, [showHistory, versions]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const save = async () => {
     const url = form.register_url.trim();
     if (url && !/^https:\/\/[^\s]+$/.test(url)) return toast({ title: "הקישור חייב להתחיל ב-https://", variant: "destructive" });
@@ -94,6 +106,7 @@ export const WorkshopManager = () => {
     setSaving(false);
     if (error) return toast({ title: "השמירה נכשלה", description: error.message, variant: "destructive" });
     queryClient.invalidateQueries({ queryKey: ["site_workshop"] });
+    setVersions(null); // the save added a version: reload the history next time it is opened
     toast({ title: form.enabled ? "נשמר. השינוי מופיע באתר" : "נשמר. הסדנה מוסתרת מהאתר" });
   };
 
@@ -145,6 +158,32 @@ export const WorkshopManager = () => {
         <p className="font-bold text-right">כך הסדנה נראית באתר</p>
         <WorkshopCard w={form} preview />
       </div>
+
+      <Card className="p-5 space-y-3">
+        <button type="button" className="w-full flex items-center justify-between text-right" onClick={() => setShowHistory((v) => !v)} aria-expanded={showHistory}>
+          <span className="font-bold text-foreground">היסטוריית סדנאות ונוסחים</span>
+          <span className="text-sm text-muted-foreground">{showHistory ? "הסתר" : "הצג"}</span>
+        </button>
+        {showHistory && (versions === null ? <Loader2 className="h-5 w-5 animate-spin" /> : versions.length === 0 ? (
+          <p className="text-sm text-muted-foreground">עוד אין גרסאות שמורות. כל שמירה מעכשיו תירשם כאן, כולל סדנאות קודמות.</p>
+        ) : (
+          <ul className="space-y-2">
+            {versions.map((v, i) => (
+              <li key={v.id} className="rounded-lg border border-border p-3 flex items-start justify-between gap-3">
+                <div className="text-right min-w-0">
+                  <p className="text-sm font-medium text-foreground">{new Date(v.created_at).toLocaleString("he-IL", { dateStyle: "medium", timeStyle: "short" })}{i === 0 && " · הגרסה הנוכחית"}</p>
+                  <p className="text-xs text-muted-foreground truncate">{[v.snapshot.title, v.snapshot.date_text, v.snapshot.price_text].filter(Boolean).join(" · ") || "(בלי פרטי סדנה)"}{v.snapshot.enabled === false && " · הוסתרה"}</p>
+                </div>
+                {i > 0 && (
+                  <Button type="button" size="sm" variant="outline" onClick={() => { setForm(withDefaults({ ...v.snapshot })); toast({ title: "הגרסה נטענה לעורך. לחצו שמור כדי להחזיר אותה" }); }}>
+                    טען לעורך
+                  </Button>
+                )}
+              </li>
+            ))}
+          </ul>
+        ))}
+      </Card>
     </div>
   );
 };

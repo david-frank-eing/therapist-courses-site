@@ -99,11 +99,57 @@ DROP POLICY IF EXISTS "Admins write seo texts" ON public.site_seo;
 CREATE POLICY "Admins write seo texts" ON public.site_seo
   FOR ALL USING (public.has_role(auth.uid(), 'admin')) WITH CHECK (public.has_role(auth.uid(), 'admin'));
 
--- check: rls_on true everywhere, anon reads the two public tables, anon cannot read the history, 1 workshop row, 3 seo rows
+-- history of the Google / link-preview texts (admin-only, written only by the trigger, last 200 kept) --------------
+CREATE TABLE IF NOT EXISTS public.site_seo_history (
+  id          BIGSERIAL PRIMARY KEY,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  page        TEXT NOT NULL,
+  snapshot    JSONB NOT NULL
+);
+ALTER TABLE public.site_seo_history ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON public.site_seo_history FROM anon;
+
+DROP POLICY IF EXISTS "Admins read seo history" ON public.site_seo_history;
+CREATE POLICY "Admins read seo history" ON public.site_seo_history
+  FOR SELECT USING (public.has_role(auth.uid(), 'admin'));
+-- no write policy: only the trigger below writes
+
+CREATE OR REPLACE FUNCTION public.site_seo_log() RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  -- the empty rows made by this file are not history
+  IF NEW.title = '' AND NEW.description = '' AND NEW.og_title = '' AND NEW.og_description = '' THEN
+    RETURN NEW;
+  END IF;
+  IF TG_OP = 'UPDATE' THEN
+    IF NEW.title IS NOT DISTINCT FROM OLD.title
+       AND NEW.description IS NOT DISTINCT FROM OLD.description
+       AND NEW.og_title IS NOT DISTINCT FROM OLD.og_title
+       AND NEW.og_description IS NOT DISTINCT FROM OLD.og_description THEN
+      RETURN NEW;   -- nothing the owner wrote has changed
+    END IF;
+  END IF;
+  INSERT INTO public.site_seo_history (page, snapshot) VALUES (NEW.page, to_jsonb(NEW));
+  DELETE FROM public.site_seo_history
+   WHERE id NOT IN (SELECT id FROM public.site_seo_history ORDER BY id DESC LIMIT 200);
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS site_seo_log_trg ON public.site_seo;
+CREATE TRIGGER site_seo_log_trg
+  AFTER INSERT OR UPDATE ON public.site_seo
+  FOR EACH ROW EXECUTE FUNCTION public.site_seo_log();
+
+-- check: rls_on true everywhere, anon reads the two public tables, anon cannot read any history, 1 workshop row, 3 seo rows
 SELECT
   (SELECT relrowsecurity FROM pg_class WHERE oid = 'public.site_workshop'::regclass) AS workshop_rls_on,
   (SELECT relrowsecurity FROM pg_class WHERE oid = 'public.site_seo'::regclass)      AS seo_rls_on,
   has_table_privilege('anon', 'public.site_workshop', 'SELECT') AS anon_can_read_workshop,
-  has_table_privilege('anon', 'public.site_workshop_history', 'SELECT') AS anon_can_read_history,
+  (has_table_privilege('anon', 'public.site_workshop_history', 'SELECT')
+   OR has_table_privilege('anon', 'public.site_seo_history', 'SELECT')) AS anon_can_read_any_history,
   (SELECT count(*) FROM public.site_workshop) AS workshop_rows,
   (SELECT count(*) FROM public.site_seo) AS seo_rows;
