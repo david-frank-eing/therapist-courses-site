@@ -48,6 +48,7 @@
     { "code": "K54", "name": "דף הבית: הסדנה הקרובה",       "sel": "[data-area=\"K54\"]", "where": "src/components/WorkshopSection.tsx" },
     { "code": "K55", "name": "דף הבית: מי אני",             "sel": "[data-area=\"K55\"]", "where": "src/components/WorkshopSection.tsx" },
     { "code": "K56", "name": "ניהול: עריכת הסדנה",          "sel": "[data-area=\"K56\"]", "where": "src/components/admin/WorkshopManager.tsx" },
-    { "code": "K57", "name": "הכפתור הצף וחלון המידע על הסדנה", "sel": "[data-area=\"K57\"]", "where": "src/components/WorkshopPopup.tsx" }
+    { "code": "K57", "name": "הכפתור הצף וחלון המידע על הסדנה", "sel": "[data-area=\"K57\"]", "where": "src/components/WorkshopPopup.tsx" },
+    { "code": "K58", "name": "ניהול: גוגל ותצוגת קישור",    "sel": "[data-area=\"K58\"]", "where": "src/components/admin/SeoManager.tsx" }
   ]
 }

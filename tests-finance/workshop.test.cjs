@@ -47,8 +47,70 @@ test('the approved text: names as in the logo, 4.5 hours including the break', (
   const all = lib + read('src/components/WorkshopSection.tsx') + read('src/components/WorkshopPopup.tsx');
   assert.ok(!/הכל בידיים/.test(all), 'the brand is written "הכול בידיים", as in the logo');
   assert.ok(!/שם זמני/.test(all), 'the "temporary name" note never reaches the public');
-  assert.match(read('src/components/WorkshopSection.tsx'), /לפרטים ולהרשמה לסדנה/);
-  assert.match(read('src/components/WorkshopSection.tsx'), /אם יש לכם יכולת לעזור לאנשים, מגיע להם לפחות לדעת שאתם קיימים\./);
+  assert.match(lib, /about_button: "לפרטים ולהרשמה לסדנה"/);
+  assert.match(lib, /about_quote: "אם יש לכם יכולת לעזור לאנשים, מגיע להם לפחות לדעת שאתם קיימים\."/);
+});
+
+test('every text can be changed from the admin: workshop, "about me", the floating button and its pop-up', () => {
+  const m = read('src/components/admin/WorkshopManager.tsx');
+  for (const key of ['title', 'date_text', 'duration_text', 'price_text', 'description', 'register_url', 'about_title', 'about_text', 'about_quote', 'about_button',
+    'popup_button', 'popup_form_title', 'popup_submit', 'popup_thanks_title', 'popup_thanks_text']) {
+    assert.match(m, new RegExp(`key: "${key}"`), key + ' has an editor field');
+    assert.match(read('supabase/migrations/20261124000000_site_workshop.sql'), key === 'title' ? /title\s+TEXT/ : new RegExp(key), key + ' has a column');
+  }
+  // the public components read those texts from the row, not from fixed strings
+  const sec = read('src/components/WorkshopSection.tsx');
+  assert.match(sec, /texts\.about_text/);
+  const pop = read('src/components/WorkshopPopup.tsx');
+  for (const k of ['popup_button', 'popup_form_title', 'popup_submit', 'popup_thanks_title', 'popup_thanks_text']) assert.match(pop, new RegExp(`workshop\\.${k}`), k);
+  // an empty field falls back to the default text, never to a blank
+  assert.match(read('src/lib/workshop.ts'), /FALLBACK_KEYS/);
+});
+
+test('Google and link previews are editable: tables, edge function, pure rewriter, admin screen', async () => {
+  const raw = read('supabase/migrations/20261124000000_site_workshop.sql');
+  const sql = raw.replace(/--.*$/gm, '');
+  assert.ok(!/[֐-׿]/.test(raw), 'no Hebrew in SQL that David pastes');
+  assert.match(sql, /CREATE TABLE IF NOT EXISTS public\.site_seo/);
+  assert.match(sql, /CHECK \(page IN \('default', 'welcome', 'assistant'\)\)/);
+  assert.match(sql, /ON public\.site_seo FOR SELECT USING \(true\)/);
+  assert.match(sql, /ON public\.site_seo\s+FOR ALL USING \(public\.has_role\(auth\.uid\(\), 'admin'\)\)/);
+  assert.match(sql, /ADD COLUMN IF NOT EXISTS about_text/, 'safe on top of an earlier run');
+
+  const { applySeo, pageKey, esc } = await import(require('url').pathToFileURL(path.join(root, 'netlify/edge-functions/lib/seo-apply.mjs')).href);
+  assert.strictEqual(pageKey('/'), 'default'); assert.strictEqual(pageKey('/welcome'), 'welcome'); assert.strictEqual(pageKey('/assistant'), 'assistant'); assert.strictEqual(pageKey('/courses'), 'default');
+  const html = read('index.html');
+  const out = applySeo(html, { title: 'כותרת חדשה', description: 'תיאור חדש', og_title: 'כותרת תצוגה', og_description: 'תיאור תצוגה' });
+  assert.match(out, /<title>כותרת חדשה<\/title>/);
+  assert.match(out, /name="description" content="תיאור חדש"/);
+  assert.match(out, /og:title" content="כותרת תצוגה"/);
+  assert.match(out, /og:description" content="תיאור תצוגה"/);
+  assert.ok(out.includes('og:image') && out.includes('<div id="root">'), 'the rest of the page is untouched');
+  assert.strictEqual(applySeo(html, { title: '', description: '  ', og_title: '', og_description: '' }), html, 'empty fields leave the page as it is');
+  assert.strictEqual(applySeo(html, null), html);
+  // nothing the owner types can break out of the tag
+  const evil = applySeo(html, { title: '</title><script>alert(1)</script>', description: '"><script>alert(2)</script>', og_title: 'a"b', og_description: "$& $1 <b>" });
+  assert.ok(!/<script>alert/.test(evil), 'no injected script');
+  assert.ok(!evil.includes('"><script'), 'no attribute break-out');
+  assert.match(evil, /og:description" content="\$&amp; \$1 &lt;b&gt;"/, '$ patterns are inserted literally');
+  assert.strictEqual(esc('<>&"'), '&lt;&gt;&amp;&quot;');
+
+  const fn = read('netlify/edge-functions/seo-meta.js');
+  assert.match(fn, /export default async/);
+  assert.match(fn, /catch \{\s*return response;/, 'any failure returns the page untouched');
+  assert.match(fn, /response\.clone\(\)\.text\(\)/, 'the original response is never consumed');
+  assert.match(fn, /AbortController/, 'a slow database never holds a page');
+  assert.match(fn, /excludedPath/);
+  assert.match(fn, /includes\("text\/html"\)/, 'only pages are touched');
+  assert.ok(!/SERVICE_KEY|service/i.test(fn), 'the edge function uses only the public key');
+
+  const mgr = read('src/components/admin/SeoManager.tsx');
+  assert.match(mgr, /from\("site_seo"\)/);
+  assert.match(read('src/pages/Admin.tsx'), /<SeoManager \/>/);
+  assert.match(read('src/pages/Admin.tsx'), /<TabsTrigger value="seo">גוגל ותצוגת קישור<\/TabsTrigger>/);
+  // the defaults match what index.html says today, so switching the function on changes nothing by itself
+  const seo = read('src/lib/seo.ts');
+  assert.ok(seo.includes('הכול בידיים | הצד העסקי של הקליניקה, למטפלים עצמאיים') && html.includes('הכול בידיים | הצד העסקי של הקליניקה, למטפלים עצמאיים'));
 });
 
 test('plan names are not shown to the public: home, hero, guest menu, footer', () => {
@@ -81,7 +143,7 @@ test('the admin screen: its own tab, a live preview, a switch, and the home page
   assert.match(m, /<WorkshopCard w=\{form\} preview \/>/);
   assert.match(m, /להציג את הסדנה באתר/);
   const lib = read('src/lib/workshop.ts');
-  assert.match(lib, /!w\.enabled \|\| !w\.title\.trim\(\)/, 'switched off or empty = nothing shown');
+  assert.match(lib, /!row\.enabled \|\| !row\.title\.trim\(\)/, 'switched off or empty = nothing shown');
   assert.match(lib, /import\.meta\.env\.DEV/, 'the default text is a development-only preview');
   assert.match(read('src/components/WorkshopSection.tsx'), /if \(!workshop\) return null;/);
 });

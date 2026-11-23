@@ -3,16 +3,9 @@ import { CalendarDays, Clock, MapPin, Tag, Users } from "lucide-react";
 import { openWorkshop, safeUrl, useWorkshop, workshopFacts, type Workshop } from "@/lib/workshop";
 
 // "הסדנה הקרובה" (K54) and "מי אני" (K55) on the home page. The workshop text comes from the table site_workshop
-// (edited in Admin -> "סדנה" before every workshop). "מי אני" is a fixed text.
+// (edited in Admin -> "סדנה" before every workshop), and so does the "מי אני" text.
 // The big button opens the registration link when there is one (a payment page or WhatsApp), and otherwise opens
 // the pop-up where a therapist leaves details to receive information (see WorkshopPopup).
-
-const ABOUT = {
-  title: "מי אני",
-  text: "אני דוד פרנק, מטפל רפואי וספורטיבי כבר כ־25 שנה, מרצה ומדריך מטפלים. הקמתי את \"הכול בידיים\" כדי לתת למטפלים את מה שלא מלמדים בלימודי הטיפול: איך לבנות קליניקה שאנשים מכירים ובוחרים בה.",
-  quote: "אם יש לכם יכולת לעזור לאנשים, מגיע להם לפחות לדעת שאתם קיימים.",
-  button: "לפרטים ולהרשמה לסדנה",
-};
 
 const ICONS = { kind: Users, date: CalendarDays, duration: Clock, price: Tag, location: MapPin } as const;
 
@@ -75,16 +68,16 @@ export const WorkshopSection = () => {
 };
 
 export const AboutDavidSection = () => {
-  const { workshop } = useWorkshop();
+  const { workshop, texts } = useWorkshop();
   return (
     <section id="about-david" className="py-12 md:py-20 bg-secondary/40" data-area="K55">
       <div className="container max-w-3xl text-center md:text-right">
-        <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-6">{ABOUT.title}</h2>
-        <p className="text-lg md:text-xl text-muted-foreground leading-relaxed mb-8">{ABOUT.text}</p>
+        <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-6">{texts.about_title}</h2>
+        <p className="text-lg md:text-xl text-muted-foreground leading-relaxed mb-8 whitespace-pre-line">{texts.about_text}</p>
         <blockquote className="border-brand-orange md:border-r-4 md:pr-5 text-xl md:text-2xl font-bold text-foreground leading-snug mb-8">
-          {ABOUT.quote}
+          {texts.about_quote}
         </blockquote>
-        {workshop && <WorkshopAction w={workshop} label={ABOUT.button} />}
+        {workshop && <WorkshopAction w={workshop} label={texts.about_button} />}
       </div>
     </section>
   );

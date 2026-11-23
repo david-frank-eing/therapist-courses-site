@@ -69,9 +69,9 @@ export const WorkshopPopup = () => {
           onClick={() => setOpen(true)}
           data-area="K57"
           className="fixed bottom-4 right-4 z-50 rounded-full bg-brand-orange text-white font-bold shadow-card-hover px-5 py-3 text-sm md:text-base hover:opacity-90 transition-opacity"
-          aria-label={`${workshop.badge || "הסדנה הקרובה"}: מידע והרשמה`}
+          aria-label={`${workshop.popup_button}: מידע והרשמה`}
         >
-          {workshop.badge || "הסדנה הקרובה"} · לפרטים
+          {workshop.popup_button}
         </button>
       )}
 
@@ -103,12 +103,12 @@ export const WorkshopPopup = () => {
           {done ? (
             <div className="rounded-xl bg-secondary p-5 text-center space-y-2" role="status">
               <CheckCircle2 className="mx-auto text-brand-orange" size={36} />
-              <p className="font-bold text-foreground">תודה, הפרטים התקבלו</p>
-              <p className="text-sm text-muted-foreground">נחזור אליכם עם כל המידע על הסדנה.</p>
+              <p className="font-bold text-foreground">{workshop.popup_thanks_title}</p>
+              <p className="text-sm text-muted-foreground">{workshop.popup_thanks_text}</p>
             </div>
           ) : (
             <form onSubmit={submit} noValidate className="space-y-3 border-t border-border pt-4">
-              <p className="font-bold text-foreground">{url ? "רוצים קודם לקבל מידע?" : "לקבלת מידע על הסדנה"}</p>
+              <p className="font-bold text-foreground">{url ? "רוצים קודם לקבל מידע?" : workshop.popup_form_title}</p>
               <div className="space-y-1">
                 <Label htmlFor="ws-name">שם מלא</Label>
                 <Input id="ws-name" autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} />
@@ -139,7 +139,7 @@ export const WorkshopPopup = () => {
               </p>
               {error && <p className="text-destructive text-sm" role="alert">{error}</p>}
               <Button type="submit" variant="cta" size="lg" className="w-full" disabled={sending}>
-                {sending ? <Loader2 className="animate-spin" size={20} /> : "שלחו לי מידע"}
+                {sending ? <Loader2 className="animate-spin" size={20} /> : workshop.popup_submit}
               </Button>
             </form>
           )}
